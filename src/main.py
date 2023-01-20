@@ -52,6 +52,26 @@ controller = Controller(PRIMARY)
 
 deadZoneVal = 0
 
+
+L = 15.0
+B = 6.0
+D = 2.75
+N = 90
+circumference = math.pi * D
+inchsPerTick = circumference / N
+
+predictedX = 0.0
+predictedY = 0.0
+predictedΘ = 0.0
+
+currRightPos = 0 # current encoder value for right wheel
+currLeftPos = 0 # current encoder value for left wheel
+currAuxPos = 0 # current encoder value for back wheel
+
+prevRightPos = 0 # previous encoder value for right wheel
+prevLeftPos = 0 # previous encoder value for left wheel
+prevAuxPos = 0 # previous encoder value for back wheel
+
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
@@ -206,27 +226,6 @@ def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
     
     return integral, previousError, motorVoltage
 
-
-
-L = 15.0
-B = 6.0
-D = 2.75
-N = 90
-circumference = math.pi * D
-inchsPerTick = circumference / N
-
-predictedX = 0.0
-predictedY = 0.0
-predictedΘ = 0.0
-
-currRightPos = 0 # current encoder value for right wheel
-currLeftPos = 0 # current encoder value for left wheel
-currAuxPos = 0 # current encoder value for back wheel
-
-prevRightPos = 0 # previous encoder value for right wheel
-prevLeftPos = 0 # previous encoder value for left wheel
-prevAuxPos = 0 # previous encoder value for back wheel
-
 # def wheelTravel(radians: float) -> float:
 #     return odomCircumference * (radians / (2 * math.pi))
 
@@ -241,7 +240,7 @@ def pol2cart(rho, phi):
     return(x, y)
 
 def getPosition() -> None:
-    global leftEncoder, rightEncoder, auxEncoder, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
+    global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
     prevRightPos = currRightPos
     prevLeftPos = currLeftPos
     prevAuxPos = currAuxPos
@@ -265,6 +264,7 @@ def getPosition() -> None:
 
 class MecDriveTrain:
     def __init__(self, FL, FR, BR, BL, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
+        global currRightPos, currLeftPos, currAuxPos
         self.FL = FL
         self.FR = FR
         self.BR = BR
@@ -279,6 +279,10 @@ class MecDriveTrain:
         self.x = 0
         self.y = 0
         self.theta = math.pi /  2
+
+        currRightPos = 0 # current encoder value for right wheel
+        currLeftPos = 0 # current encoder value for left wheel
+        currAuxPos = 0 # current encoder value for back wheel
 
         odomThread = Thread(getPosition)
 
