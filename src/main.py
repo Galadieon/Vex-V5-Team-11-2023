@@ -45,7 +45,7 @@ flywheelMotors = MotorGroup(flywheelLeft, flywheelRight)
 
 leftEncoder = Encoder(brain.three_wire_port.a)
 rightEncoder = Encoder(brain.three_wire_port.c)
-backEncoder = Encoder(brain.three_wire_port.e)
+auxEncoder = Encoder(brain.three_wire_port.e)
 
 controllerEnabled = True
 controller = Controller(PRIMARY)
@@ -208,29 +208,27 @@ def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
 
 
 
+L = 15.0
+B = 6.0
+D = 2.75
+N = 90
+circumference = math.pi * D
+inchsPerTick = circumference / N
 
-SL = 5.0 # left-right distance from the tracking center to the left tracking wheel
-SR = 5.0 # left-right distance from the tracking center to the right tracking wheel
-SS = 5.0 # forward-backward distance from the tracking center to the back tracking wheel
+predictedX = 0.0
+predictedY = 0.0
+predictedΘ = 0.0
 
-d0 = [None, None] # previous global position vector
-d1 = [None, None] # current position
+currRightPos = 0 # current encoder value for right wheel
+currLeftPos = 0 # current encoder value for left wheel
+currAuxPos = 0 # current encoder value for back wheel
 
-θ0 = 0.0 # previous global orientation
-θr = 0.0 # global orientation at last reset
+prevRightPos = 0 # previous encoder value for right wheel
+prevLeftPos = 0 # previous encoder value for left wheel
+prevAuxPos = 0 # previous encoder value for back wheel
 
-odomCircumference = 2.75 * math.pi # circumference of the 3 odometry wheels
-
-currLeftEcoVal = 0.0 # current encoder value for left wheel
-currRightEcoVal = 0.0 # current encoder value for right wheel
-currBackEcoVal = 0.0 # current encoder value for back wheel
-
-prevLeftEcoVal = 0.0 # previous encoder value for left wheel
-prevRightEcoVal = 0.0 # previous encoder value for right wheel
-prevBackEcoVal = 0.0 # previous encoder value for back wheel
-
-def wheelTravel(radians: float) -> float:
-    return odomCircumference * (radians / (2 * math.pi))
+# def wheelTravel(radians: float) -> float:
+#     return odomCircumference * (radians / (2 * math.pi))
 
 def cart2pol(x, y):
     rho = math.sqrt(x**2 + y**2)
@@ -243,77 +241,27 @@ def pol2cart(rho, phi):
     return(x, y)
 
 def getPosition() -> None:
-    global leftEncoder, rightEncoder, backEncoder, prevLeftEcoVal, prevRightEcoVal, prevBackEcoVal, d0, θ0, θr
-    # thetaPos += math.radians((rightEncoder.position(DEGREES) - leftEncoder.position(DEGREES))) / 2
-    # yPos += math.radians((leftEncoder.position(DEGREES) + rightEncoder.position(DEGREES))) / 2
-    # xPos += math.radians(backEncoder.position(DEGREES)) - (k * thetaPos)
-    
-    # leftEncoder.set_position(0, DEG)
-    # rightEncoder.set_position(0, DEG)
-    # backEncoder.set_position(0, DEG)
-    
-    # return thetaPos, xPos, yPos
-    
-    # 1. Store the current encoder values in local variables
-    currLeftEcoVal = math.radians(leftEncoder.position(DEGREES))
-    currRightEcoVal = math.radians(rightEncoder.position(DEGREES))
-    currBackEcoVal = math.radians(backEncoder.position(DEGREES))
+    global leftEncoder, rightEncoder, auxEncoder, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
+    prevRightPos = currRightPos
+    prevLeftPos = currLeftPos
+    prevAuxPos = currAuxPos
 
-    # 2. Calculate the change in each encoders’ value since the last cycle, and convert to distance of
-    # wheel travel (for example, if the wheel has a radius 2" and turned 5°, then it travelled approximately 0.1745"); call these Δ𝐿, Δ𝑅, and Δ𝑆
-    deltaLeftEco = currLeftEcoVal - prevLeftEcoVal
-    deltaRightEco = currRightEcoVal - prevRightEcoVal
-    deltaBackEco = currBackEcoVal - prevBackEcoVal
+    currRightPos = rightEncoder.value()
+    currLeftPos = leftEncoder.value()
+    currAuxPos = auxEncoder.value()
 
-    ΔL = wheelTravel(deltaLeftEco)
-    ΔR = wheelTravel(deltaRightEco)
-    ΔS = wheelTravel(deltaBackEco)
-    
-    # 3. Update stored "previous values" of encoders
-    prevLeftEcoVal = currLeftEcoVal
-    prevRightEcoVal = currRightEcoVal
-    prevBackEcoVal = currBackEcoVal
-    
-    # 4. Calculate the total change in the left and right encoder values since the last reset, and convert
-    # to distance of wheel travel; call these Δ𝐿𝑟 and Δ𝑅𝑟
-    ΔLr = wheelTravel(currLeftEcoVal)
-    ΔRr = wheelTravel(currRightEcoVal)
+    dn1 = currLeftPos - prevLeftPos
+    dn2 = currRightPos - prevRightPos
+    dn3 = currAuxPos - prevAuxPos
 
-    # 5. Calculate new absolute orientation 𝜃1 = 𝜃𝑟 +
-    # Δ𝐿𝑟−Δ𝑅𝑟
-    # 𝑠𝐿+𝑠𝑅; please note that the second term will be in radians, regardless of the units of other variables
-    θ1 = θr + (ΔLr - ΔRr) / (SL + SR)
+    dtheta = inchsPerTick * ((dn2 - dn1) / L)
+    dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+    dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
 
-    # 6. Calculate the change in angle Δ𝜃 = 𝜃1 − 𝜃0
-    Δθ = θ1 - θ0
-
-    # 7. If Δ𝜃 = 0 (i.e. Δ𝐿 = Δ𝑅), then calculate the local offset 
-    # Δ𝑑𝑙 = 
-    # [Δ𝑆
-    #  Δ𝑅]
-    Δdl = [None, None]
-    if Δθ == 0: Δdl = [ΔS, ΔR]
-
-    # 8. Otherwise, calculate the local offset
-    # Δ𝑑𝑙 = 2 sin (𝜃/2) × 
-    # [(Δ𝑆/Δ𝜃) + 𝑠𝑆
-    #  (Δ𝑅/Δ𝜃) + 𝑠𝑅] (Equation 6)
-    else:
-        multiplier = 2 * math.sin(Δθ / 2)
-        Δdl = [multiplier * ((ΔS / Δθ) + SS), multiplier * ((ΔR / Δθ) + SR)]
-
-    # 9. Calculate the average orientation 𝜃𝑚 = 𝜃0 + (Δ𝜃/2)
-    θavg = θ0 + (Δθ / 2)
-    
-    # 10. Calculate global offset Δ𝑑 as Δ𝑑𝑙 rotated by −𝜃𝑚; this can be done by converting your existing
-    # Cartesian coordinates to polar coordinates, changing the angle, then converting back
-    rho, phi = cart2pol(Δdl[0], Δdl[1])
-    x, y = pol2cart(rho, phi - θavg)
-    
-    Δd = [x, y]
-
-    # 11. Calculate new absolute position 𝑑1 = 𝑑0 + Δ𝑑
-    d1 = d0 + Δd
+    theta = predictedΘ + (dtheta / 2.0)
+    predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
+    predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
+    predictedΘ += dtheta
 
 class MecDriveTrain:
     def __init__(self, FL, FR, BR, BL, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
