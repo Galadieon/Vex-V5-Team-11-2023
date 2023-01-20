@@ -1,0 +1,18 @@
+{
+	"extension": {
+		"version": "0.3.0",
+		"json": 1
+	},
+	"project": {
+		"name": "mmm",
+		"description": "",
+		"creationDate": "1/20/2023, 12:14:12 AM",
+		"platform": "V5",
+		"language": "python",
+		"slot": 1,
+		"sdkVersion": "V5_1_0_1_14",
+		"python": {
+			"main": "src/main.py"
+		}
+	}
+}
