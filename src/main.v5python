@@ -83,7 +83,7 @@ prevRightPos = 0 # previous encoder value for right wheel
 prevLeftPos = 0 # previous encoder value for left wheel
 prevAuxPos = 0 # previous encoder value for back wheel
 
-# Autonomous paths:
+# Autonomous paths
 
 path1 = [[0, 0, math.pi/2]]
 
@@ -154,7 +154,7 @@ def vexcode_auton_function():
     auton_task_0.stop()
 
 def Autonomous_Control():
-    Default_Motor_Speed()
+    drivetrain.startAuto(path1)
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
@@ -276,6 +276,7 @@ class MecDriveTrain:
         currAuxPos = 0 # current encoder value for back wheel
     
     def startAuto(self, path):
+        odomThread = Thread(updatePosition)
         atPosition = False
         for step in path:
             while not atPosition:
@@ -306,6 +307,8 @@ class MecDriveTrain:
         predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
         predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
         predictedΘ += dtheta
+
+        wait(10, MSEC)
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
         self.updatePostion()
