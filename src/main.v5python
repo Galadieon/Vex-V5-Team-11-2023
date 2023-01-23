@@ -39,11 +39,13 @@ brain=Brain()
 
 motorVel = 75
 
+# BAD PORT: 5, 6, 7, 8, 11, 12
+
 # Motor variables
-FL = Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
-FR = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
-BR = Motor(Ports.PORT3, GearSetting.RATIO_6_1, False)
-BL = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
+FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
+BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
+BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
 
 F1 = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False) # motor closest to flywheel
 # F2 = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
@@ -98,7 +100,7 @@ wait(30, MSEC)
 
 # Controller loop to handle controller readings
 def controllerLoop():
-    global controllerEnabled, FL, FR, BL, BR, deadZoneVal
+    global controllerEnabled, controller, FL, FR, BL, BR, deadZoneVal
     deadZoneVal = axisCurve(5)
 
     while(True):
@@ -109,9 +111,14 @@ def controllerLoop():
 
             if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(rotate) > deadZoneVal:
                 FL.set_velocity(forward + strafe + rotate, PERCENT)
-                FR.set_velocity(forward - strafe - rotate, PERCENT)
-                BR.set_velocity(forward + strafe - rotate, PERCENT)
+                FR.set_velocity(-forward + strafe + rotate, PERCENT)
+                BR.set_velocity(-forward - strafe + rotate, PERCENT)
                 BL.set_velocity(forward - strafe + rotate, PERCENT)
+
+                # FL.set_velocity(forward + strafe + rotate, PERCENT)
+                # FR.set_velocity(forward - strafe - rotate, PERCENT)
+                # BR.set_velocity(forward + strafe - rotate, PERCENT)
+                # BL.set_velocity(forward - strafe + rotate, PERCENT)
 
                 FL.spin(FORWARD)
                 FR.spin(FORWARD)
@@ -122,6 +129,8 @@ def controllerLoop():
                 FR.stop()
                 BR.stop()
                 BL.stop()
+            
+            wait(10, MSEC)
 
 def axisCurve(x):
     if x > 0: return (x ** 2) / 100
@@ -276,7 +285,7 @@ class MecDriveTrain:
         currAuxPos = 0 # current encoder value for back wheel
     
     def startAuto(self, path):
-        odomThread = Thread(updatePosition)
+        odomThread = Thread(self.updatePosition)
         atPosition = False
         for step in path:
             while not atPosition:
@@ -285,7 +294,7 @@ class MecDriveTrain:
                 drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
                 wait(10, MSEC)
 
-    def updatePostion(self):
+    def updatePosition(self):
         global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
         prevRightPos = currRightPos
         prevLeftPos = currLeftPos
@@ -311,10 +320,10 @@ class MecDriveTrain:
         wait(10, MSEC)
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
-        self.updatePostion()
+        self.updatePosition()
         # self.translation(xTarget, yTarget)
         # wait(10, MSEC)
-        # self.updatePostion()
+        # self.updatePosition()
         # self.rotation(thetaTarget)
 
         deltaX = xTarget - self.x
