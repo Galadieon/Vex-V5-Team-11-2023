@@ -83,6 +83,10 @@ prevRightPos = 0 # previous encoder value for right wheel
 prevLeftPos = 0 # previous encoder value for left wheel
 prevAuxPos = 0 # previous encoder value for back wheel
 
+# Autonomous paths:
+
+path1 = [[0, 0, math.pi/2]]
+
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
@@ -263,7 +267,7 @@ class MecDriveTrain:
             while not atPosition:
                 drivetrain.set_drive_velocity(path[step][3])
                 drivetrain.set_turn_velocity(path[step][4])
-                drivetrain.drive_to(path[step][0], step][1], step][2])
+                drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
                 wait(10, MSEC)
 
     def updatePostion(self):
@@ -290,36 +294,36 @@ class MecDriveTrain:
         predictedΘ += dtheta
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
-        while True:
-            self.updatePostion()
-            self.translation()
-            self.updatePostion()
-            self.rotation()
+        self.updatePostion()
+        self.translation(xTarget, yTarget)
+        wait(10, MSEC)
+        self.updatePostion()
+        self.rotation(thetaTarget)
 
-            deltaX = xTarget - self.x
-            deltaY = yTarget - self.y
-            deltaTheta = thetaTarget - self.theta
+        deltaX = xTarget - self.x
+        deltaY = yTarget - self.y
+        deltaTheta = thetaTarget - self.theta
 
-            if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-                strafe = 100 * tanh(deltaX)
-                forward = 100 * tanh(deltaY)
-                rotate = 100 * tanhTurning(deltaTheta)
+        if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
+            strafe = 100 * tanh(deltaX)
+            forward = 100 * tanh(deltaY)
+            rotate = 100 * tanhTurning(deltaTheta)
 
-                FL.set_velocity(forward + strafe + rotate, PERCENT)
-                FR.set_velocity(forward - strafe - rotate, PERCENT)
-                BR.set_velocity(forward + strafe - rotate, PERCENT)
-                BL.set_velocity(forward - strafe + rotate, PERCENT)
+            FL.set_velocity(forward + strafe + rotate, PERCENT)
+            FR.set_velocity(forward - strafe - rotate, PERCENT)
+            BR.set_velocity(forward + strafe - rotate, PERCENT)
+            BL.set_velocity(forward - strafe + rotate, PERCENT)
 
-                FL.spin(FORWARD)
-                FR.spin(FORWARD)
-                BR.spin(FORWARD)
-                BL.spin(FORWARD)
-            else:
-                FL.stop()
-                FR.stop()
-                BR.stop()
-                BL.stop()
-    
+            FL.spin(FORWARD)
+            FR.spin(FORWARD)
+            BR.spin(FORWARD)
+            BL.spin(FORWARD)
+        else:
+            FL.stop()
+            FR.stop()
+            BR.stop()
+            BL.stop()
+
     def translation(self, x, y):
         pass
     
