@@ -34,24 +34,35 @@ import math
 brain=Brain()
 
 # Robot variables and configuration code
+
+# Default values
+
+motorVel = 75
+
+# Motor variables
 FL = Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
 FR = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
 BR = Motor(Ports.PORT3, GearSetting.RATIO_6_1, False)
 BL = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 
-flywheelLeft = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)
-flywheelRight = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
-flywheelMotors = MotorGroup(flywheelLeft, flywheelRight)
+F1 = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False) # motor closest to flywheel
+# F2 = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
+# FM = MotorGroup(flywheelLeft, flywheelRight)
+
+# Encoder variables
 
 leftEncoder = Encoder(brain.three_wire_port.a)
 rightEncoder = Encoder(brain.three_wire_port.c)
 auxEncoder = Encoder(brain.three_wire_port.e)
+
+# Controller variables
 
 controllerEnabled = True
 controller = Controller(PRIMARY)
 
 deadZoneVal = 0
 
+# Odometry variables
 
 L = 15.0
 B = 6.0
@@ -74,6 +85,9 @@ prevAuxPos = 0 # previous encoder value for back wheel
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
+
+
+# ---------------------------END OF VARIABLES---------------------------
 
 # Controller loop to handle controller readings
 def controllerLoop():
@@ -107,15 +121,14 @@ def axisCurve(x):
     return (x ** 2) / -100
 
 
-
-
+# DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
 
 def when_started1():
     Driver_Control()
 
+
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
 
-# create a function for handling the starting and stopping of all autonomous tasks
 def vexcode_auton_function():
     auton_task_0 = Thread( Autonomous_Control )
     while( competition.is_autonomous() and competition.is_enabled() ):
@@ -124,11 +137,12 @@ def vexcode_auton_function():
     FR.stop()
     BR.stop()
     BL.stop()
-    flywheelMotors.stop()
+    F1.stop()
     auton_task_0.stop()
 
 def Autonomous_Control():
     Default_Motor_Speed()
+
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
 
@@ -140,24 +154,18 @@ def vexcode_driver_function():
     FR.stop()
     BR.stop()
     BL.stop()
-    flywheelMotors.stop()
+    F1.stop()
     driver_control_task_0.stop()
 
 def Driver_Control():
     Default_Motor_Speed()
 
-# HELPER METHODS -------------- HELPER METHODS -------------- HELPER METHODS
-
-# def Step_1_Get_Ball():
-
-# def Step_2_Score_Goal():
-
 # ------------------------------------------------------------------------
 
 def Default_Motor_Speed():
-    # drivetrain.set_drive_velocity(motorVel, PERCENT)
-    # drivetrain.set_turn_velocity(motorVel, PERCENT)
-    # drivetrain.set_stopping(COAST)
+    drivetrain.set_drive_velocity(motorVel, VelocityUnits.PERCENT)
+    drivetrain.set_turn_velocity(motorVel, VelocityUnits.PERCENT)
+    drivetrain.set_stopping(COAST)
     pass
 
 
@@ -166,11 +174,11 @@ def Default_Motor_Speed():
 
 
 def throwTheThings():
-    flywheelMotors.set_velocity(100, PERCENT)
-    flywheelMotors.spin(REVERSE)
+    F1.set_velocity(100, PERCENT)
+    F1.spin(REVERSE)
 
     wait(1, SECONDS)
-    flywheelMotors.stop()
+    F1.stop()
 
 
 
@@ -226,42 +234,6 @@ def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
     
     return integral, previousError, motorVoltage
 
-# def wheelTravel(radians: float) -> float:
-#     return odomCircumference * (radians / (2 * math.pi))
-
-def cart2pol(x, y):
-    rho = math.sqrt(x**2 + y**2)
-    phi = math.atan2(y, x)
-    return(rho, phi)
-
-def pol2cart(rho, phi):
-    x = rho * math.cos(phi)
-    y = rho * math.sin(phi)
-    return(x, y)
-
-def getPosition() -> None:
-    global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
-    prevRightPos = currRightPos
-    prevLeftPos = currLeftPos
-    prevAuxPos = currAuxPos
-
-    currRightPos = rightEncoder.value()
-    currLeftPos = leftEncoder.value()
-    currAuxPos = auxEncoder.value()
-
-    dn1 = currLeftPos - prevLeftPos
-    dn2 = currRightPos - prevRightPos
-    dn3 = currAuxPos - prevAuxPos
-
-    dtheta = inchsPerTick * ((dn2 - dn1) / L)
-    dx = inchsPerTick * ((dn1 + dn2) / 2.0)
-    dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
-
-    theta = predictedΘ + (dtheta / 2.0)
-    predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
-    predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
-    predictedΘ += dtheta
-
 class MecDriveTrain:
     def __init__(self, FL, FR, BR, BL, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
         global currRightPos, currLeftPos, currAuxPos
@@ -279,15 +251,51 @@ class MecDriveTrain:
         self.x = 0
         self.y = 0
         self.theta = math.pi /  2
+        self.motorMode = BRAKE
 
         currRightPos = 0 # current encoder value for right wheel
         currLeftPos = 0 # current encoder value for left wheel
         currAuxPos = 0 # current encoder value for back wheel
+    
+    def startAuto(self, path):
+        atPosition = False
+        for step in path:
+            while not atPosition:
+                drivetrain.set_drive_velocity(path[step][3])
+                drivetrain.set_turn_velocity(path[step][4])
+                drivetrain.drive_to(path[step][0], step][1], step][2])
+                wait(10, MSEC)
 
-        odomThread = Thread(getPosition)
+    def updatePostion(self):
+        global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
+        prevRightPos = currRightPos
+        prevLeftPos = currLeftPos
+        prevAuxPos = currAuxPos
+
+        currRightPos = rightEncoder.value()
+        currLeftPos = leftEncoder.value()
+        currAuxPos = auxEncoder.value()
+
+        dn1 = currLeftPos - prevLeftPos
+        dn2 = currRightPos - prevRightPos
+        dn3 = currAuxPos - prevAuxPos
+
+        dtheta = inchsPerTick * ((dn2 - dn1) / L)
+        dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+        dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
+
+        theta = predictedΘ + (dtheta / 2.0)
+        predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
+        predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
+        predictedΘ += dtheta
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
         while True:
+            self.updatePostion()
+            self.translation()
+            self.updatePostion()
+            self.rotation()
+
             deltaX = xTarget - self.x
             deltaY = yTarget - self.y
             deltaTheta = thetaTarget - self.theta
@@ -311,23 +319,39 @@ class MecDriveTrain:
                 FR.stop()
                 BR.stop()
                 BL.stop()
+    
+    def translation(self, x, y):
+        pass
+    
+    def rotation(self, Θ):
+        pass
 
+    def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
+        self.driveVel = velocity
+
+    def set_turn_velocity(self, velocity, units=VelocityUnits.RPM):
+        self.turnVel = velocity
+    
+    def set_stopping(self, mode=BrakeType.COAST):
+        self.motorMode = mode
 
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
-drivetrain = MecDriveTrain(FL, FR, BR, BL, 4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
-
-controllerThread = Thread(controllerLoop())
-
-competition = Competition( vexcode_driver_function, vexcode_auton_function )
+# END OF METHODS
 
 # system event handlers
-controller_1.buttonL1.pressed(L1_Pressed)
-controller_1.buttonL2.pressed(L2_Pressed)
-controller_1.buttonR1.pressed(R1_Pressed)
-controller_1.buttonR2.pressed(R2_Pressed)
+controller.buttonL1.pressed(L1_Pressed)
+controller.buttonL2.pressed(L2_Pressed)
+controller.buttonR1.pressed(R1_Pressed)
+controller.buttonR2.pressed(R2_Pressed)
+
+drivetrain = MecDriveTrain(FL, FR, BR, BL, 4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
+
+controllerThread = Thread(controllerLoop)
+
+competition = Competition( vexcode_driver_function, vexcode_auton_function )
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
