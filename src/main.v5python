@@ -93,6 +93,9 @@ wait(30, MSEC)
 
 # ---------------------------END OF VARIABLES---------------------------
 
+
+# ---------------------------CONTROLLER LOOP---------------------------
+
 # Controller loop to handle controller readings
 def controllerLoop():
     global controllerEnabled, FL, FR, BL, BR, deadZoneVal
@@ -130,6 +133,12 @@ def axisCurve(x):
 def when_started1():
     Driver_Control()
 
+def Default_Motor_Speed():
+    drivetrain.set_drive_velocity(motorVel, VelocityUnits.PERCENT)
+    drivetrain.set_turn_velocity(motorVel, VelocityUnits.PERCENT)
+    drivetrain.set_stopping(COAST)
+    pass
+
 
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
 
@@ -164,44 +173,8 @@ def vexcode_driver_function():
 def Driver_Control():
     Default_Motor_Speed()
 
-# ------------------------------------------------------------------------
 
-def Default_Motor_Speed():
-    drivetrain.set_drive_velocity(motorVel, VelocityUnits.PERCENT)
-    drivetrain.set_turn_velocity(motorVel, VelocityUnits.PERCENT)
-    drivetrain.set_stopping(COAST)
-    pass
-
-
-
-
-
-
-def throwTheThings():
-    F1.set_velocity(100, PERCENT)
-    F1.spin(REVERSE)
-
-    wait(1, SECONDS)
-    F1.stop()
-
-
-
-
-
-
-
-
-def tanh(x): # x is in inches
-    n = 1.732
-    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
-
-def tanhTurning(x):
-    n = 23.2742
-    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
-
-
-
-
+# ---------------------------BUTTON FUNCTIONS---------------------------
 
 def L1_Pressed():
     pass
@@ -216,9 +189,47 @@ def R2_Pressed():
     pass
 
 
+def A_Pressed():
+    pass
+
+def B_Pressed():
+    pass
+
+def X_Pressed():
+    pass
+
+def Y_Pressed():
+    pass
 
 
+def Up_Pressed():
+    pass
 
+def Down_Pressed():
+    pass
+
+def Left_Pressed():
+    pass
+
+def Right_Pressed():
+    pass
+
+
+# ---------------------------HELPER FUNCTIONS---------------------------
+def throwTheThings():
+    F1.set_velocity(100, PERCENT)
+    F1.spin(REVERSE)
+
+    wait(1, SECONDS)
+    F1.stop()
+
+def tanh(x): # x is in inches
+    n = 1.732
+    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
+
+def tanhTurning(x):
+    n = 23.2742
+    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
 
 def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
     current = encoder.velocity(RPM)
@@ -237,6 +248,9 @@ def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
     if motorVoltage > 12: motorVoltage = 12
     
     return integral, previousError, motorVoltage
+
+
+# ---------------------------MECANUM DRIVETRAIN---------------------------
 
 class MecDriveTrain:
     def __init__(self, FL, FR, BR, BL, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
@@ -295,10 +309,10 @@ class MecDriveTrain:
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
         self.updatePostion()
-        self.translation(xTarget, yTarget)
-        wait(10, MSEC)
-        self.updatePostion()
-        self.rotation(thetaTarget)
+        # self.translation(xTarget, yTarget)
+        # wait(10, MSEC)
+        # self.updatePostion()
+        # self.rotation(thetaTarget)
 
         deltaX = xTarget - self.x
         deltaY = yTarget - self.y
@@ -323,6 +337,8 @@ class MecDriveTrain:
             FR.stop()
             BR.stop()
             BL.stop()
+        
+        wait(10, MSEC)
 
     def translation(self, x, y):
         pass
@@ -340,16 +356,26 @@ class MecDriveTrain:
         self.motorMode = mode
 
 
+# ---------------------------END OF METHODS---------------------------
+
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
-
-# END OF METHODS
 
 # system event handlers
 controller.buttonL1.pressed(L1_Pressed)
 controller.buttonL2.pressed(L2_Pressed)
 controller.buttonR1.pressed(R1_Pressed)
 controller.buttonR2.pressed(R2_Pressed)
+
+controller.buttonA.pressed(A_Pressed)
+controller.buttonB.pressed(B_Pressed)
+controller.buttonX.pressed(X_Pressed)
+controller.buttonY.pressed(Y_Pressed)
+
+controller.buttonUp.pressed(Up_Pressed)
+controller.buttonDown.pressed(Down_Pressed)
+controller.buttonLeft.pressed(Left_Pressed)
+controller.buttonRight.pressed(Right_Pressed)
 
 drivetrain = MecDriveTrain(FL, FR, BR, BL, 4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
 
