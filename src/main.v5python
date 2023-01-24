@@ -53,8 +53,8 @@ F1 = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False) # motor closest to flywhee
 
 # Encoder variables
 
-leftEncoder = Encoder(brain.three_wire_port.a)
-rightEncoder = Encoder(brain.three_wire_port.c)
+rightEncoder = Encoder(brain.three_wire_port.a)
+leftEncoder = Encoder(brain.three_wire_port.c)
 auxEncoder = Encoder(brain.three_wire_port.e)
 
 # Controller variables
@@ -66,8 +66,8 @@ deadZoneVal = 0
 
 # Odometry variables
 
-L = 15.0
-B = 6.0
+L = 13.5
+B = 5.0
 D = 2.75
 N = 90
 circumference = math.pi * D
@@ -75,7 +75,7 @@ inchsPerTick = circumference / N
 
 predictedX = 0.0
 predictedY = 0.0
-predictedΘ = 0.0
+predictedΘ = math.pi / 2
 
 currRightPos = 0 # current encoder value for right wheel
 currLeftPos = 0 # current encoder value for left wheel
@@ -102,6 +102,8 @@ wait(30, MSEC)
 def controllerLoop():
     global controllerEnabled, controller, FL, FR, BL, BR, deadZoneVal
     deadZoneVal = axisCurve(5)
+
+    printThread = Thread(printToController)
 
     while(True):
         if controllerEnabled:
@@ -131,6 +133,28 @@ def controllerLoop():
                 BL.stop()
             
             wait(10, MSEC)
+count = 0
+def printToController():
+    global predictedX, predictedY, predictedΘ
+    while(True):
+        # controller.screen.print("Right Encoder: ", rightEncoder.value())
+        # controller.screen.next_row()
+        # controller.screen.print("Left Encoder: ", -leftEncoder.value())
+        # controller.screen.next_row()
+        # controller.screen.print("Aux Encoder: ", auxEncoder.value())
+        # controller.screen.next_row()
+
+        controller.screen.print("Global X: ", predictedX)
+        controller.screen.next_row()
+        controller.screen.print("Global Y: ", predictedY)
+        controller.screen.next_row()
+        controller.screen.print("Global Θ: ", math.degrees(predictedΘ))
+        controller.screen.next_row()
+
+        wait(100, MSEC)
+
+        controller.screen.clear_screen()
+        controller.screen.set_cursor(1, 1)
 
 def axisCurve(x):
     if x > 0: return (x ** 2) / 100
@@ -202,6 +226,7 @@ def A_Pressed():
     pass
 
 def B_Pressed():
+    drivetrain.startAuto(path1)
     pass
 
 def X_Pressed():
@@ -212,6 +237,7 @@ def Y_Pressed():
 
 
 def Up_Pressed():
+    # goBackToOG()
     pass
 
 def Down_Pressed():
@@ -225,6 +251,7 @@ def Right_Pressed():
 
 
 # ---------------------------HELPER FUNCTIONS---------------------------
+
 def throwTheThings():
     F1.set_velocity(100, PERCENT)
     F1.spin(REVERSE)
@@ -286,38 +313,40 @@ class MecDriveTrain:
     
     def startAuto(self, path):
         odomThread = Thread(self.updatePosition)
-        atPosition = False
-        for step in path:
-            while not atPosition:
-                drivetrain.set_drive_velocity(path[step][3])
-                drivetrain.set_turn_velocity(path[step][4])
-                drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
-                wait(10, MSEC)
+
+        # atPosition = False
+        # for step in path:
+        #     while not atPosition:
+        #         drivetrain.set_drive_velocity(path[step][3])
+        #         drivetrain.set_turn_velocity(path[step][4])
+        #         drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
+        #         wait(10, MSEC)
 
     def updatePosition(self):
         global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
-        prevRightPos = currRightPos
-        prevLeftPos = currLeftPos
-        prevAuxPos = currAuxPos
+        while(True):
+            prevRightPos = currRightPos
+            prevLeftPos = currLeftPos
+            prevAuxPos = currAuxPos
 
-        currRightPos = rightEncoder.value()
-        currLeftPos = leftEncoder.value()
-        currAuxPos = auxEncoder.value()
+            currRightPos = -rightEncoder.value()
+            currLeftPos = -leftEncoder.value()
+            currAuxPos = -auxEncoder.value()
 
-        dn1 = currLeftPos - prevLeftPos
-        dn2 = currRightPos - prevRightPos
-        dn3 = currAuxPos - prevAuxPos
+            dn1 = currLeftPos - prevLeftPos
+            dn2 = currRightPos - prevRightPos
+            dn3 = currAuxPos - prevAuxPos
 
-        dtheta = inchsPerTick * ((dn2 - dn1) / L)
-        dx = inchsPerTick * ((dn1 + dn2) / 2.0)
-        dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
+            dtheta = inchsPerTick * ((dn2 - dn1) / L)
+            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
 
-        theta = predictedΘ + (dtheta / 2.0)
-        predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
-        predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
-        predictedΘ += dtheta
+            theta = predictedΘ + (dtheta / 2.0)
+            predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
+            predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
+            predictedΘ += dtheta
 
-        wait(10, MSEC)
+            wait(10, MSEC)
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
         self.updatePosition()
