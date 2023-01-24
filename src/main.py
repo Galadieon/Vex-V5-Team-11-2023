@@ -1,21 +1,3 @@
-# left_motor_a = Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
-# left_motor_b = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
-# left_drive_smart = MotorGroup(left_motor_a, left_motor_b)
-# right_motor_a = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
-# right_motor_b = Motor(Ports.PORT4, GearSetting.RATIO_6_1, True)
-# right_drive_smart = MotorGroup(right_motor_a, right_motor_b)
-# drivetrain = DriveTrain(left_drive_smart, right_drive_smart, 319.19, 381, 254, MM, 0.42857142857142855)
-# encoder_a = Encoder(brain.three_wire_port.a)
-# encoder_c = Encoder(brain.three_wire_port.c)
-# encoder_e = Encoder(brain.three_wire_port.e)
-# motor_5 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
-# distance_6 = Distance(Ports.PORT6)
-# motor_group_7_motor_a = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
-# motor_group_7_motor_b = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
-# motor_group_7 = MotorGroup(motor_group_7_motor_a, motor_group_7_motor_b)
-# controller_1 = Controller(PRIMARY)
-# range_finder_g = Sonar(brain.three_wire_port.g)
-
 # ------------------------------------------
 # 
 # 	Project:      Mecanum Robot Program
