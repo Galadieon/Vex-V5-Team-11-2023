@@ -105,13 +105,13 @@ def controllerLoop():
         if controllerEnabled:
             forward = axisCurve(controller.axis3.position())
             strafe  = axisCurve(controller.axis4.position())
-            rotate  = axisCurve(controller.axis1.position())
+            turn  = axisCurve(controller.axis1.position())
 
-            if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(rotate) > deadZoneVal:
-                FL.set_velocity(forward + strafe + rotate, PERCENT)
-                FR.set_velocity(forward - strafe - rotate, PERCENT)
-                BR.set_velocity(forward + strafe - rotate, PERCENT)
-                BL.set_velocity(forward - strafe + rotate, PERCENT)
+            if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                FL.set_velocity(forward + strafe + turn, PERCENT)
+                FR.set_velocity(forward - strafe - turn, PERCENT)
+                BR.set_velocity(forward + strafe - turn, PERCENT)
+                BL.set_velocity(forward - strafe + turn, PERCENT)
 
                 FL.spin(FORWARD)
                 FR.spin(FORWARD)
@@ -231,9 +231,7 @@ def tanhTurning(x):
     n = 23.2742
     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
 
-def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
-    current = encoder.velocity(RPM)
-    
+def PID(target: float, current: float, integral: float, previousError: float, minimumVoltage: int, Kp: float, Ki: float, Kd: float):
     error = target - current
     
     integral += error
@@ -266,17 +264,32 @@ class MecDriveTrain:
         self.gearRatio = gearRatio
         self.driveVel = 25
         self.turnVel = 25
-        self.x = 0
-        self.y = 0
-        self.theta = math.pi /  2
         self.motorMode = BRAKE
+
+        self.strafeIntegral = 0
+        self.strafePrevE = 0
+        self.strafeKp = 1
+        self.strafeKi = 0
+        self.strafeKd = 0
+
+        self.forwardIntegral = 0
+        self.forwardPrevE = 0
+        self.forwardKp = 1
+        self.forwardKi = 0
+        self.forwardKd = 0
+
+        self.turnIntegral = 0
+        self.turnPrevE = 0
+        self.turnKp = 1
+        self.turnKi = 0
+        self.turnKd = 0
 
         currRightPos = 0 # current encoder value for right wheel
         currLeftPos = 0 # current encoder value for left wheel
         currAuxPos = 0 # current encoder value for back wheel
     
     def startAuto(self, path):
-        odomThread = Thread(updatePosition)
+        odomThread = Thread(self.updatePosition)
         atPosition = False
         for step in path:
             while not atPosition:
@@ -285,7 +298,7 @@ class MecDriveTrain:
                 drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
                 wait(10, MSEC)
 
-    def updatePostion(self):
+    def updatePosition(self):
         global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
         prevRightPos = currRightPos
         prevLeftPos = currLeftPos
@@ -311,25 +324,30 @@ class MecDriveTrain:
         wait(10, MSEC)
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
-        self.updatePostion()
+        # self.updatePosition()
         # self.translation(xTarget, yTarget)
         # wait(10, MSEC)
-        # self.updatePostion()
+        # self.updatePosition()
         # self.rotation(thetaTarget)
 
-        deltaX = xTarget - self.x
-        deltaY = yTarget - self.y
-        deltaTheta = thetaTarget - self.theta
+        deltaX = xTarget - predictedX
+        deltaY = yTarget - predictedY
+        deltaTheta = thetaTarget - predictedΘ
 
         if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-            strafe = 100 * tanh(deltaX)
-            forward = 100 * tanh(deltaY)
-            rotate = 100 * tanhTurning(deltaTheta)
+            self.strafePrevE, self.strafeIntegral, strafe = PID(xTarget, predictedX, self.strafeIntegral, self.strafePrevE, 0, self.strafeKp, self.strafeKi, self.strafeKd)
 
-            FL.set_velocity(forward + strafe + rotate, PERCENT)
-            FR.set_velocity(forward - strafe - rotate, PERCENT)
-            BR.set_velocity(forward + strafe - rotate, PERCENT)
-            BL.set_velocity(forward - strafe + rotate, PERCENT)
+            self.forwardPrevE, self.forwardIntegral, forward = PID(yTarget, predictedY, self.forwardIntegral, self.forwardPrevE, 0, self.forwardKp, self.forwardKi, self.forwardKd)
+
+            self.turnPrevE, self.turnIntegral, turn = PID(thetaTarget, predictedΘ, self.turnIntegral, self.turnPrevE, 0, self.turnKp, self.turnKi, self.turnKd)
+            # strafe = 100 * tanh(deltaX)
+            # forward = 100 * tanh(deltaY)
+            # turn = 100 * tanhTurning(deltaTheta)
+
+            FL.set_velocity(forward + strafe + turn, PERCENT)
+            FR.set_velocity(forward - strafe - turn, PERCENT)
+            BR.set_velocity(forward + strafe - turn, PERCENT)
+            BL.set_velocity(forward - strafe + turn, PERCENT)
 
             FL.spin(FORWARD)
             FR.spin(FORWARD)
@@ -340,8 +358,6 @@ class MecDriveTrain:
             FR.stop()
             BR.stop()
             BL.stop()
-        
-        wait(10, MSEC)
 
     def translation(self, x, y):
         pass
