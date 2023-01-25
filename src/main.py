@@ -48,7 +48,7 @@ deadZoneVal = 0
 
 # Odometry variables
 
-L = 13.5
+L = 13.25
 B = 5.0
 D = 2.75
 N = 360
@@ -69,7 +69,10 @@ prevAuxPos = 0 # previous encoder value for back wheel
 
 # Autonomous paths
 
-path1 = [[0, 0, math.pi/2]]
+path1 = [
+         [0, 0, math.pi/2, 25, 25],
+         [0, 5, math.pi/2, 25, 25],
+         [0, 0, math.pi/2, 25, 25] ]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -83,7 +86,7 @@ wait(30, MSEC)
 # Controller loop to handle controller readings
 def controllerLoop():
     global controllerEnabled, controller, FL, FR, BL, BR, deadZoneVal
-    deadZoneVal = axisCurve(5)
+    deadZoneVal = axisCurve(3)
 
     printThread = Thread(printToController)
 
@@ -115,7 +118,7 @@ def controllerLoop():
                 BL.stop()
             
             wait(10, MSEC)
-count = 0
+
 def printToController():
     global predictedX, predictedY, predictedΘ
     while(True):
@@ -139,8 +142,9 @@ def printToController():
         controller.screen.set_cursor(1, 1)
 
 def axisCurve(x):
-    if x > 0: return (x ** 2) / 100
-    return (x ** 2) / -100
+    return (x ** 3) / 10000
+    # if x > 0: return (x ** 2) / 100
+    # return (x ** 2) / -100
 
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
@@ -296,16 +300,16 @@ class MecDriveTrain:
     def startAuto(self, path):
         odomThread = Thread(self.updatePosition)
 
-        # atPosition = False
-        # for step in path:
-        #     while not atPosition:
-        #         drivetrain.set_drive_velocity(path[step][3])
-        #         drivetrain.set_turn_velocity(path[step][4])
-        #         drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
-        #         wait(10, MSEC)
+        atPosition = False
+        for step in path:
+            while not atPosition:
+                drivetrain.set_drive_velocity(step[3])
+                drivetrain.set_turn_velocity(step[4])
+                drivetrain.drive_to(step[0], step[1], step[2])
+                wait(10, MSEC)
 
     def updatePosition(self):
-        global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
+        global inchsPerTick, leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
         while(True):
             prevRightPos = currRightPos
             prevLeftPos = currLeftPos
@@ -326,19 +330,16 @@ class MecDriveTrain:
             theta = predictedΘ + (dtheta / 2.0)
             predictedX += -dx * math.cos(-theta) + dy * math.sin(-theta)
             predictedY += -dx * math.sin(-theta) - dy * math.cos(-theta)
-            predictedΘ += dtheta
+            predictedΘ += -dtheta
 
             wait(10, MSEC)
 
     def drive_to(self, xTarget, yTarget, thetaTarget):
-        self.updatePosition()
         # self.translation(xTarget, yTarget)
         # wait(10, MSEC)
-        # self.updatePosition()
         # self.rotation(thetaTarget)
 
-        deltaX = xTarget - self.x
-        deltaY = yTarget - self.y
+        deltaX, deltaY = calcDeltaLocalXY(XTarget, yTarget)
         deltaTheta = thetaTarget - self.theta
 
         if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
