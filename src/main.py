@@ -51,7 +51,7 @@ deadZoneVal = 0
 L = 13.5
 B = 5.0
 D = 2.75
-N = 90
+N = 360
 circumference = math.pi * D
 inchsPerTick = circumference / N
 
@@ -119,11 +119,11 @@ count = 0
 def printToController():
     global predictedX, predictedY, predictedΘ
     while(True):
-        # controller.screen.print("Right Encoder: ", rightEncoder.value())
+        # controller.screen.print("Right Encoder: ", currRightPos)
         # controller.screen.next_row()
-        # controller.screen.print("Left Encoder: ", -leftEncoder.value())
+        # controller.screen.print("Left Encoder: ", currLeftPos)
         # controller.screen.next_row()
-        # controller.screen.print("Aux Encoder: ", auxEncoder.value())
+        # controller.screen.print("Aux Encoder: ", currAuxPos)
         # controller.screen.next_row()
 
         controller.screen.print("Global X: ", predictedX)
@@ -312,7 +312,7 @@ class MecDriveTrain:
             prevAuxPos = currAuxPos
 
             currRightPos = -rightEncoder.value()
-            currLeftPos = -leftEncoder.value()
+            currLeftPos = leftEncoder.value()
             currAuxPos = -auxEncoder.value()
 
             dn1 = currLeftPos - prevLeftPos
