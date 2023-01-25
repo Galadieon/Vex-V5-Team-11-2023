@@ -286,23 +286,23 @@ class MecDriveTrain:
         self.turnVel = 25
         self.x = 0
         self.y = 0
-        self.theta = math.pi /  2
+        self.Θ = math.pi /  2
         self.motorMode = BRAKE
 
-        currRightPos = 0 # current encoder value for right wheel
-        currLeftPos = 0 # current encoder value for left wheel
-        currAuxPos = 0 # current encoder value for back wheel
+        currRightPos = 0 # current encoder raw tick value for right wheel
+        currLeftPos = 0 # current encoder raw tick value for left wheel
+        currAuxPos = 0 # current encoder raw tick value for back wheel
     
     def startAuto(self, path):
         odomThread = Thread(self.updatePosition)
 
-        # atPosition = False
-        # for step in path:
-        #     while not atPosition:
-        #         drivetrain.set_drive_velocity(path[step][3])
-        #         drivetrain.set_turn_velocity(path[step][4])
-        #         drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
-        #         wait(10, MSEC)
+        atPosition = False
+        for step in path:
+            while not atPosition:
+                drivetrain.set_drive_velocity(path[step][3])
+                drivetrain.set_turn_velocity(path[step][4])
+                drivetrain.drive_to(path[step][0], path[step][1], path[step][2])
+                wait(10, MSEC)
 
     def updatePosition(self):
         global leftEncoder, rightEncoder, auxEncoder, currRightPos, currLeftPos, currAuxPos, prevRightPos, prevLeftPos, prevAuxPos, predictedX, predictedY, predictedΘ
@@ -330,21 +330,18 @@ class MecDriveTrain:
 
             wait(10, MSEC)
 
-    def drive_to(self, xTarget, yTarget, thetaTarget):
-        self.updatePosition()
+    def drive_to(self, xTarget, yTarget, ΘTarget):
         # self.translation(xTarget, yTarget)
         # wait(10, MSEC)
-        # self.updatePosition()
-        # self.rotation(thetaTarget)
+        # self.rotation(ΘTarget)
+        # wait(10, MSEC)
+        deltaX, deltaY = self.calcLocalXYH(xTarget, yTarget, ΘTarget)
+        deltaΘ = ΘTarget - self.Θ
 
-        deltaX = xTarget - self.x
-        deltaY = yTarget - self.y
-        deltaTheta = thetaTarget - self.theta
-
-        if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
+        if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaΘ) > 0.035:
             strafe = 100 * tanh(deltaX)
             forward = 100 * tanh(deltaY)
-            rotate = 100 * tanhTurning(deltaTheta)
+            rotate = 100 * tanhTurning(deltaΘ)
 
             FL.set_velocity(forward + strafe + rotate, PERCENT)
             FR.set_velocity(forward - strafe - rotate, PERCENT)
@@ -362,6 +359,12 @@ class MecDriveTrain:
             BL.stop()
         
         wait(10, MSEC)
+
+    def calcLocalXYH(self, xTarget, yTarget, ΘTarget):
+        n = 
+        Θd = math.atan((yTarget - self.y) / (xTarget - self.x))
+        φ = Θd - self.Θ + (n * (math.pi / 2))
+        return dx, dy
 
     def translation(self, x, y):
         pass
