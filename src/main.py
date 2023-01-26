@@ -123,6 +123,7 @@ def Autonomous_Control():
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
 
 def vexcode_driver_function():
+    global drivetrain, F1
     driver_control_task_0 = Thread( Driver_Control )
     while( competition.is_driver_control() and competition.is_enabled() ):
         wait( 10, MSEC )
@@ -153,6 +154,7 @@ def A_Pressed():
     pass
 
 def B_Pressed():
+    global drivetrain, path1
     drivetrain.startAuto(path1)
     pass
 
@@ -338,7 +340,10 @@ class MecDriveTrain:
         self.turnVel = velocity
     
     def set_stopping(self, mode=BrakeType.COAST):
-        self.motorMode = mode
+        self.FL.set_stopping(mode)
+        self.FR.set_stopping(mode)
+        self.BR.set_stopping(mode)
+        self.BL.set_stopping(mode)
     
     def calcLocalXY(self, xTarget, yTarget):
         distance = math.sqrt(math.pow(xTarget - self.x, 2) + math.pow(yTarget - self.y, 2))
