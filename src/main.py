@@ -59,7 +59,7 @@ def controllerLoop():
             rotate  = axisCurve(controller.axis1.position())
 
             if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(rotate) > deadZoneVal:
-                drivetrain.drive(forward, strafe, rotate)
+                drivetrain.drive(forward * drivetrain.driveVel, strafe * drivetrain.driveVel, rotate * drivetrain.turnVel)
             else:
                 drivetrain.stop()
         
@@ -141,13 +141,15 @@ def L1_Pressed():
     pass
 
 def L2_Pressed():
-    pass
+    if drivetrain.turnVel == 100: drivetrain.set_turn_velocity(50)
+    else: drivetrain.set_turn_velocity(100)
 
 def R1_Pressed():
     pass
 
 def R2_Pressed():
-    pass
+    if drivetrain.driveVel == 100: drivetrain.set_drive_velocity(50)
+    else: drivetrain.set_drive_velocity(100)
 
 
 def A_Pressed():
@@ -156,7 +158,6 @@ def A_Pressed():
 def B_Pressed():
     global drivetrain, path1
     drivetrain.startAuto(path1)
-    pass
 
 def X_Pressed():
     pass
@@ -241,8 +242,8 @@ class MecDriveTrain:
         self.wheelBase = wheelBase
         self.unit = unit
         self.gearRatio = gearRatio
-        self.driveVel = 25
-        self.turnVel = 25
+        self.driveVel = 100
+        self.turnVel = 100
         self.x = 0
         self.y = 0
         self.Θ = math.pi /  2
@@ -294,14 +295,14 @@ class MecDriveTrain:
 
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
-    def drive_to(self, xTarget, yTarget, ΘTarget, vel):
+    def drive_to(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
         if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-            forward = 100 * tanh(deltaY, vel)
-            strafe  = 100 * tanh(deltaX, vel)
-            rotate  = 100 * tanhTurning(deltaTheta, vel)
+            forward = 100 * tanh(deltaY, driveVel / 100)
+            strafe  = 100 * tanh(deltaX, driveVel / 100)
+            rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
             
             self.drive(forward, strafe, rotate)
         else:
