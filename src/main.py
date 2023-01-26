@@ -34,10 +34,10 @@ controller = Controller(PRIMARY)
 
 # Autonomous paths
 
-#           x,    y,              Θ,    vel(%)
-path1 = [ [ 0,    0,      math.pi/2,      25 ],
-          [ 0,    5,      math.pi/2,      25 ],
-          [ 0,    0,      math.pi/2,      25 ] ]
+#           x,    y,              Θ,  driveVel,  turnVel
+path1 = [ [ 0,    0,      math.pi/2,        25,       25 ],
+          [ 0,    5,      math.pi/2,        25,       25 ],
+          [ 0,    0,      math.pi/2,        25,       25 ] ]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -153,11 +153,13 @@ def R2_Pressed():
 
 
 def A_Pressed():
-    pass
-
-def B_Pressed():
     global drivetrain, path1
     drivetrain.startAuto(path1)
+
+def B_Pressed():
+    if drivetrain.mode == BRAKE: drivetrain.set_stopping(HOLD)
+    elif drivetrain.mode == HOLD: drivetrain.set_stopping(COAST)
+    elif drivetrain.mode == COAST: drivetrain.set_stopping(BRAKE)
 
 def X_Pressed():
     pass
@@ -260,6 +262,7 @@ class MecDriveTrain:
     # ---------------------------AUTO AND ODOMETRY---------------------------
     
     def startAuto(self, path):
+        drivetrain.set_stopping(HOLD)
         odomThread = Thread(self.updatePosition)
 
         atPosition = False
@@ -341,6 +344,7 @@ class MecDriveTrain:
         self.turnVel = velocity
     
     def set_stopping(self, mode=BrakeType.COAST):
+        self.motorMode = mode
         self.FL.set_stopping(mode)
         self.FR.set_stopping(mode)
         self.BR.set_stopping(mode)
