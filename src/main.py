@@ -23,37 +23,14 @@ motorVel = 75
 
 # BAD PORT: 5, 6, 7, 8, 11, 12
 
-# Motor variables
-FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
-BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
-
 F1 = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False) # motor closest to flywheel
 # F2 = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
 # FM = MotorGroup(flywheelLeft, flywheelRight)
-
-# Encoder variables
-
-rightEncoder = Encoder(brain.three_wire_port.a)
-leftEncoder = Encoder(brain.three_wire_port.c)
-auxEncoder = Encoder(brain.three_wire_port.e)
 
 # Controller variables
 
 controllerEnabled = True
 controller = Controller(PRIMARY)
-
-deadZoneVal = 0
-
-# Odometry variables
-
-L = 13.25
-B = 5.0
-D = 2.75
-N = 360
-circumference = math.pi * D
-inchsPerTick = circumference / N
 
 # Autonomous paths
 
@@ -70,7 +47,7 @@ wait(30, MSEC)
 
 # Controller loop to handle controller readings
 def controllerLoop():
-    global controllerEnabled, controller, FL, FR, BL, BR, deadZoneVal
+    global controllerEnabled, controller, drivetrain
     deadZoneVal = axisCurve(3)
 
     printThread = Thread(printToController)
@@ -122,22 +99,20 @@ def when_started1():
     Driver_Control()
 
 def Default_Motor_Speed():
+    global motorVel, drivetrain
     drivetrain.set_drive_velocity(motorVel, VelocityUnits.PERCENT)
     drivetrain.set_turn_velocity(motorVel, VelocityUnits.PERCENT)
     drivetrain.set_stopping(COAST)
-    pass
 
 
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
 
 def vexcode_auton_function():
+    global drivetrain, F1
     auton_task_0 = Thread( Autonomous_Control )
     while( competition.is_autonomous() and competition.is_enabled() ):
         wait( 10, MSEC )
-    FL.stop()
-    FR.stop()
-    BR.stop()
-    BL.stop()
+    drivetrain.stop()
     F1.stop()
     auton_task_0.stop()
 
@@ -151,10 +126,7 @@ def vexcode_driver_function():
     driver_control_task_0 = Thread( Driver_Control )
     while( competition.is_driver_control() and competition.is_enabled() ):
         wait( 10, MSEC )
-    FL.stop()
-    FR.stop()
-    BR.stop()
-    BL.stop()
+    drivetrain.stop()
     F1.stop()
     driver_control_task_0.stop()
 
@@ -208,6 +180,7 @@ def Right_Pressed():
 # ---------------------------HELPER FUNCTIONS---------------------------
 
 def throwTheThings():
+    global F1
     F1.set_velocity(100, PERCENT)
     F1.spin(REVERSE)
 
@@ -244,11 +217,23 @@ def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
 # ---------------------------MECANUM DRIVETRAIN---------------------------
 
 class MecDriveTrain:
-    def __init__(self, FL, FR, BR, BL, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
-        self.FL = FL
-        self.FR = FR
-        self.BR = BR
-        self.BL = BL
+    def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
+        self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+        self.FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
+        self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
+        self.BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
+        
+        self.rightEncoder = Encoder(brain.three_wire_port.a)
+        self.leftEncoder = Encoder(brain.three_wire_port.c)
+        self.auxEncoder = Encoder(brain.three_wire_port.e)
+        
+        self.L = 13.25
+        self.B = 5.0
+        self.D = 2.75
+        self.N = 360
+        self.circumference = math.pi * self.D
+        self.inchsPerTick = self.circumference / self.N
+
         self.wheelTravel = wheelTravel
         self.trackWidth = trackWidth
         self.wheelBase = wheelBase
@@ -281,23 +266,22 @@ class MecDriveTrain:
                 wait(10, MSEC)
 
     def updatePosition(self):
-        global inchsPerTick, leftEncoder, rightEncoder, auxEncoder
         while(True):
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
             self.prevAuxVal = self.currAuxVal
 
-            self.currRightVal = -rightEncoder.value()
-            self.currLeftVal = leftEncoder.value()
-            self.currAuxVal = -auxEncoder.value()
+            self.currRightVal = -self.rightEncoder.value()
+            self.currLeftVal = self.leftEncoder.value()
+            self.currAuxVal = -self.auxEncoder.value()
 
             dn1 = self.currLeftVal - self.prevLeftVal
             dn2 = self.currRightVal - self.prevRightVal
             dn3 = self.currAuxVal - self.prevAuxVal
 
-            dtheta = inchsPerTick * ((dn2 - dn1) / L)
-            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
-            dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (B / L)))
+            dtheta = self.inchsPerTick * ((dn2 - dn1) / self.L)
+            dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) * (self.B / self.L)))
 
             theta = self.Θ + (dtheta / 2.0)
             self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
@@ -309,10 +293,6 @@ class MecDriveTrain:
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
     def drive_to(self, xTarget, yTarget, ΘTarget, vel):
-        # self.translation(xTarget, yTarget)
-        # wait(10, MSEC)
-        # self.rotation(ΘTarget)
-
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
@@ -328,26 +308,26 @@ class MecDriveTrain:
         wait(10, MSEC)
     
     def drive(self, forward, strafe, rotate):
-        FL.set_velocity( forward + strafe + rotate, PERCENT)
-        FR.set_velocity(-forward + strafe + rotate, PERCENT)
-        BR.set_velocity(-forward - strafe + rotate, PERCENT)
-        BL.set_velocity( forward - strafe + rotate, PERCENT)
+        self.FL.set_velocity( forward + strafe + rotate, PERCENT)
+        self.FR.set_velocity(-forward + strafe + rotate, PERCENT)
+        self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
+        self.BL.set_velocity( forward - strafe + rotate, PERCENT)
 
-        # FL.set_velocity(forward + strafe + rotate, PERCENT)
-        # FR.set_velocity(forward - strafe - rotate, PERCENT)
-        # BR.set_velocity(forward + strafe - rotate, PERCENT)
-        # BL.set_velocity(forward - strafe + rotate, PERCENT)
+        # self.FL.set_velocity(forward + strafe + rotate, PERCENT)
+        # self.FR.set_velocity(forward - strafe - rotate, PERCENT)
+        # self.BR.set_velocity(forward + strafe - rotate, PERCENT)
+        # self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
-        FL.spin(FORWARD)
-        FR.spin(FORWARD)
-        BR.spin(FORWARD)
-        BL.spin(FORWARD)
+        self.FL.spin(FORWARD)
+        self.FR.spin(FORWARD)
+        self.BR.spin(FORWARD)
+        self.BL.spin(FORWARD)
     
     def stop(self):
-        FL.stop()
-        FR.stop()
-        BR.stop()
-        BL.stop()
+        self.FL.stop()
+        self.FR.stop()
+        self.BR.stop()
+        self.BL.stop()
     
     # ---------------------------HELPER FUNCTIONS---------------------------
 
@@ -407,7 +387,7 @@ controller.buttonDown.pressed(Down_Pressed)
 controller.buttonLeft.pressed(Left_Pressed)
 controller.buttonRight.pressed(Right_Pressed)
 
-drivetrain = MecDriveTrain(FL, FR, BR, BL, 4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
+drivetrain = MecDriveTrain(4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
 
 controllerThread = Thread(controllerLoop)
 
