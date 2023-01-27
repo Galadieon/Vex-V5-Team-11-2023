@@ -304,8 +304,6 @@ class MecDriveTrain:
             self.drive(forward, strafe, rotate)
         else:
             self.stop()
-        
-        wait(10, MSEC)
     
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity( forward + strafe + rotate, PERCENT)
