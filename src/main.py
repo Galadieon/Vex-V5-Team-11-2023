@@ -164,8 +164,7 @@ def Y_Pressed():
 
 
 def Up_Pressed():
-    # goBackToOG()
-    pass
+    drivetrain.goBackToOG()
 
 def Down_Pressed():
     pass
@@ -323,6 +322,9 @@ class MecDriveTrain:
         self.FR.spin(FORWARD)
         self.BR.spin(FORWARD)
         self.BL.spin(FORWARD)
+
+    def goBackToOG(self):
+        self.drive_to(0, 0, math.pi/2, 25, 25)
     
     def stop(self):
         self.FL.stop()
