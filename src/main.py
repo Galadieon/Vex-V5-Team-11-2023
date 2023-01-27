@@ -31,9 +31,8 @@ controller = Controller(PRIMARY)
 # Autonomous paths
 
 #           x,    y,              Θ,  driveVel,  turnVel
-path1 = [ [ 0,    0,      math.pi/2,        25,       25 ],
-          [ 0,    5,      math.pi/2,        25,       25 ],
-          [ 0,    0,      math.pi/2,        25,       25 ] ]
+path1 = [ [ -1,    10,      math.pi/2,        50,       50 ]]
+        #   [ 0,    0,      math.pi/2,        25,       25 ] ]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -44,7 +43,7 @@ wait(30, MSEC)
 # Controller loop to handle controller readings
 def controllerLoop():
     global controllerEnabled, controller, drivetrain
-    deadZoneVal = axisCurve(3)
+    deadZoneVal = axisCurve(1)
 
     printThread = Thread(printToController)
 
@@ -55,7 +54,7 @@ def controllerLoop():
             rotate  = axisCurve(controller.axis1.position())
 
             if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(rotate) > deadZoneVal:
-                drivetrain.drive(forward * drivetrain.driveVel, strafe * drivetrain.driveVel, rotate * drivetrain.turnVel)
+                drivetrain.drive(forward * (drivetrain.driveVel/100), strafe * (drivetrain.driveVel/100), rotate * (drivetrain.turnVel/100))
             else:
                 drivetrain.stop()
         
@@ -71,17 +70,17 @@ def printToController():
         # controller.screen.print("Aux Encoder: ", currAuxVal)
         # controller.screen.next_row()
 
-        controller.screen.print("Global X: ", drivetrain.x)
-        controller.screen.next_row()
-        controller.screen.print("Global Y: ", drivetrain.y)
-        controller.screen.next_row()
-        controller.screen.print("Global Θ: ", math.degrees(drivetrain.Θ))
-        controller.screen.next_row()
+        # controller.screen.print("Global X: ", drivetrain.x)
+        # controller.screen.next_row()
+        # controller.screen.print("Global Y: ", drivetrain.y)
+        # controller.screen.next_row()
+        # controller.screen.print("Global Θ: ", math.degrees(drivetrain.Θ))
+        # controller.screen.next_row()
 
         wait(100, MSEC)
 
-        controller.screen.clear_screen()
-        controller.screen.set_cursor(1, 1)
+        # controller.screen.clear_screen()
+        # controller.screen.set_cursor(1, 1)
 
 def axisCurve(x):
     return (x ** 3) / 10000
@@ -98,7 +97,7 @@ def Default_Motor_Speed():
     global drivetrain
     drivetrain.set_drive_velocity(100, VelocityUnits.PERCENT)
     drivetrain.set_turn_velocity(100, VelocityUnits.PERCENT)
-    drivetrain.set_stopping(BRAKE)
+    drivetrain.set_stopping(COAST)
 
 
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
@@ -113,6 +112,7 @@ def vexcode_auton_function():
     auton_task_0.stop()
 
 def Autonomous_Control():
+    brain.screen.print("Starting auto")
     drivetrain.startAuto(path1)
 
 
@@ -186,13 +186,24 @@ def throwTheThings():
     wait(1, SECONDS)
     F1.stop()
 
+
+def tanh(x): # x is in inches
+    n = 1.732
+    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
+
 def tanh(x, max): # x is in inches
     n = 1.732
     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
 
+
+def tanhTurning(x): # x is in radians
+    n = 23.2742 # seems a little too large for turn motor value, try 3
+    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
+
 def tanhTurning(x, max): # x is in radians
     n = 23.2742 # seems a little too large for turn motor value, try 3
     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
+
 
 def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
     current = encoder.velocity(RPM)
@@ -238,12 +249,12 @@ class MecDriveTrain:
         self.wheelBase = wheelBase
         self.unit = unit
         self.gearRatio = gearRatio
-        self.driveVel = 100
-        self.turnVel = 100
+        self.driveVel = 0
+        self.turnVel = 0
         self.x = 0
         self.y = 0
         self.Θ = math.pi /  2
-        self.motorMode = BRAKE
+        self.motorMode = COAST
 
         self.currRightVal = 0 # current encoder value for right wheel
         self.currLeftVal = 0 # current encoder value for left wheel
@@ -256,15 +267,20 @@ class MecDriveTrain:
     # ---------------------------AUTO AND ODOMETRY---------------------------
     
     def startAuto(self, path):
-        drivetrain.set_stopping(HOLD)
+        drivetrain.set_stopping(COAST)
         odomThread = Thread(self.updatePosition)
+
+        count = 0
 
         atPosition = False
         for step in path:
             while not atPosition:
-                drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
-                wait(10, MSEC)
-
+                count += 1
+                controller.screen.print(count)
+                atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
+                controller.screen.clear_screen()
+                controller.screen.set_cursor(1, 1)
+    
     def updatePosition(self):
         while(True):
             self.prevRightVal = self.currRightVal
@@ -297,13 +313,30 @@ class MecDriveTrain:
         deltaTheta = ΘTarget - self.Θ
 
         if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-            forward = 100 * tanh(deltaY, driveVel / 100)
-            strafe  = 100 * tanh(deltaX, driveVel / 100)
-            rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
+            forward = 100 * tanh(deltaY)
+            strafe  = 100 * tanh(deltaX)
+            rotate  = 100 * tanhTurning(deltaTheta)
+            
+            # forward = 100 * tanh(deltaY, driveVel / 100)
+            # strafe  = 100 * tanh(deltaX, driveVel / 100)
+            # rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
+
+            
             
             self.drive(forward, strafe, rotate)
+            controller.screen.print(forward)
+            controller.screen.next_row()
+            controller.screen.print(strafe)
+            controller.screen.next_row()
+            controller.screen.print(rotate)
+            controller.screen.next_row()
+
+            wait(0.5, SECONDS)
         else:
             self.stop()
+            return True
+        
+        return False
     
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity( forward + strafe + rotate, PERCENT)
@@ -331,6 +364,31 @@ class MecDriveTrain:
         self.BL.stop()
     
     # ---------------------------HELPER FUNCTIONS---------------------------
+    
+    def calcLocalXY(self, xTarget, yTarget):
+        dist = math.sqrt(math.pow(xTarget - self.x, 2) + math.pow(yTarget - self.y, 2))
+        Θd = self.calcRelAngle(xTarget, yTarget)
+        φ = Θd - self.Θ + (math.pi / 2)
+        localDeltaX = dist * math.cos(φ)
+        localDeltaY = dist * math.sin(φ)
+
+        return localDeltaX, localDeltaY
+
+    def calcRelAngle(self, xTarget, yTarget):
+        deltaGX = xTarget - self.x
+        deltaGY = yTarget - self.y
+        
+        if deltaGX == 0 and deltaGY == 0: return math.pi / 2             # 90  deg
+        # if deltaGX == 0 and deltaGY < 0: return 3 * (math.pi / 2)       # 270 deg 
+
+        ΘGTarget = math.atan(abs(deltaGY / deltaGX))
+
+        if deltaGX >= 0 and deltaGY >= 0: return ΘGTarget               # Quadrant 1 / 0 deg
+        if deltaGX <= 0 and deltaGY >= 0: return math.pi - ΘGTarget     # Quadrant 2 / 180 deg
+        if deltaGX <= 0 and deltaGY <=  0: return math.pi + ΘGTarget    # Quadrant 3
+        if deltaGX >= 0 and deltaGY <=  0: return 360 - ΘGTarget        # Quadrant 4
+
+        return 1029300000000000084756 # return big number if an edge case is not accounted for
 
     def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
         self.driveVel = velocity
@@ -344,31 +402,6 @@ class MecDriveTrain:
         self.FR.set_stopping(mode)
         self.BR.set_stopping(mode)
         self.BL.set_stopping(mode)
-    
-    def calcLocalXY(self, xTarget, yTarget):
-        distance = math.sqrt(math.pow(xTarget - self.x, 2) + math.pow(yTarget - self.y, 2))
-        Θd = self.calcRelAngle(xTarget, yTarget)
-        φ = Θd - self.Θ + (math.pi / 2)
-        localDeltaX = distance * math.cos(φ)
-        localDeltaY = distance * math.sin(φ)
-
-        return localDeltaX, localDeltaY
-
-    def calcRelAngle(self, xTarget, yTarget):
-        deltaGX = xTarget - self.x
-        deltaGY = yTarget - self.y
-
-        if deltaGX == 0 and deltaGY > 0: return math.pi / 2             # 90  deg
-        if deltaGX == 0 and deltaGY < 0: return 3 * (math.pi / 2)       # 270 deg 
-
-        ΘGTarget = math.atan(abs(deltaGY / deltaGX))
-
-        if deltaGX >= 0 and deltaGY >= 0: return ΘGTarget               # Quadrant 1 / 0 deg
-        if deltaGX <= 0 and deltaGY >= 0: return math.pi - ΘGTarget     # Quadrant 2 / 180 deg
-        if deltaGX <= 0 and deltaGY <=  0: return math.pi + ΘGTarget    # Quadrant 3
-        if deltaGX >= 0 and deltaGY <=  0: return 360 - ΘGTarget        # Quadrant 4
-
-        return 1029300000000000084756 # return big number if an edge case is not accounted for
 
 
 # ---------------------------REQUIRED CODE---------------------------
