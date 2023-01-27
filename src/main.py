@@ -157,9 +157,9 @@ def A_Pressed():
     drivetrain.startAuto(path1)
 
 def B_Pressed():
-    if drivetrain.mode == BRAKE: drivetrain.set_stopping(HOLD)
-    elif drivetrain.mode == HOLD: drivetrain.set_stopping(COAST)
-    elif drivetrain.mode == COAST: drivetrain.set_stopping(BRAKE)
+    if drivetrain.motorMode == BRAKE: drivetrain.set_stopping(HOLD)
+    elif drivetrain.motorMode == HOLD: drivetrain.set_stopping(COAST)
+    elif drivetrain.motorMode == COAST: drivetrain.set_stopping(BRAKE)
 
 def X_Pressed():
     pass
@@ -268,7 +268,7 @@ class MecDriveTrain:
         atPosition = False
         for step in path:
             while not atPosition:
-                drivetrain.drive_to(step[0], step[1], step[2], step[3])
+                drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
                 wait(10, MSEC)
 
     def updatePosition(self):
