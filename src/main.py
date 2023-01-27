@@ -281,8 +281,8 @@ class MecDriveTrain:
             self.currLeftVal = self.leftEncoder.value()
             self.currAuxVal = -self.auxEncoder.value()
 
-            dn1 = self.currLeftVal - self.prevLeftVal
             dn2 = self.currRightVal - self.prevRightVal
+            dn1 = self.currLeftVal - self.prevLeftVal
             dn3 = self.currAuxVal - self.prevAuxVal
 
             dtheta = self.inchsPerTick * ((dn2 - dn1) / self.L)
@@ -363,15 +363,15 @@ class MecDriveTrain:
         deltaGX = xTarget - self.x
         deltaGY = yTarget - self.y
 
-        if deltaGX == 0 and deltaGY > 0: return math.pi / 2         # 90  deg
-        if deltaGX == 0 and deltaGY < 0: return 3 * (math.pi / 2)   # 270 deg 
+        if deltaGX == 0 and deltaGY > 0: return math.pi / 2             # 90  deg
+        if deltaGX == 0 and deltaGY < 0: return 3 * (math.pi / 2)       # 270 deg 
 
         ΘGTarget = math.atan(abs(deltaGY / deltaGX))
 
-        if deltaGX > 0 and deltaGY >= 0: return ΘGTarget            # Quadrant 1 / 0 deg
-        if deltaGX < 0 and deltaGY >= 0: return math.pi - ΘGTarget  # Quadrant 2 / 180 deg
-        if deltaGX < 0 and deltaGY <  0: return math.pi + ΘGTarget  # Quadrant 3
-        if deltaGX > 0 and deltaGY <  0: return 360 - ΘGTarget      # Quadrant 4
+        if deltaGX >= 0 and deltaGY >= 0: return ΘGTarget               # Quadrant 1 / 0 deg
+        if deltaGX <= 0 and deltaGY >= 0: return math.pi - ΘGTarget     # Quadrant 2 / 180 deg
+        if deltaGX <= 0 and deltaGY <=  0: return math.pi + ΘGTarget    # Quadrant 3
+        if deltaGX >= 0 and deltaGY <=  0: return 360 - ΘGTarget        # Quadrant 4
 
         return 1029300000000000084756 # return big number if an edge case is not accounted for
 
