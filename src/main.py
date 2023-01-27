@@ -17,10 +17,6 @@ brain=Brain()
 
 # Robot variables and configuration code
 
-# Default values
-
-motorVel = 75
-
 # BAD PORT: 5, 6, 7, 8, 11, 12
 
 F1 = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False) # motor closest to flywheel
@@ -99,10 +95,10 @@ def when_started1():
     Driver_Control()
 
 def Default_Motor_Speed():
-    global motorVel, drivetrain
-    drivetrain.set_drive_velocity(motorVel, VelocityUnits.PERCENT)
-    drivetrain.set_turn_velocity(motorVel, VelocityUnits.PERCENT)
-    drivetrain.set_stopping(COAST)
+    global drivetrain
+    drivetrain.set_drive_velocity(100, VelocityUnits.PERCENT)
+    drivetrain.set_turn_velocity(100, VelocityUnits.PERCENT)
+    drivetrain.set_stopping(BRAKE)
 
 
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
@@ -157,8 +153,7 @@ def A_Pressed():
     drivetrain.startAuto(path1)
 
 def B_Pressed():
-    if drivetrain.motorMode == BRAKE: drivetrain.set_stopping(HOLD)
-    elif drivetrain.motorMode == HOLD: drivetrain.set_stopping(COAST)
+    if drivetrain.motorMode == BRAKE: drivetrain.set_stopping(COAST)
     elif drivetrain.motorMode == COAST: drivetrain.set_stopping(BRAKE)
 
 def X_Pressed():
@@ -187,7 +182,7 @@ def Right_Pressed():
 def throwTheThings():
     global F1
     F1.set_velocity(100, PERCENT)
-    F1.spin(REVERSE)
+    F1.spin(FORWARD)
 
     wait(1, SECONDS)
     F1.stop()
