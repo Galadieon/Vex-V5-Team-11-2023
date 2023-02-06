@@ -43,7 +43,7 @@ wait(30, MSEC)
 # Controller loop to handle controller readings
 def controllerLoop():
     global controllerEnabled, controller, drivetrain
-    deadZoneVal = axisCurve(1)
+    deadZoneVal = axisCurve(0.1)
 
     printThread = Thread(printToController)
 
@@ -70,17 +70,17 @@ def printToController():
         # controller.screen.print("Aux Encoder: ", currAuxVal)
         # controller.screen.next_row()
 
-        # controller.screen.print("Global X: ", drivetrain.x)
-        # controller.screen.next_row()
-        # controller.screen.print("Global Y: ", drivetrain.y)
-        # controller.screen.next_row()
-        # controller.screen.print("Global Θ: ", math.degrees(drivetrain.Θ))
-        # controller.screen.next_row()
+        controller.screen.print("Global X: ", drivetrain.x)
+        controller.screen.next_row()
+        controller.screen.print("Global Y: ", drivetrain.y)
+        controller.screen.next_row()
+        controller.screen.print("Global Θ: ", math.degrees(drivetrain.Θ))
+        controller.screen.next_row()
 
         wait(100, MSEC)
 
-        # controller.screen.clear_screen()
-        # controller.screen.set_cursor(1, 1)
+        controller.screen.clear_screen()
+        controller.screen.set_cursor(1, 1)
 
 def axisCurve(x):
     return (x ** 3) / 10000
@@ -187,22 +187,22 @@ def throwTheThings():
     F1.stop()
 
 
+# def tanh(x, max): # x is in inches
+#     n = 1.732
+#     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
+
 def tanh(x): # x is in inches
     n = 1.732
     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
 
-def tanh(x, max): # x is in inches
-    n = 1.732
-    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
 
+# def tanhTurning(x, max): # x is in radians
+#     n = 23.2742 # seems a little too large for turn motor value, try 3
+#     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
 
 def tanhTurning(x): # x is in radians
     n = 23.2742 # seems a little too large for turn motor value, try 3
     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x)))
-
-def tanhTurning(x, max): # x is in radians
-    n = 23.2742 # seems a little too large for turn motor value, try 3
-    return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
 
 
 def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
@@ -237,7 +237,7 @@ class MecDriveTrain:
         self.leftEncoder = Encoder(brain.three_wire_port.c)
         self.auxEncoder = Encoder(brain.three_wire_port.e)
         
-        self.L = 13.25
+        self.L = 13.5
         self.B = 5.0
         self.D = 2.75
         self.N = 360
@@ -264,7 +264,9 @@ class MecDriveTrain:
         self.prevLeftVal = 0 # previous encoder value for left wheel
         self.prevAuxVal = 0 # previous encoder value for back wheel
 
-        odomThread = Thread(self.updatePosition)
+        wait(100, MSEC)
+
+        self.odomThread = Thread(self.updatePosition)
 
     # ---------------------------AUTO AND ODOMETRY---------------------------
     
@@ -273,14 +275,14 @@ class MecDriveTrain:
 
         count = 0
 
-        atPosition = False
-        for step in path:
-            while not atPosition:
-                count += 1
-                controller.screen.print(count)
-                atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
-                controller.screen.clear_screen()
-                controller.screen.set_cursor(1, 1)
+        # atPosition = False
+        # for step in path:
+        #     while not atPosition:
+        #         count += 1
+        #         controller.screen.print(count)
+        #         atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
+        #         controller.screen.clear_screen()
+        #         controller.screen.set_cursor(1, 1)
     
     def updatePosition(self):
         while(True):
@@ -302,7 +304,7 @@ class MecDriveTrain:
 
             theta = self.Θ + (dtheta / 2.0)
             self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
-            self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += -dtheta
 
             wait(10, MSEC)
@@ -405,9 +407,13 @@ class MecDriveTrain:
         self.BL.set_stopping(mode)
     
     def resetOdom(self):
+        self.odomThread.stop()
+
         self.x = 0
         self.y = 0
-        self.Θ = 0
+        self.Θ = math.pi / 2
+
+        # self.odomThread = Thread(self.updatePosition)
 
 
 # ---------------------------REQUIRED CODE---------------------------
