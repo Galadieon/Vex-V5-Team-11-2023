@@ -157,7 +157,7 @@ def B_Pressed():
     elif drivetrain.motorMode == COAST: drivetrain.set_stopping(BRAKE)
 
 def X_Pressed():
-    pass
+    drivetrain.resetOdom()
 
 def Y_Pressed():
     pass
@@ -264,11 +264,12 @@ class MecDriveTrain:
         self.prevLeftVal = 0 # previous encoder value for left wheel
         self.prevAuxVal = 0 # previous encoder value for back wheel
 
+        odomThread = Thread(self.updatePosition)
+
     # ---------------------------AUTO AND ODOMETRY---------------------------
     
     def startAuto(self, path):
         drivetrain.set_stopping(COAST)
-        odomThread = Thread(self.updatePosition)
 
         count = 0
 
@@ -402,6 +403,11 @@ class MecDriveTrain:
         self.FR.set_stopping(mode)
         self.BR.set_stopping(mode)
         self.BL.set_stopping(mode)
+    
+    def resetOdom(self):
+        self.x = 0
+        self.y = 0
+        self.Θ = 0
 
 
 # ---------------------------REQUIRED CODE---------------------------
