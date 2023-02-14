@@ -367,31 +367,18 @@ class MecDriveTrain:
         self.BL.stop()
     
     # ---------------------------HELPER FUNCTIONS---------------------------
-    
-    def calcLocalXY(self, xTarget, yTarget):
-        dist = math.sqrt(math.pow(xTarget - self.x, 2) + math.pow(yTarget - self.y, 2))
-        Θd = self.calcRelAngle(xTarget, yTarget)
-        φ = Θd - self.Θ + (math.pi / 2)
-        localDeltaX = dist * math.cos(φ)
-        localDeltaY = dist * math.sin(φ)
 
-        return localDeltaX, localDeltaY
+def calcLocalXY(self, xTarget, yTarget):
+    deltaX = xTarget - self.x
+    deltaY = yTarget - self.y
+    dist = math.hypot(deltaX, deltaY)
 
-    def calcRelAngle(self, xTarget, yTarget):
-        deltaGX = xTarget - self.x
-        deltaGY = yTarget - self.y
-        
-        if deltaGX == 0 and deltaGY == 0: return math.pi / 2             # 90  deg
-        # if deltaGX == 0 and deltaGY < 0: return 3 * (math.pi / 2)       # 270 deg 
+    Θd = math.atan2(deltaY, deltaX)
+    φ = (Θd if Θd >= 0 else Θd + (2 * math.pi)) - self.Θ + (math.pi / 2)
 
-        ΘGTarget = math.atan(abs(deltaGY / deltaGX))
-
-        if deltaGX >= 0 and deltaGY >= 0: return ΘGTarget               # Quadrant 1 / 0 deg
-        if deltaGX <= 0 and deltaGY >= 0: return math.pi - ΘGTarget     # Quadrant 2 / 180 deg
-        if deltaGX <= 0 and deltaGY <=  0: return math.pi + ΘGTarget    # Quadrant 3
-        if deltaGX >= 0 and deltaGY <=  0: return 360 - ΘGTarget        # Quadrant 4
-
-        return 1029300000000000084756 # return big number if an edge case is not accounted for
+    localDeltaX = dist * math.cos(φ)
+    localDeltaY = dist * math.sin(φ)
+    return localDeltaX, localDeltaY
 
     def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
         self.driveVel = velocity
@@ -446,3 +433,22 @@ competition = Competition( vexcode_driver_function, vexcode_auton_function )
 wait(15, MSEC)
 
 when_started1()
+
+# -------------------------------ARCHIVED CODE-------------------------------
+
+# def calcRelAngle(deltaX, deltaY):
+#     ret = math.atan2(deltaY, deltaX)
+#     return ret if ret >= 0 else ret + (2 * math.pi)
+    
+# def calcLocalXY(startX, startY, xTarget, yTarget):
+#     deltaX = xTarget - startX
+#     deltaY = yTarget - startY
+#     dist = math.hypot(deltaX, deltaY)
+
+#     Θd = calcRelAngle(deltaX, deltaY)
+#     φ = Θd - 5.497787143782138 + (math.pi / 2)
+
+#     localDeltaX = dist * math.cos(φ)
+#     localDeltaY = dist * math.sin(φ)
+
+#     return localDeltaX, localDeltaY
