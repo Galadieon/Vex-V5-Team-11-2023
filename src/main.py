@@ -11,6 +11,7 @@
 # Library imports
 from vex import *
 import math
+import timer
 
 # Begin project code
 brain=Brain()
@@ -324,17 +325,10 @@ class MecDriveTrain:
             # strafe  = 100 * tanh(deltaX, driveVel / 100)
             # rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
 
-            
-            
-            self.drive(forward, strafe, rotate)
-            controller.screen.print(forward)
-            controller.screen.next_row()
-            controller.screen.print(strafe)
-            controller.screen.next_row()
-            controller.screen.print(rotate)
-            controller.screen.next_row()
-
-            wait(0.5, SECONDS)
+            start = timer.time_ns()
+            While timer.time_ns - start < 100_000_000
+                self.drive(forward, strafe, rotate)
+                timer.sleep(0.010)
         else:
             self.stop()
             return True
