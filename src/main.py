@@ -368,17 +368,17 @@ class MecDriveTrain:
     
     # ---------------------------HELPER FUNCTIONS---------------------------
 
-def calcLocalXY(self, xTarget, yTarget):
-    deltaX = xTarget - self.x
-    deltaY = yTarget - self.y
-    dist = math.hypot(deltaX, deltaY)
+    def calcLocalXY(self, xTarget, yTarget):
+        deltaX = xTarget - self.x
+        deltaY = yTarget - self.y
+        dist = math.hypot(deltaX, deltaY)
 
-    Θd = math.atan2(deltaY, deltaX)
-    φ = (Θd if Θd >= 0 else Θd + (2 * math.pi)) - self.Θ + (math.pi / 2)
+        Θd = math.atan2(deltaY, deltaX)
+        φ = (Θd if Θd >= 0 else Θd + (2 * math.pi)) - self.Θ + (math.pi / 2)
 
-    localDeltaX = dist * math.cos(φ)
-    localDeltaY = dist * math.sin(φ)
-    return localDeltaX, localDeltaY
+        localDeltaX = dist * math.cos(φ)
+        localDeltaY = dist * math.sin(φ)
+        return localDeltaX, localDeltaY
 
     def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
         self.driveVel = velocity
