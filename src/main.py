@@ -32,12 +32,13 @@ controller = Controller(PRIMARY)
 # Autonomous paths
 
 #           x,    y,              Θ,  driveVel,  turnVel
-path1 = [ [ -1,    10,      math.pi/2,        50,       50 ]]
+path1 = [ [ 0,    10,      math.pi/2,        25,       25 ]]
         #   [ 0,    0,      math.pi/2,        25,       25 ] ]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
+timeList = [0] * 10
 
 # ---------------------------CONTROLLER LOOP---------------------------
 
@@ -187,6 +188,8 @@ def throwTheThings():
     wait(1, SECONDS)
     F1.stop()
 
+# def findAvg
+
 
 # def tanh(x, max): # x is in inches
 #     n = 1.732
@@ -313,6 +316,7 @@ class MecDriveTrain:
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
     def drive_to(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
+
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
