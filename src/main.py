@@ -11,7 +11,7 @@
 # Library imports
 from vex import *
 import math
-import timer
+import time
 
 # Begin project code
 brain=Brain()
@@ -276,14 +276,14 @@ class MecDriveTrain:
 
         count = 0
 
-        # atPosition = False
-        # for step in path:
-        #     while not atPosition:
-        #         count += 1
-        #         controller.screen.print(count)
-        #         atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
-        #         controller.screen.clear_screen()
-        #         controller.screen.set_cursor(1, 1)
+        atPosition = False
+        for step in path:
+            while not atPosition:
+                count += 1
+                controller.screen.print(count)
+                atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
+                controller.screen.clear_screen()
+                controller.screen.set_cursor(1, 1)
     
     def updatePosition(self):
         while(True):
@@ -316,24 +316,38 @@ class MecDriveTrain:
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
-        if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-            forward = 100 * tanh(deltaY)
-            strafe  = 100 * tanh(deltaX)
-            rotate  = 100 * tanhTurning(deltaTheta)
-            
-            # forward = 100 * tanh(deltaY, driveVel / 100)
-            # strafe  = 100 * tanh(deltaX, driveVel / 100)
-            # rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
-
-            start = timer.time_ns()
-            While timer.time_ns - start < 100_000_000
-                self.drive(forward, strafe, rotate)
-                timer.sleep(0.010)
-        else:
-            self.stop()
+        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(deltaTheta) < 0.035:
             return True
+
+        forward, strafe, rotate = 0, 0, 0
         
+        if deltaX > 0.25: strafe = 25
+        if deltaX < -0.25: strafe = -25
+        
+        if deltaY > 0.25: forward = 25
+        if deltaY < -0.25: forward = -25
+        
+        if deltaTheta > 0.035: rotate = 25
+        if deltaTheta < -0.035: rotate = -25
+        
+        self.drive(forward, strafe, rotate)
+        sleep(10, MSEC)
+        self.stop()
         return False
+
+        # if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
+        #     # forward = 100 * tanh(deltaY)
+        #     # strafe  = 100 * tanh(deltaX)
+        #     # rotate  = 100 * tanhTurning(deltaTheta)
+            
+        #     # forward = 100 * tanh(deltaY, driveVel / 100)
+        #     # strafe  = 100 * tanh(deltaX, driveVel / 100)
+        #     # rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
+
+        #     start = time.time_ns()
+        #     while time.time_ns() - start < 100_000_000:
+        #         self.drive(forward, strafe, rotate)
+        #         time.sleep(0.010)
     
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity( forward + strafe + rotate, PERCENT)
