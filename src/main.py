@@ -319,21 +319,25 @@ class MecDriveTrain:
         if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(deltaTheta) < 0.035:
             return True
 
-        forward, strafe, rotate = 0, 0, 0
-        
-        if deltaX > 0.25: strafe = 25
-        if deltaX < -0.25: strafe = -25
-        
-        if deltaY > 0.25: forward = 25
-        if deltaY < -0.25: forward = -25
-        
-        if deltaTheta > 0.035: rotate = 25
-        if deltaTheta < -0.035: rotate = -25
+        forward = 25 if deltaY > 0.25 else -25 if deltaY < -0.25 else 0
+        strafe = 25 if deltaX > 0.25 else -25 if deltaX < -0.25 else 0
+        rotate = 25 if deltaTheta > 0.035 else -25 if deltaTheta < -0.035 else 0
         
         self.drive(forward, strafe, rotate)
         sleep(10, MSEC)
         self.stop()
         return False
+
+        # forward, strafe, rotate = 0, 0, 0
+        
+        # if deltaX > 0.25: strafe = 25
+        # if deltaX < -0.25: strafe = -25
+        
+        # if deltaY > 0.25: forward = 25
+        # if deltaY < -0.25: forward = -25
+        
+        # if deltaTheta > 0.035: rotate = 25
+        # if deltaTheta < -0.035: rotate = -25
 
         # if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
         #     # forward = 100 * tanh(deltaY)
