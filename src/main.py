@@ -310,12 +310,6 @@ class MecDriveTrain:
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
     def drive_to(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
-        '''
-        This method will drive the robot to a specific coordinate and orientation
-        
-        @param xTarget asd
-        '''
-
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
@@ -332,31 +326,6 @@ class MecDriveTrain:
             time.sleep(0.010)
         self.stop()
         return False
-
-        # forward, strafe, rotate = 0, 0, 0
-        
-        # if deltaX > 0.25: strafe = 25
-        # if deltaX < -0.25: strafe = -25
-        
-        # if deltaY > 0.25: forward = 25
-        # if deltaY < -0.25: forward = -25
-        
-        # if deltaTheta > 0.035: rotate = 25
-        # if deltaTheta < -0.035: rotate = -25
-
-        # if abs(deltaX) > 0.25 or abs(deltaY) > 0.25 or abs(deltaTheta) > 0.035:
-        #     # forward = 100 * tanh(deltaY)
-        #     # strafe  = 100 * tanh(deltaX)
-        #     # rotate  = 100 * tanhTurning(deltaTheta)
-            
-        #     # forward = 100 * tanh(deltaY, driveVel / 100)
-        #     # strafe  = 100 * tanh(deltaX, driveVel / 100)
-        #     # rotate  = 100 * tanhTurning(deltaTheta, turnVel / 100)
-
-        #     start = time.time_ns()
-        #     while time.time_ns() - start < 100_000_000:
-        #         self.drive(forward, strafe, rotate)
-        #         time.sleep(0.010)
     
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity( forward + strafe + rotate, PERCENT)
@@ -385,11 +354,11 @@ class MecDriveTrain:
         deltaY = yTarget - self.y
         dist = math.hypot(deltaX, deltaY)
 
-        Θd = math.atan2(deltaY, deltaX)
-        φ = (Θd if Θd >= 0 else Θd + (2 * math.pi)) - self.Θ + (math.pi / 2)
+        targetTheta = math.atan2(deltaY, deltaX)
+        localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta + (2 * math.pi)) - self.Θ + (math.pi / 2)
 
-        localDeltaX = dist * math.cos(φ)
-        localDeltaY = dist * math.sin(φ)
+        localDeltaX = dist * math.cos(localRelTheta)
+        localDeltaY = dist * math.sin(localRelTheta)
         return localDeltaX, localDeltaY
 
     def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
@@ -445,22 +414,3 @@ competition = Competition( vexcode_driver_function, vexcode_auton_function )
 wait(15, MSEC)
 
 non_competition_start()
-
-# -------------------------------ARCHIVED CODE-------------------------------
-
-# def calcRelAngle(deltaX, deltaY):
-#     ret = math.atan2(deltaY, deltaX)
-#     return ret if ret >= 0 else ret + (2 * math.pi)
-    
-# def calcLocalXY(startX, startY, xTarget, yTarget):
-#     deltaX = xTarget - startX
-#     deltaY = yTarget - startY
-#     dist = math.hypot(deltaX, deltaY)
-
-#     Θd = calcRelAngle(deltaX, deltaY)
-#     φ = Θd - 5.497787143782138 + (math.pi / 2)
-
-#     localDeltaX = dist * math.cos(φ)
-#     localDeltaY = dist * math.sin(φ)
-
-#     return localDeltaX, localDeltaY
