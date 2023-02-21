@@ -92,7 +92,7 @@ def axisCurve(x):
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
 
-def when_started1():
+def non_competition_start():
     Driver_Control()
 
 def Default_Motor_Speed():
@@ -310,7 +310,11 @@ class MecDriveTrain:
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
     def drive_to(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
-        '''This method will drive the robot to a specific coordinate and orientation'''
+        '''
+        This method will drive the robot to a specific coordinate and orientation
+        
+        @param xTarget asd
+        '''
 
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
@@ -321,9 +325,11 @@ class MecDriveTrain:
         forward = 25 if deltaY > 0.25 else -25 if deltaY < -0.25 else 0
         strafe = 25 if deltaX > 0.25 else -25 if deltaX < -0.25 else 0
         rotate = 25 if deltaTheta > 0.035 else -25 if deltaTheta < -0.035 else 0
-        
-        self.drive(forward, strafe, rotate)
-        sleep(10, MSEC)
+
+        start = time.time_ns()
+        while time.time_ns() - start < 100_000_000:
+            self.drive(forward, strafe, rotate)
+            time.sleep(0.010)
         self.stop()
         return False
 
@@ -438,7 +444,7 @@ competition = Competition( vexcode_driver_function, vexcode_auton_function )
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
-when_started1()
+non_competition_start()
 
 # -------------------------------ARCHIVED CODE-------------------------------
 
