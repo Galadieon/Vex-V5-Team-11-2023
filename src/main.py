@@ -31,8 +31,8 @@ controller = Controller(PRIMARY)
 
 # Autonomous paths
 
-#           x,    y,              Θ,  driveVel,  turnVel
-path1 = [ [ -1,    10,      math.pi/2,        50,       50 ]]
+#           x,     y,                Θ,  driveVel,  turnVel
+path1 = [ [ 0,    10,      math.pi / 2,        25,       25 ] ]
         #   [ 0,    0,      math.pi/2,        25,       25 ] ]
 
 # wait for rotation sensor to fully initialize
@@ -274,16 +274,10 @@ class MecDriveTrain:
     def startAuto(self, path):
         drivetrain.set_stopping(COAST)
 
-        count = 0
-
         atPosition = False
         for step in path:
             while not atPosition:
-                count += 1
-                controller.screen.print(count)
                 atPosition = drivetrain.drive_to(step[0], step[1], step[2], step[3], step[4])
-                controller.screen.clear_screen()
-                controller.screen.set_cursor(1, 1)
     
     def updatePosition(self):
         while(True):
@@ -313,22 +307,17 @@ class MecDriveTrain:
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
     def drive_to(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
+        '''This method will drive the robot to a specific coordinate and orientation'''
+
         deltaX, deltaY = self.calcLocalXY(xTarget, yTarget)
         deltaTheta = ΘTarget - self.Θ
 
         if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(deltaTheta) < 0.035:
             return True
 
-        forward, strafe, rotate = 0, 0, 0
-        
-        if deltaX > 0.25: strafe = 25
-        if deltaX < -0.25: strafe = -25
-        
-        if deltaY > 0.25: forward = 25
-        if deltaY < -0.25: forward = -25
-        
-        if deltaTheta > 0.035: rotate = 25
-        if deltaTheta < -0.035: rotate = -25
+        strafe = 25 if deltaX > 0.25 else -25 if deltaX < -0.25 else 0
+        forward = 25 if deltaY > 0.25 else -25 if deltaY < -0.25 else 0
+        rotate = 25 if deltaTheta > 0.035 else -25 if deltaTheta < -0.035 else 0
         
         self.drive(forward, strafe, rotate)
         sleep(10, MSEC)
@@ -354,11 +343,6 @@ class MecDriveTrain:
         self.FR.set_velocity(-forward + strafe + rotate, PERCENT)
         self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
         self.BL.set_velocity( forward - strafe + rotate, PERCENT)
-
-        # self.FL.set_velocity(forward + strafe + rotate, PERCENT)
-        # self.FR.set_velocity(forward - strafe - rotate, PERCENT)
-        # self.BR.set_velocity(forward + strafe - rotate, PERCENT)
-        # self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
         self.FL.spin(FORWARD)
         self.FR.spin(FORWARD)
