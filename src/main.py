@@ -11,15 +11,6 @@
 # Library imports
 from vex import *
 
-from math import atan2
-from math import sin
-from math import cos
-from math import hypot
-from math import degrees
-from math import pi
-
-from time import time_ns
-
 # Begin project code
 brain = Brain()
 
@@ -40,7 +31,7 @@ controller = Controller(PRIMARY)
 # Autonomous paths
 
 #        x,  y, Θ, driveVel, turnVel
-path1 = [[0.0, 10.0, pi / 2, 25, 25]]
+path1 = [[0.0, 10.0, math.pi / 2, 25, 25]]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -86,7 +77,7 @@ def printToController():
         controller.screen.next_row()
         controller.screen.print("Global Y: ", drivetrain.y)
         controller.screen.next_row()
-        controller.screen.print("Global Θ: ", degrees(drivetrain.Θ))
+        controller.screen.print("Global Θ: ", math.degrees(drivetrain.Θ))
         controller.screen.next_row()
 
         wait(100, MSEC)
@@ -279,7 +270,7 @@ class MecDriveTrain:
         self.B = 5.0
         self.D = 2.75
         self.N = 360
-        self.circumference = pi * self.D
+        self.circumference = math.pi * self.D
         self.inchsPerTick = self.circumference / self.N
 
         self.wheelTravel = wheelTravel
@@ -291,7 +282,7 @@ class MecDriveTrain:
         self.turnVel = 0
         self.x = 0
         self.y = 0
-        self.Θ = pi / 2
+        self.Θ = math.pi / 2
         self.motorMode = COAST
 
         self.currRightVal = 0  # current encoder value for right wheel
@@ -319,7 +310,7 @@ class MecDriveTrain:
 
     def updatePosition(self):
         while (True):
-            start = time_ns()
+            start = time.time_ns()
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
             self.prevAuxVal = self.currAuxVal
@@ -337,12 +328,12 @@ class MecDriveTrain:
             dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) * (self.B / self.L)))
 
             theta = self.Θ + (dtheta / 2.0)
-            self.x += -dx * cos(-theta) + dy * sin(-theta)
-            self.y -= -dx * sin(-theta) - dy * cos(-theta)
+            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += -dtheta
 
             # allows for faster
-            while time_ns() - start < 10_000_000:
+            while time.time_ns() - start < 10_000_000:
                 # may need wait(1, MSEC) or something similar
                 pass
 
@@ -361,8 +352,8 @@ class MecDriveTrain:
         strafe = 25 if deltaX > 0.25 else -25 if deltaX < -0.25 else 0
         rotate = 25 if deltaTheta > 0.035 else -25 if deltaTheta < -0.035 else 0
 
-        start = time_ns()
-        while time_ns() - start < 100_000_000:
+        start = time.time_ns()
+        while time.time_ns() - start < 100_000_000:
             self.drive(forward, strafe, rotate)
             sleep(0.010)
         self.stop()
@@ -381,7 +372,7 @@ class MecDriveTrain:
         self.BL.spin(FORWARD)
 
     def goBackToOG(self):
-        self.drive_to(0, 0, pi / 2, 25, 25)
+        self.drive_to(0, 0, math.pi / 2, 25, 25)
 
     def stop(self):
         self.FL.stop()
@@ -394,14 +385,14 @@ class MecDriveTrain:
     def calcLocalXY(self, xTarget: float, yTarget: float):
         deltaX = xTarget - self.x
         deltaY = yTarget - self.y
-        dist = hypot(deltaX, deltaY)
+        dist = math.hypot(deltaX, deltaY)
 
-        targetTheta = atan2(deltaY, deltaX)
+        targetTheta = math.atan2(deltaY, deltaX)
         localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
-                         (2 * pi)) - self.Θ + (pi / 2)
+                         (2 * math.pi)) - self.Θ + (math.pi / 2)
 
-        localDeltaX = dist * cos(localRelTheta)
-        localDeltaY = dist * sin(localRelTheta)
+        localDeltaX = dist * math.cos(localRelTheta)
+        localDeltaY = dist * math.sin(localRelTheta)
 
         # limit excessively long and small numbers
         if abs(localDeltaX) < 0.001: localDeltaX = 0.0
@@ -427,7 +418,7 @@ class MecDriveTrain:
 
         self.x = 0
         self.y = 0
-        self.Θ = pi / 2
+        self.Θ = math.pi / 2
 
         # self.odomThread = Thread(self.updatePosition)
 
@@ -453,7 +444,7 @@ controller.buttonDown.pressed(Down_Pressed)
 controller.buttonLeft.pressed(Left_Pressed)
 controller.buttonRight.pressed(Right_Pressed)
 
-drivetrain = MecDriveTrain(4 * pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
+drivetrain = MecDriveTrain(4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
 
 controllerThread = Thread(controllerLoop)
 
