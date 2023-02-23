@@ -413,4 +413,4 @@ competition = Competition( vexcode_driver_function, vexcode_auton_function )
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
-non_competition_start()
+non_competition_start() # test
