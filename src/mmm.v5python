@@ -12,7 +12,6 @@
 from vex import *
 
 import math
-import time
 
 # Begin project code
 brain = Brain()
@@ -313,7 +312,7 @@ class MecDriveTrain:
 
     def updatePosition(self):
         while (True):
-            # start = time.time_ns()
+            # start = brain.timer.time(MSEC)
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
             self.prevAuxVal = self.currAuxVal
@@ -338,7 +337,7 @@ class MecDriveTrain:
             wait(100, MSEC)
 
             # allows for faster
-            # while time.time_ns() - start < 10_000_000:
+            # while brain.timer.time(MSEC) - start < 10:
                 # may need wait(1, MSEC) or something similar
                 # pass
 
@@ -354,17 +353,27 @@ class MecDriveTrain:
             print("AT POSITION")
             return True
 
-        forward = 25 if deltaY > 0.25 else -25 if deltaY < -0.25 else 0
-        strafe = 25 if deltaX > 0.25 else -25 if deltaX < -0.25 else 0
-        rotate = 25 if deltaTheta > 0.035 else -25 if deltaTheta < -0.035 else 0
+        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
+        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
+        rotate = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
 
-        start = time.time_ns()
-        while time.time_ns() - start < 100_000_000:
-            # self.drive(forward, strafe, rotate)
-            wait(0.010, MSEC)
-        self.stop()
+        print("\n\n\n\n", round(self.x, 1), "\t", round(self.y, 1), "\t", round(self.Θ, 1))
+        print(round(deltaX, 1), "\t", round(deltaY, 1), "\t", round(deltaTheta, 1))
+
+        self.autoDrive(forward, strafe, 0)
 
         return False
+
+    def autoDrive(self, forward, strafe, rotate):
+        self.FL.set_velocity(forward + strafe + rotate, PERCENT)
+        self.FR.set_velocity(-1 * (-forward + strafe + rotate), PERCENT)
+        self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
+        self.BL.set_velocity(forward - strafe + rotate, PERCENT)
+
+        self.FL.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.FR.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.BR.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.BL.spin_for(FORWARD, 10, MSEC, wait=False)
 
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity(forward + strafe + rotate, PERCENT)
