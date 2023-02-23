@@ -11,6 +11,9 @@
 # Library imports
 from vex import *
 
+import math
+import time
+
 # Begin project code
 brain = Brain()
 
@@ -66,11 +69,11 @@ def controllerLoop():
 def printToController():
     global drivetrain
     while (True):
-        # controller.screen.print("Right Encoder: ", currRightVal)
+        # controller.screen.print("Right Encoder: ", drivetrain.rightEncoder.value())
         # controller.screen.next_row()
-        # controller.screen.print("Left Encoder: ", currLeftVal)
+        # controller.screen.print("Left Encoder: ", drivetrain.leftEncoder.value())
         # controller.screen.next_row()
-        # controller.screen.print("Aux Encoder: ", currAuxVal)
+        # controller.screen.print("Aux Encoder: ", drivetrain.auxEncoder.value())
         # controller.screen.next_row()
 
         controller.screen.print("Global X: ", drivetrain.x)
@@ -259,12 +262,12 @@ class MecDriveTrain:
     def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
         self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
         self.FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-        self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
+        self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)                                                                    
         self.BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
 
-        self.rightEncoder = Encoder(brain.three_wire_port.a)
-        self.leftEncoder = Encoder(brain.three_wire_port.c)
-        self.auxEncoder = Encoder(brain.three_wire_port.e)
+        self.rightEncoder = Encoder(brain.three_wire_port.e)
+        self.leftEncoder = Encoder(brain.three_wire_port.a)
+        self.auxEncoder = Encoder(brain.three_wire_port.c)
 
         self.L = 13.5
         self.B = 5.0
@@ -293,7 +296,7 @@ class MecDriveTrain:
         self.prevLeftVal = 0  # previous encoder value for left wheel
         self.prevAuxVal = 0  # previous encoder value for back wheel
 
-        wait(100, MSEC)
+        wait(10, MSEC)
 
         self.odomThread = Thread(self.updatePosition)
 
@@ -310,14 +313,14 @@ class MecDriveTrain:
 
     def updatePosition(self):
         while (True):
-            start = time.time_ns()
+            # start = time.time_ns()
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
             self.prevAuxVal = self.currAuxVal
 
-            self.currRightVal = -self.rightEncoder.value()
+            self.currRightVal = self.rightEncoder.value()
             self.currLeftVal = self.leftEncoder.value()
-            self.currAuxVal = -self.auxEncoder.value()
+            self.currAuxVal = self.auxEncoder.value()
 
             dn2 = self.currRightVal - self.prevRightVal
             dn1 = self.currLeftVal - self.prevLeftVal
@@ -328,14 +331,16 @@ class MecDriveTrain:
             dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) * (self.B / self.L)))
 
             theta = self.Θ + (dtheta / 2.0)
-            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
-            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
-            self.Θ += -dtheta
+            self.x -= -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.Θ += dtheta
+
+            wait(100, MSEC)
 
             # allows for faster
-            while time.time_ns() - start < 10_000_000:
+            # while time.time_ns() - start < 10_000_000:
                 # may need wait(1, MSEC) or something similar
-                pass
+                # pass
 
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
@@ -346,6 +351,7 @@ class MecDriveTrain:
 
         if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
                 deltaTheta) < 0.035:
+            print("AT POSITION")
             return True
 
         forward = 25 if deltaY > 0.25 else -25 if deltaY < -0.25 else 0
@@ -354,15 +360,15 @@ class MecDriveTrain:
 
         start = time.time_ns()
         while time.time_ns() - start < 100_000_000:
-            self.drive(forward, strafe, rotate)
-            sleep(0.010)
+            # self.drive(forward, strafe, rotate)
+            wait(0.010, MSEC)
         self.stop()
 
         return False
 
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity(forward + strafe + rotate, PERCENT)
-        self.FR.set_velocity(-forward + strafe + rotate, PERCENT)
+        self.FR.set_velocity(-1 * (-forward + strafe + rotate), PERCENT)
         self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
         self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
@@ -385,7 +391,8 @@ class MecDriveTrain:
     def calcLocalXY(self, xTarget: float, yTarget: float):
         deltaX = xTarget - self.x
         deltaY = yTarget - self.y
-        dist = math.hypot(deltaX, deltaY)
+
+        dist = pow(pow(deltaX, 2)+pow(deltaY, 2), 1/2)
 
         targetTheta = math.atan2(deltaY, deltaX)
         localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
@@ -397,6 +404,8 @@ class MecDriveTrain:
         # limit excessively long and small numbers
         if abs(localDeltaX) < 0.001: localDeltaX = 0.0
         if abs(localDeltaY) < 0.001: localDeltaY = 0.0
+
+        print(localDeltaX, localDeltaY)
 
         return localDeltaX, localDeltaY
 
