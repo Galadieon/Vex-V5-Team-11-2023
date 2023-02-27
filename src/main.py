@@ -1,7 +1,7 @@
 # ------------------------------------------
 #
 # 	Project:      Mecanum Robot Program
-#	Author:       Lam Ninh
+#	Author:       Lam Ninh & Kaily Do
 #	Created:      11/1/2022
 #	Description:  VEXcode V5 Python Mecanum
 #                 Project
