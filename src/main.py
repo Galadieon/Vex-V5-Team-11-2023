@@ -360,7 +360,7 @@ class MecDriveTrain:
         print("\n\n\n\n", round(self.x, 1), "\t", round(self.y, 1), "\t", round(self.Θ, 1))
         print(round(deltaX, 1), "\t", round(deltaY, 1), "\t", round(deltaTheta, 1))
 
-        self.autoDrive(forward, strafe, 0)
+        self.autoDrive(forward, strafe, rotate)
 
         return False
 
@@ -370,10 +370,10 @@ class MecDriveTrain:
         self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
         self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
-        self.FL.spin_for(FORWARD, 10, MSEC, wait=False)
-        self.FR.spin_for(FORWARD, 10, MSEC, wait=False)
-        self.BR.spin_for(FORWARD, 10, MSEC, wait=False)
-        self.BL.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.FL.spin_for(FORWARD, 1, SECONDS, False)
+        self.FR.spin_for(FORWARD, 1, SECONDS, False)
+        self.BR.spin_for(FORWARD, 1, SECONDS, False)
+        self.BL.spin_for(FORWARD, 1, SECONDS, False)
 
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity(forward + strafe + rotate, PERCENT)
@@ -412,8 +412,8 @@ class MecDriveTrain:
         localDeltaY = dist * math.sin(localRelTheta)
 
         # limit excessively long and small numbers
-        localDeltaX = round(localDeltaX, 10) # 10.0000000000
-        localDeltaY = round(localDeltaY, 10) # 10.0000000000
+        localDeltaX = round(localDeltaX, 5) # 10.0000000000
+        localDeltaY = round(localDeltaY, 5) # 10.0000000000
 
         print(localDeltaX, localDeltaY)
 
