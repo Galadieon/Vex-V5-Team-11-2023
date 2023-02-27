@@ -401,7 +401,7 @@ class MecDriveTrain:
         deltaX = xTarget - self.x
         deltaY = yTarget - self.y
 
-        dist = pow(pow(deltaX, 2)+pow(deltaY, 2), 1/2)
+        dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1/2)
 
         targetTheta = math.atan2(deltaY, deltaX)
         localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
@@ -411,8 +411,8 @@ class MecDriveTrain:
         localDeltaY = dist * math.sin(localRelTheta)
 
         # limit excessively long and small numbers
-        if abs(localDeltaX) < 0.001: localDeltaX = 0.0
-        if abs(localDeltaY) < 0.001: localDeltaY = 0.0
+        localDeltaX = round(localDeltaX, 10) # 10.0000000000
+        localDeltaY = round(localDeltaY, 10) # 10.0000000000
 
         print(localDeltaX, localDeltaY)
 
