@@ -401,6 +401,7 @@ class MecDriveTrain:
         deltaX = xTarget - self.x
         deltaY = yTarget - self.y
 
+        # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1/2)
 
         targetTheta = math.atan2(deltaY, deltaX)
