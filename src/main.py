@@ -209,26 +209,43 @@ def Right_Pressed():
 # ---------------------------MECANUM DRIVETRAIN---------------------------
 
 class Constants:
-    LEFT_DRIVE_TRAIN_BACK = 11
-    LEFT_DRIVE_TRAIN_FORWARD = 10
-    RIGHT_DRIVE_TRAIN_BACK = 1
-    RIGHT_DRIVE_TRAIN_FORWARD = 20
+    LEFT_DRIVE_TRAIN_FORWARD = Ports.PORT1
+    RIGHT_DRIVE_TRAIN_FORWARD = Ports.PORT2
+    RIGHT_DRIVE_TRAIN_BACK = Ports.PORT10
+    LEFT_DRIVE_TRAIN_BACK = Ports.PORT9
+
+    WHEEL_TRAVEL = 4 * math.pi
+    TRACK_WIDTH = 14.097242
+    WHEEL_BASE = 11.5
 
 class Robot:
-    """
-    Includes all subsystems
-    """
-    drivetrain = MecanumDriveTrain()
+    drivetrain = MecanumDriveTrain(
+        Constants.LEFT_DRIVE_TRAIN_FORWARD,
+        Constants.RIGHT_DRIVE_TRAIN_FORWARD,
+        Constants.RIGHT_DRIVE_TRAIN_BACK,
+        Constants.LEFT_DRIVE_TRAIN_BACK
+    )
+
+class MecanumDriveTrain:
+    motorFrontLeft = None
+    motorFrontRight = None
+    motorBackRight = None
+    motorBackLeft = None
+    leftEncoder = None
+    rightEncoder = None
+    auxEncoder = None
+
+    def __init__(self, FL, FB, FR, RB):
+        
 
 
 class MecanumDriveTrain:
-
     def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
         self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
         self.FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
         self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
         self.BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
-
+        
         self.rightEncoder = Encoder(brain.three_wire_port.e)
         self.leftEncoder = Encoder(brain.three_wire_port.a)
         self.auxEncoder = Encoder(brain.three_wire_port.c)
