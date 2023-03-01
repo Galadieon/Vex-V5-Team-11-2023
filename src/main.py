@@ -59,6 +59,8 @@ def controllerLoop():
                 drivetrain.drive(forward * (drivetrain.driveVel / 100),
                                  strafe * (drivetrain.driveVel / 100),
                                  rotate * (drivetrain.turnVel / 100))
+            elif drivetrain.autoIsRunning == True:
+                pass
             else:
                 drivetrain.stop()
 
@@ -89,7 +91,7 @@ def printToController():
 
 
 def axisCurve(x):
-    return (x**3) / 10000
+    return (pow(x, 3)) / 10_000
     # if x > 0: return (x ** 2) / 100
     # return (x ** 2) / -100
 
@@ -124,7 +126,8 @@ def vexcode_auton_function():
 def Autonomous_Control():
     global path1, drivetrain, brain
     brain.screen.print("Starting auto")
-    drivetrain.startAuto(path1)
+    drivetrain.setAutoPath(path1)
+    drivetrain.runAuto()
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
@@ -167,7 +170,11 @@ def R2_Pressed():
 
 def A_Pressed():
     global drivetrain, path1
-    drivetrain.startAuto(path1)
+    if drivetrain.autoIsRunning == False:
+        drivetrain.setAutoPath(path1)
+        Thread(drivetrain.runAuto)
+    else:
+        drivetrain.stopAuto()
 
 
 def B_Pressed():
@@ -261,7 +268,7 @@ class MecDriveTrain:
     def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
         self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
         self.FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-        self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)                                                                    
+        self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
         self.BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
 
         self.rightEncoder = Encoder(brain.three_wire_port.e)
@@ -295,24 +302,38 @@ class MecDriveTrain:
         self.prevLeftVal = 0  # previous encoder value for left wheel
         self.prevAuxVal = 0  # previous encoder value for back wheel
 
-        wait(10, MSEC)
+        self.autoIsRunning = False
+        self.path = [[]]
+
+        wait(100, MSEC)
 
         self.odomThread = Thread(self.updatePosition)
 
     # ---------------------------AUTO AND ODOMETRY---------------------------
 
-    def startAuto(self, path):
-        drivetrain.set_stopping(COAST)
+    def setAutoPath(self, path):
+        self.path = path
+
+    def runAuto(self):
+        self.set_stopping(COAST)
+
+        self.autoIsRunning = True
 
         atPosition = False
-        for step in path:
+        for step in self.path:
             while not atPosition:
-                atPosition = drivetrain.drive_to(step[0], step[1], step[2],
-                                                 step[3], step[4])
+                if self.autoIsRunning == False:
+                    return
+                atPosition = self.drive_to(step[0], step[1], step[2], step[3],
+                                           step[4])
+
+    def stopAuto(self):
+        self.autoIsRunning = False
 
     def updatePosition(self):
         while (True):
-            # start = brain.timer.time(MSEC)
+            start = brain.timer.time(MSEC)
+
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
             self.prevAuxVal = self.currAuxVal
@@ -334,12 +355,8 @@ class MecDriveTrain:
             self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += dtheta
 
-            wait(100, MSEC)
-
-            # allows for faster
-            # while brain.timer.time(MSEC) - start < 10:
-                # may need wait(1, MSEC) or something similar
-                # pass
+            while brain.timer.time(MSEC) - start < 10:
+                pass
 
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
@@ -357,9 +374,6 @@ class MecDriveTrain:
         strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
         rotate = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
 
-        print("\n\n\n\n", round(self.x, 1), "\t", round(self.y, 1), "\t", round(self.Θ, 1))
-        print(round(deltaX, 1), "\t", round(deltaY, 1), "\t", round(deltaTheta, 1))
-
         self.autoDrive(forward, strafe, rotate)
 
         return False
@@ -370,10 +384,10 @@ class MecDriveTrain:
         self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
         self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
-        self.FL.spin_for(FORWARD, 1, SECONDS, False)
-        self.FR.spin_for(FORWARD, 1, SECONDS, False)
-        self.BR.spin_for(FORWARD, 1, SECONDS, False)
-        self.BL.spin_for(FORWARD, 1, SECONDS, False)
+        self.FL.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        self.FR.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        self.BR.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        self.BL.spin_for(FORWARD, 0.01, SECONDS, wait=False)
 
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity(forward + strafe + rotate, PERCENT)
@@ -402,7 +416,7 @@ class MecDriveTrain:
         deltaY = yTarget - self.y
 
         # dist = math.hypot(deltaY, deltaX)
-        dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1/2)
+        dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
 
         targetTheta = math.atan2(deltaY, deltaX)
         localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
@@ -412,8 +426,8 @@ class MecDriveTrain:
         localDeltaY = dist * math.sin(localRelTheta)
 
         # limit excessively long and small numbers
-        localDeltaX = round(localDeltaX, 5) # 10.0000000000
-        localDeltaY = round(localDeltaY, 5) # 10.0000000000
+        localDeltaX = round(localDeltaX, 5)  # 10.0000000000
+        localDeltaY = round(localDeltaY, 5)  # 10.0000000000
 
         print(localDeltaX, localDeltaY)
 
