@@ -341,6 +341,9 @@ class MecanumDriveTrain:
     def resetOdometry(self):
         self.odometry.resetPose()
 
+class AutonomousRoutine:
+    def __init__(self):
+        self.pathList = [[]]
 
 class MecanumDriveTrain:
     def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
