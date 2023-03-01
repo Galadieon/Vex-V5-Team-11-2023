@@ -384,10 +384,10 @@ class MecDriveTrain:
         self.BR.set_velocity(-forward - strafe + rotate, PERCENT)
         self.BL.set_velocity(forward - strafe + rotate, PERCENT)
 
-        self.FL.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.FR.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.BR.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.BL.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        self.FL.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.FR.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.BR.spin_for(FORWARD, 10, MSEC, wait=False)
+        self.BL.spin_for(FORWARD, 10, MSEC, wait=False)
 
     def drive(self, forward, strafe, rotate):
         self.FL.set_velocity(forward + strafe + rotate, PERCENT)
