@@ -239,35 +239,35 @@ class Robot:
 
     intake = Intake()
 
-class MecanumDriveTrain:
-    def __init__(self, FL, FB, FR, RB):
-        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
-        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
-        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
-        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
-        
-        self.rightEncoder = Encoder(brain.three_wire_port.e)
-        self.leftEncoder = Encoder(brain.three_wire_port.a)
-        self.auxEncoder = Encoder(brain.three_wire_port.c)
-        
-        self.driveVel = 100
-        self.turnVel = 100
-        self.motorMode = COAST
+class Odometry:
+    def __init__(self, right, left, aux):
+        self.x = 0
+        self.y = 0
+        self.Θ = math.pi / 2
 
-        self.resetEncoders()
+        self.rightEncoder = right
+        self.leftEncoder = left
+        self.auxEncoder = aux
 
-        self.odometry = Odometry(0, 0, math.pi / 2)
+        self.currRightVal = 0  # current encoder value for right wheel
+        self.currLeftVal = 0  # current encoder value for left wheel
+        self.currAuxVal = 0  # current encoder value for back wheel
 
-    def update(self):
-        
+        self.prevRightVal = 0  # previous encoder value for right wheel
+        self.prevLeftVal = 0  # previous encoder value for left wheel
+        self.prevAuxVal = 0  # previous encoder value for back wheel
 
-    def resetEncoders(self):
-        self.rightEncoder.set_position(0, DEGREES)
-        self.leftEncoder.set_position(0, DEGREES)
-        self.auxEncoder.set_position(0, DEGREES)
+        self.threadIsRunning = False
+        self.threadIsPaused = False
 
-    def updatePosition(self):
-        while (True):
+    def start(self):
+        Thread(self.updatePose)
+        self.threadIsRunning = True
+
+    def updatePose(self):
+        while (self.threadIsRunning):
+            if self.threadIsPaused: pass
+
             start = brain.timer.time(MSEC)
 
             self.prevRightVal = self.currRightVal
@@ -293,6 +293,54 @@ class MecanumDriveTrain:
 
             while brain.timer.time(MSEC) - start < 10:
                 pass
+
+    def stop(self):
+        self.threadIsRunning = False
+
+    def resetPose(self):
+        self.x = 0
+        self.y = 0
+        self.Θ = math.pi / 2
+
+    def setPose(self, newX, newY, newΘ):
+        self.threadIsPaused = True
+        wait(1  MSEC)
+        self.x = newX
+        self.y = newY
+        self.Θ = newΘ
+        self.threadIsPaused = False
+
+class MecanumDriveTrain:
+    def __init__(self, FL, FB, FR, RB):
+        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
+        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
+        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
+        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
+        
+        self.rightEncoder = Encoder(brain.three_wire_port.e)
+        self.leftEncoder = Encoder(brain.three_wire_port.a)
+        self.auxEncoder = Encoder(brain.three_wire_port.c)
+        
+        self.driveVel = 100
+        self.turnVel = 100
+        self.motorMode = COAST
+
+        self.resetEncoders()
+
+        self.odometry = Odometry(
+                        self.rightEncoder,
+                        self.leftEncoder,
+                        self.auxEncoder
+        )
+        self.odometry.start()
+
+    def resetOdometry(self):
+        self.odometry.resetPose()
+
+    def resetEncoders(self):
+        self.rightEncoder.set_position(0, DEGREES)
+        self.leftEncoder.set_position(0, DEGREES)
+        self.auxEncoder.set_position(0, DEGREES)
 
 
 class MecanumDriveTrain:
