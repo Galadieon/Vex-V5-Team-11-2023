@@ -218,6 +218,13 @@ class Constants:
     TRACK_WIDTH = 14.097242
     WHEEL_BASE = 11.5
 
+    LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
+    AUX_ODOMETRY_DISGRACE = 5.0
+    ODOMETRY_DIAMETER = 2.75
+    QUADRATURE_ENCODER_TICKS = 360
+    ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
+    INCHS_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
+
 class Robot:
     drivetrain = MecanumDriveTrain(
         Constants.LEFT_DRIVE_TRAIN_FORWARD,
@@ -226,17 +233,66 @@ class Robot:
         Constants.LEFT_DRIVE_TRAIN_BACK
     )
 
-class MecanumDriveTrain:
-    motorFrontLeft = None
-    motorFrontRight = None
-    motorBackRight = None
-    motorBackLeft = None
-    leftEncoder = None
-    rightEncoder = None
-    auxEncoder = None
+    indexer = Indexer()
+    
+    flywheel = Flywheel()
 
+    intake = Intake()
+
+class MecanumDriveTrain:
     def __init__(self, FL, FB, FR, RB):
+        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
+        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
+        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
+        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
         
+        self.rightEncoder = Encoder(brain.three_wire_port.e)
+        self.leftEncoder = Encoder(brain.three_wire_port.a)
+        self.auxEncoder = Encoder(brain.three_wire_port.c)
+        
+        self.driveVel = 100
+        self.turnVel = 100
+        self.motorMode = COAST
+
+        self.resetEncoders()
+
+        self.odometry = Odometry(0, 0, math.pi / 2)
+
+    def update(self):
+        
+
+    def resetEncoders(self):
+        self.rightEncoder.set_position(0, DEGREES)
+        self.leftEncoder.set_position(0, DEGREES)
+        self.auxEncoder.set_position(0, DEGREES)
+
+    def updatePosition(self):
+        while (True):
+            start = brain.timer.time(MSEC)
+
+            self.prevRightVal = self.currRightVal
+            self.prevLeftVal = self.currLeftVal
+            self.prevAuxVal = self.currAuxVal
+
+            self.currRightVal = self.rightEncoder.value()
+            self.currLeftVal = self.leftEncoder.value()
+            self.currAuxVal = self.auxEncoder.value()
+
+            dn2 = self.currRightVal - self.prevRightVal
+            dn1 = self.currLeftVal - self.prevLeftVal
+            dn3 = self.currAuxVal - self.prevAuxVal
+
+            dtheta = self.inchsPerTick * ((dn2 - dn1) / self.L)
+            dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) * (self.B / self.L)))
+
+            theta = self.Θ + (dtheta / 2.0)
+            self.x -= -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.Θ += dtheta
+
+            while brain.timer.time(MSEC) - start < 10:
+                pass
 
 
 class MecanumDriveTrain:
@@ -249,13 +305,6 @@ class MecanumDriveTrain:
         self.rightEncoder = Encoder(brain.three_wire_port.e)
         self.leftEncoder = Encoder(brain.three_wire_port.a)
         self.auxEncoder = Encoder(brain.three_wire_port.c)
-
-        self.L = 13.5
-        self.B = 5.0
-        self.D = 2.75
-        self.N = 360
-        self.circumference = math.pi * self.D
-        self.inchsPerTick = self.circumference / self.N
 
         self.wheelTravel = wheelTravel
         self.trackWidth = trackWidth
