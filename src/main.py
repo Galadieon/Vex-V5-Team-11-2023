@@ -68,7 +68,7 @@ def controllerLoop():
 
 
 def printToController():
-    global drivetrain
+    global controller, drivetrain
     while (True):
         # controller.screen.print("Right Encoder: ", drivetrain.rightEncoder.value())
         # controller.screen.next_row()
@@ -206,64 +206,22 @@ def Right_Pressed():
     pass
 
 
-# ---------------------------HELPER FUNCTIONS---------------------------
-
-
-def throwTheThings():
-    global F1
-    F1.set_velocity(100, PERCENT)
-    F1.spin(FORWARD)
-
-    wait(1, SECONDS)
-    F1.stop()
-
-
-# def findAvg
-
-# def tanh(x, max): # x is in inches
-#     n = 1.732
-#     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
-
-
-def tanh(x):  # x is in inches
-    n = 1.732
-    return ((n**x) - (n**(-x))) / ((n**x) + (n**(-x)))
-
-
-# def tanhTurning(x, max): # x is in radians
-#     n = 23.2742 # seems a little too large for turn motor value, try 3
-#     return ((n ** x) - (n ** (-x))) / ((n ** x) + (n ** (-x))) * max
-
-
-def tanhTurning(x):  # x is in radians
-    n = 23.2742  # seems a little too large for turn motor value, try 3
-    return ((n**x) - (n**(-x))) / ((n**x) + (n**(-x)))
-
-
-def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
-    current = encoder.velocity(RPM)
-
-    error = target - current
-
-    integral += error
-    if error == 0: integral = 0
-    if abs(error) > 10: integral = 0
-
-    derivative = error - previousError
-    previousError = error
-
-    motorVoltage = minimumVoltage + abs((Kp * error) + (Ki * integral) +
-                                        (Kd * derivative))
-
-    if motorVoltage > 12: motorVoltage = 12
-
-    return integral, previousError, motorVoltage
-
-
 # ---------------------------MECANUM DRIVETRAIN---------------------------
 
+class Constants:
+    LEFT_DRIVE_TRAIN_BACK = 11
+    LEFT_DRIVE_TRAIN_FORWARD = 10
+    RIGHT_DRIVE_TRAIN_BACK = 1
+    RIGHT_DRIVE_TRAIN_FORWARD = 20
 
-class MecDriveTrain:
+class Robot:
+    """
+    Includes all subsystems
+    """
+    drivetrain = MecanumDriveTrain()
+
+
+class MecanumDriveTrain:
 
     def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
         self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
@@ -477,7 +435,7 @@ controller.buttonDown.pressed(Down_Pressed)
 controller.buttonLeft.pressed(Left_Pressed)
 controller.buttonRight.pressed(Right_Pressed)
 
-drivetrain = MecDriveTrain(4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
+drivetrain = MecanumDriveTrain(4 * math.pi, 14.097242, 11.5, INCHES, 36.0 / 84.0)
 
 controllerThread = Thread(controllerLoop)
 
