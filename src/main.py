@@ -262,9 +262,10 @@ class Odometry:
 
     def start(self):
         Thread(self.updatePose)
-        self.threadIsRunning = True
 
     def updatePose(self):
+        self.threadIsRunning = True
+
         while (self.threadIsRunning):
             if self.threadIsPaused: pass
 
@@ -298,17 +299,21 @@ class Odometry:
         self.threadIsRunning = False
 
     def resetPose(self):
-        self.x = 0
-        self.y = 0
-        self.Θ = math.pi / 2
+        self.setPose(0, 0, math.pi / 2)
 
     def setPose(self, newX, newY, newΘ):
         self.threadIsPaused = True
-        wait(1  MSEC)
+        wait(0.5, MSEC)
         self.x = newX
         self.y = newY
         self.Θ = newΘ
+        self.resetEncoders()
         self.threadIsPaused = False
+
+    def resetEncoders(self):
+        self.rightEncoder.set_position(0, DEGREES)
+        self.leftEncoder.set_position(0, DEGREES)
+        self.auxEncoder.set_position(0, DEGREES)
 
 class MecanumDriveTrain:
     def __init__(self, FL, FB, FR, RB):
@@ -317,30 +322,20 @@ class MecanumDriveTrain:
         self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
         
-        self.rightEncoder = Encoder(brain.three_wire_port.e)
-        self.leftEncoder = Encoder(brain.three_wire_port.a)
-        self.auxEncoder = Encoder(brain.three_wire_port.c)
-        
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
 
-        self.resetEncoders()
-
         self.odometry = Odometry(
-                        self.rightEncoder,
-                        self.leftEncoder,
-                        self.auxEncoder
+                        Encoder(brain.three_wire_port.e),
+                        Encoder(brain.three_wire_port.a),
+                        Encoder(brain.three_wire_port.c)
         )
+        self.odometry.resetEncoders()
         self.odometry.start()
 
     def resetOdometry(self):
         self.odometry.resetPose()
-
-    def resetEncoders(self):
-        self.rightEncoder.set_position(0, DEGREES)
-        self.leftEncoder.set_position(0, DEGREES)
-        self.auxEncoder.set_position(0, DEGREES)
 
 
 class MecanumDriveTrain:
