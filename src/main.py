@@ -219,11 +219,11 @@ class Constants:
     WHEEL_BASE = 11.5
 
     LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
-    AUX_ODOMETRY_DISGRACE = 5.0
+    AUX_ODOMETRY_DISTANCE = 5.0
     ODOMETRY_DIAMETER = 2.75
     QUADRATURE_ENCODER_TICKS = 360
     ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
-    INCHS_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
+    INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
 class Robot:
     drivetrain = MecanumDriveTrain(
@@ -240,22 +240,14 @@ class Robot:
     intake = Intake()
 
 class Odometry:
-    def __init__(self, right, left, aux):
+    def __init__(self, rightEncoder, leftEncoder, auxEncoder):
         self.x = 0
         self.y = 0
         self.Θ = math.pi / 2
 
-        self.rightEncoder = right
-        self.leftEncoder = left
-        self.auxEncoder = aux
-
-        self.currRightVal = 0  # current encoder value for right wheel
-        self.currLeftVal = 0  # current encoder value for left wheel
-        self.currAuxVal = 0  # current encoder value for back wheel
-
-        self.prevRightVal = 0  # previous encoder value for right wheel
-        self.prevLeftVal = 0  # previous encoder value for left wheel
-        self.prevAuxVal = 0  # previous encoder value for back wheel
+        self.rightEncoder = rightEncoder
+        self.leftEncoder = leftEncoder
+        self.auxEncoder = auxEncoder
 
         self.threadIsRunning = False
         self.threadIsPaused = False
@@ -264,28 +256,40 @@ class Odometry:
         Thread(self.updatePose)
 
     def updatePose(self):
+        inchsPerTick = Constants.INCHES_PER_TICK
+        LRDistance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
+        BDistance = Constants.AUX_ODOMETRY_DISTANCE
+
+        currRightVal = 0  # current encoder value for right wheel
+        currLeftVal = 0  # current encoder value for left wheel
+        currAuxVal = 0  # current encoder value for back wheel
+        
+        prevRightVal = 0  # previous encoder value for right wheel
+        prevLeftVal = 0  # previous encoder value for left wheel
+        prevAuxVal = 0  # previous encoder value for back whee
+        
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
-            if self.threadIsPaused: pass
+            if self.threadIsPaused: continue
 
             start = brain.timer.time(MSEC)
 
-            self.prevRightVal = self.currRightVal
-            self.prevLeftVal = self.currLeftVal
-            self.prevAuxVal = self.currAuxVal
+            prevRightVal = currRightVal
+            prevLeftVal = currLeftVal
+            prevAuxVal = currAuxVal
 
-            self.currRightVal = self.rightEncoder.value()
-            self.currLeftVal = self.leftEncoder.value()
-            self.currAuxVal = self.auxEncoder.value()
+            currRightVal = self.rightEncoder.value()
+            currLeftVal = self.leftEncoder.value()
+            currAuxVal = self.auxEncoder.value()
 
-            dn2 = self.currRightVal - self.prevRightVal
-            dn1 = self.currLeftVal - self.prevLeftVal
-            dn3 = self.currAuxVal - self.prevAuxVal
+            dn2 = currRightVal - prevRightVal
+            dn1 = currLeftVal - prevLeftVal
+            dn3 = currAuxVal - prevAuxVal
 
-            dtheta = self.inchsPerTick * ((dn2 - dn1) / self.L)
-            dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
-            dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) * (self.B / self.L)))
+            dtheta = inchsPerTick * ((dn2 - dn1) / LRDistance)
+            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = inchsPerTick * (dn3 - ((dn2 - dn1) * (BDistance / LRDistance)))
 
             theta = self.Θ + (dtheta / 2.0)
             self.x -= -dx * math.cos(-theta) + dy * math.sin(-theta)
@@ -293,7 +297,7 @@ class Odometry:
             self.Θ += dtheta
 
             while brain.timer.time(MSEC) - start < 10:
-                pass
+                continue
 
     def stop(self):
         self.threadIsRunning = False
@@ -361,13 +365,13 @@ class MecanumDriveTrain:
         self.Θ = math.pi / 2
         self.motorMode = COAST
 
-        self.currRightVal = 0  # current encoder value for right wheel
-        self.currLeftVal = 0  # current encoder value for left wheel
-        self.currAuxVal = 0  # current encoder value for back wheel
+        currRightVal = 0  # current encoder value for right wheel
+        currLeftVal = 0  # current encoder value for left wheel
+        currAuxVal = 0  # current encoder value for back wheel
 
-        self.prevRightVal = 0  # previous encoder value for right wheel
-        self.prevLeftVal = 0  # previous encoder value for left wheel
-        self.prevAuxVal = 0  # previous encoder value for back wheel
+        prevRightVal = 0  # previous encoder value for right wheel
+        prevLeftVal = 0  # previous encoder value for left wheel
+        prevAuxVal = 0  # previous encoder value for back wheel
 
         self.autoIsRunning = False
         self.path = [[]]
@@ -401,17 +405,17 @@ class MecanumDriveTrain:
         while (True):
             start = brain.timer.time(MSEC)
 
-            self.prevRightVal = self.currRightVal
-            self.prevLeftVal = self.currLeftVal
-            self.prevAuxVal = self.currAuxVal
+            prevRightVal = currRightVal
+            prevLeftVal = currLeftVal
+            prevAuxVal = currAuxVal
 
-            self.currRightVal = self.rightEncoder.value()
-            self.currLeftVal = self.leftEncoder.value()
-            self.currAuxVal = self.auxEncoder.value()
+            currRightVal = self.rightEncoder.value()
+            currLeftVal = self.leftEncoder.value()
+            currAuxVal = self.auxEncoder.value()
 
-            dn2 = self.currRightVal - self.prevRightVal
-            dn1 = self.currLeftVal - self.prevLeftVal
-            dn3 = self.currAuxVal - self.prevAuxVal
+            dn2 = currRightVal - prevRightVal
+            dn1 = currLeftVal - prevLeftVal
+            dn3 = currAuxVal - prevAuxVal
 
             dtheta = self.inchsPerTick * ((dn2 - dn1) / self.L)
             dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
@@ -423,7 +427,7 @@ class MecanumDriveTrain:
             self.Θ += dtheta
 
             while brain.timer.time(MSEC) - start < 10:
-                pass
+                continue
 
     # ---------------------------DRIVE FUNCTIONS---------------------------
 
