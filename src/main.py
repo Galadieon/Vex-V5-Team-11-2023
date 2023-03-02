@@ -52,13 +52,13 @@ def controllerLoop():
         if controllerEnabled:
             forward = axisCurve(controller.axis3.position())
             strafe = axisCurve(controller.axis4.position())
-            rotate = axisCurve(controller.axis1.position())
+            turn = axisCurve(controller.axis1.position())
 
             if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(
-                    rotate) > deadZoneVal:
+                    turn) > deadZoneVal:
                 Robot.drivetrain.drive(forward * (Robot.drivetrain.driveVel / 100),
                                  strafe * (Robot.drivetrain.driveVel / 100),
-                                 rotate * (Robot.drivetrain.turnVel / 100))
+                                 turn * (Robot.drivetrain.turnVel / 100))
             elif Robot.autoRoutine.autoIsRunning == True:
                 pass
             else:
@@ -227,6 +227,22 @@ class Constants:
     ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
     INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
+    FLYWHEEL_KP = 1
+    FLYWHEEL_KI = 0
+    FLYWHEEL_KD = 0
+
+    DRIVETRAIN_FORWARD_KP = 1
+    DRIVETRAIN_FORWARD_KI = 0
+    DRIVETRAIN_FORWARD_KD = 0
+
+    DRIVETRAIN_STRAFE_KP = 1
+    DRIVETRAIN_STRAFE_KI = 0
+    DRIVETRAIN_STRAFE_KD = 0
+
+    DRIVETRAIN_TURN_KP = 1
+    DRIVETRAIN_TURN_KI = 0
+    DRIVETRAIN_TURN_KD = 0
+
 class PID:
     def __init__(self, Kp = 0, Ki = 0, Kd = 0):
         self.Kp = Kp
@@ -349,11 +365,11 @@ class MecanumDriveTrain:
         Robot.odometry.resetEncoders()
         Robot.odometry.start()
 
-    def drive(self, forward, strafe, rotate):
-        self.motorFrontLeft.set_velocity(forward + strafe + rotate, PERCENT)
-        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + rotate), PERCENT)
-        self.motorBackRight.set_velocity(-forward - strafe + rotate, PERCENT)
-        self.motorBackLeft.set_velocity(forward - strafe + rotate, PERCENT)
+    def drive(self, forward, strafe, turn):
+        self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
+        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn), PERCENT)
+        self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
+        self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
         self.motorFrontLeft.spin(FORWARD)
         self.motorFrontRight.spin(FORWARD)
@@ -372,17 +388,17 @@ class MecanumDriveTrain:
 
         forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
         strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
-        rotate = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
+        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
 
-        Robot.drivetrain.autoDrive(forward, strafe, rotate)
+        Robot.drivetrain.autoDrive(forward, strafe, turn)
 
         return False
 
-    def autoDrive(self, forward, strafe, rotate):
-        self.motorFrontLeft.set_velocity(forward + strafe + rotate, PERCENT)
-        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + rotate), PERCENT)
-        self.motorBackRight.set_velocity(-forward - strafe + rotate, PERCENT)
-        self.motorBackLeft.set_velocity(forward - strafe + rotate, PERCENT)
+    def autoDrive(self, forward, strafe, turn):
+        self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
+        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn), PERCENT)
+        self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
+        self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
         self.motorFrontLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
         self.motorFrontRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
@@ -508,9 +524,9 @@ wait(15, MSEC)
 
 non_competition_start()
 
-# class MecanumDriveTrain:
-    # def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
-    #     self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+class MecanumDriveTrain:
+    def __init__(self, wheelTravel, trackWidth, wheelBase, unit, gearRatio):
+        self.FL = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
     #     self.FR = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
     #     self.BR = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
     #     self.BL = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
