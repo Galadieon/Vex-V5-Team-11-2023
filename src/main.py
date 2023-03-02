@@ -230,6 +230,26 @@ class Constants:
 class PID:
     def __init__(self, Kp, kI, )
 
+
+    # def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
+    #     current = encoder.velocity(RPM)
+
+    #     error = target - current
+
+    #     integral += error
+    #     if error == 0: integral = 0
+    #     if abs(error) > 10: integral = 0
+
+    #     derivative = error - previousError
+    #     previousError = error
+
+    #     motorVoltage = minimumVoltage + abs((Kp * error) + (Ki * integral) +
+    #                                         (Kd * derivative))
+
+    #     if motorVoltage > 12: motorVoltage = 12
+
+    #     return integral, previousError, motorVoltage
+
 class Odometry:
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
         self.x = 0
