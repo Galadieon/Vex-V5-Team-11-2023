@@ -228,27 +228,29 @@ class Constants:
     INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
 class PID:
-    def __init__(self, Kp, kI, )
+    def __init__(self, Kp = 0, Ki = 0, Kd = 0):
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.prevError = 0.0
+        self.integral = 0.0
+        self.value = 0.0
 
+    def update(self, target, current):
+        error = target - current
 
-    # def PID(encoder, target, integral, previousError, minimumVoltage, Kp, Ki, Kd):
-    #     current = encoder.velocity(RPM)
+        self.integral += error
+        if error == 0 or abs(error) > 2.0: self.integral = 0.0
 
-    #     error = target - current
+        derivative = error - self.previousError
+        self.previousError = error
 
-    #     integral += error
-    #     if error == 0: integral = 0
-    #     if abs(error) > 10: integral = 0
+        self.value = abs((Kp * error) + (Ki * self.integral) + (Kd * derivative))
 
-    #     derivative = error - previousError
-    #     previousError = error
+        if self.value > 100: self.value = 100
+        if self.value < -100: self.value = -100
 
-    #     motorVoltage = minimumVoltage + abs((Kp * error) + (Ki * integral) +
-    #                                         (Kd * derivative))
-
-    #     if motorVoltage > 12: motorVoltage = 12
-
-    #     return integral, previousError, motorVoltage
+        return self.value
 
 class Odometry:
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
