@@ -227,6 +227,9 @@ class Constants:
     ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
     INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
+class PID:
+    def __init__(self, Kp, kI, )
+
 class Odometry:
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
         self.x = 0
@@ -454,9 +457,6 @@ class Robot:
 
     autoRoutine = AutonomousRoutine()
 
-    def __init__(self):
-        pass
-
 # ---------------------------REQUIRED CODE---------------------------
 
 # wait for rotation sensor to fully initialize
@@ -477,8 +477,6 @@ controller.buttonUp.pressed(Up_Pressed)
 controller.buttonDown.pressed(Down_Pressed)
 controller.buttonLeft.pressed(Left_Pressed)
 controller.buttonRight.pressed(Right_Pressed)
-
-robot = Robot()
 
 controllerThread = Thread(controllerLoop)
 
