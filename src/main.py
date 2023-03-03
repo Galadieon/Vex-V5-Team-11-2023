@@ -62,7 +62,8 @@ class Constants:
 
     # subject to change
     INDEXER_PORT = Ports.PORT11
-    FLYWHEEL_PORT = Ports.PORT15
+    FLYWHEEL_PORT1 = Ports.PORT15
+    FLYWHEEL_PORT2 = Ports.PORT16
     INTAKE_PORT = Ports.PORT20
 
     RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
@@ -158,9 +159,9 @@ class Odometry:
         A new Odometry object.
 
     #### Examples:
-        odometry1 = Odometry(Constants.RIGHT_ENCODER,
-                            Constants.LEFT_ENCODER,
-                            Constants.AUX_ENCODER)
+        odometry1 = Odometry(Constants.RIGHT_ENCODER,\\
+        Constants.LEFT_ENCODER,\\
+        Constants.AUX_ENCODER)
     """
 
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
@@ -332,10 +333,10 @@ class MecanumDriveTrain:
         A new MecanumDriveTrain object.
 
     #### Examples:
-        drivetrain1 = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
-                                        Constants.RIGHT_DRIVE_TRAIN_FORWARD,
-                                        Constants.RIGHT_DRIVE_TRAIN_BACK,
-                                        Constants.LEFT_DRIVE_TRAIN_BACK)
+        drivetrain1 = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,\\
+        Constants.RIGHT_DRIVE_TRAIN_FORWARD,\\
+        Constants.RIGHT_DRIVE_TRAIN_BACK,\\
+        Constants.LEFT_DRIVE_TRAIN_BACK)
     """
 
     def __init__(self, FL, FR, BR, BL):
@@ -430,9 +431,8 @@ class Flywheel:
         A new Flywheel object.
 
     #### Examples:
-        Constants.LEFT_DRIVE_TRAIN_FORWARD\\
-        Constants.INDEXER_PORT\\
-        Constants.WHEEL_TRAVEL
+        flywheel1 = Flywheel(Constants.FLYWHEEL_PORT1)\\
+        flywheel2 = Flywheel(Constants.FLYWHEEL_PORT1, Constants.FLYWHEEL_PORT2)
     """
 
     def __init__(self, *motors):
@@ -541,7 +541,7 @@ class Robot:
 
     indexer = Indexer(Constants.INDEXER_PORT)
 
-    flywheel = Flywheel(Constants.FLYWHEEL_PORT)
+    flywheel = Flywheel(Constants.FLYWHEEL_PORT1)
 
     intake = Intake(Constants.INTAKE_PORT)
 
