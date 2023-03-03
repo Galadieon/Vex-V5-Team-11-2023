@@ -38,6 +38,23 @@ wait(30, MSEC)
 
 
 class Constants:
+    """
+    ### Constants class - class to hold final constants
+
+    This class holds constants that won't be changed while running
+
+    #### Arguments:
+        None
+
+    #### Returns:
+        None
+
+    #### Examples:
+        Constants.LEFT_DRIVE_TRAIN_FORWARD\\
+        Constants.INDEXER_PORT\\
+        Constants.WHEEL_TRAVEL
+    """
+
     LEFT_DRIVE_TRAIN_FORWARD = Ports.PORT1
     RIGHT_DRIVE_TRAIN_FORWARD = Ports.PORT2
     RIGHT_DRIVE_TRAIN_BACK = Ports.PORT10
@@ -47,6 +64,10 @@ class Constants:
     INDEXER_PORT = Ports.PORT11
     FLYWHEEL_PORT = Ports.PORT15
     INTAKE_PORT = Ports.PORT20
+
+    RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
+    LEFT_ENCODER = Encoder(brain.three_wire_port.a)
+    AUX_ENCODER = Encoder(brain.three_wire_port.c)
 
     WHEEL_TRAVEL = 4 * math.pi
     TRACK_WIDTH = 14.097242
@@ -77,8 +98,26 @@ class Constants:
 
 
 class PID:
+    """
+    ### PID class - create PID controller
 
-    def __init__(self, Kp=0, Ki=0, Kd=0):
+    This class is used to simplify creation of PID controllers
+
+    #### Arguments:
+        Kp (optional) : The proportional constant (how reactive the PID controller is)
+        Ki (optional) : The integral constant (how impactful the PID controllelr is for small movements)
+        Ki (optional) : The integral constant (how much to dampen the PID controller)
+
+    #### Returns:
+        A new PID controller object
+
+    #### Examples:
+        pid1 = PID(1)\\
+        pid2 = PID(1, 0.5)\\
+        pid2 = PID(1, 0.5, 0.25)
+    """
+
+    def __init__(self, Kp=1, Ki=0, Kd=0):
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
@@ -105,6 +144,24 @@ class PID:
 
 
 class Odometry:
+    """
+    ### Odometry class - creates odometry object
+
+    This class is used to hold information about robot pose and quadrature encoders
+
+    #### Arguments:
+        rightEncoder : The encoder on the right of robot
+        leftEncoder : The encoder on the left of robot
+        auxEncoder : The encoder on the auxillary ("back") side of robot
+
+    #### Returns:
+        A new Odometry object.
+
+    #### Examples:
+        odometry1 = Odometry(Constants.RIGHT_ENCODER,
+                            Constants.LEFT_ENCODER,
+                            Constants.AUX_ENCODER)
+    """
 
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
         self.x = 0
@@ -191,6 +248,20 @@ class Odometry:
 
 
 class AutonomousRoutine:
+    """
+    ### Autonomous routine class - creates autonomous routines object
+
+    This class is used to pick and run autonomous routines
+
+    #### Arguments:
+        None
+
+    #### Returns:
+        A new AutonomousRoutine object.
+
+    #### Examples:
+        autoRoutine1 = AutonomousRoutine()
+    """
 
     def __init__(self):
         self.autoIsRunning = False
@@ -246,6 +317,26 @@ class AutonomousRoutine:
 
 
 class MecanumDriveTrain:
+    """
+    ### MecanumDrivetrain class - creates mecanum drivetrain
+
+    This class is used to create and use mecanum drivetrain
+
+    #### Arguments:
+        FL : The front left motor
+        FR : The front right motor
+        BR : The back right motor
+        BL : The back left motor
+
+    #### Returns:
+        A new MecanumDriveTrain object.
+
+    #### Examples:
+        drivetrain1 = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
+                                        Constants.RIGHT_DRIVE_TRAIN_FORWARD,
+                                        Constants.RIGHT_DRIVE_TRAIN_BACK,
+                                        Constants.LEFT_DRIVE_TRAIN_BACK)
+    """
 
     def __init__(self, FL, FR, BR, BL):
         self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
@@ -327,9 +418,25 @@ class MecanumDriveTrain:
 
 
 class Flywheel:
+    """
+    ### Flywheel class - creates flywheel object
 
-    def __init__(self, motor):
-        self.motor = Motor(motor, GearSetting.RATIO_6_1, False)
+    This class is to create and run robot flywheel that launches discs
+
+    #### Arguments:
+        One or more Motor class instances (Motor objects)
+
+    #### Returns:
+        A new Flywheel object.
+
+    #### Examples:
+        Constants.LEFT_DRIVE_TRAIN_FORWARD\\
+        Constants.INDEXER_PORT\\
+        Constants.WHEEL_TRAVEL
+    """
+
+    def __init__(self, *motors):
+        self.motorGroup = MotorGroup(*[motors])
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
 
@@ -348,6 +455,20 @@ class Flywheel:
 
 
 class Indexer:
+    """
+    ### Indexer class - creates indexer object
+
+    This class is to create and run robot indexer to push discs into flywheel
+
+    #### Arguments:
+        motor : The indexer motor to push discs
+
+    #### Returns:
+        A new Indexer object.
+
+    #### Examples:
+        indexer1 = Indexer(Constants.INDEXER_PORT)
+    """
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
@@ -366,6 +487,20 @@ class Indexer:
 
 
 class Intake:
+    """
+    ### Flywheel class - creates flywheel object
+
+    This class is to create and run robot flywheel
+
+    #### Arguments:
+        motor : The intake motor to collect or remove jammed discs
+
+    #### Returns:
+        A new Intake object.
+
+    #### Examples:
+        intake1 = Intake(Constants.INTAKE_PORT)
+    """
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
@@ -380,14 +515,29 @@ class Intake:
 
 
 class Robot:
+    """
+    ### Robot class - creates robot object
+
+    This class is to create and run robot subsystems and autonomous from a static context
+
+    #### Arguments:
+        None
+
+    #### Returns:
+        A new Robot object (unnecessary to access subsystem functions).
+
+    #### Examples:
+        robot1 = Robot() # unnecessary
+    """
+
     drivetrain = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
                                    Constants.RIGHT_DRIVE_TRAIN_FORWARD,
                                    Constants.RIGHT_DRIVE_TRAIN_BACK,
                                    Constants.LEFT_DRIVE_TRAIN_BACK)
 
-    odometry = Odometry(Encoder(brain.three_wire_port.e),
-                        Encoder(brain.three_wire_port.a),
-                        Encoder(brain.three_wire_port.c))
+    odometry = Odometry(Constants.RIGHT_ENCODER,
+                        Constants.LEFT_ENCODER,
+                        Constants.AUX_ENCODER)
 
     indexer = Indexer(Constants.INDEXER_PORT)
 
