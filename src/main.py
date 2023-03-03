@@ -403,7 +403,6 @@ class Robot:
 
 # Controller loop to handle controller readings
 def controllerLoop():
-    global controllerEnabled, controller, drivetrain
     deadZoneVal = axisCurve(0.1)
 
     printThread = Thread(printToController)
@@ -429,7 +428,6 @@ def controllerLoop():
 
 
 def printToController():
-    global controller, drivetrain
     while (True):
         # controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
         # controller.screen.next_row()
@@ -467,7 +465,6 @@ def non_competition_start():
 
 
 def Default_Motor_Speed():
-    global drivetrain
     Robot.drivetrain.set_drive_velocity(100, VelocityUnits.PERCENT)
     Robot.drivetrain.set_turn_velocity(100, VelocityUnits.PERCENT)
     Robot.drivetrain.set_stopping(COAST)
@@ -477,7 +474,6 @@ def Default_Motor_Speed():
 
 
 def vexcode_auton_function():
-    global drivetrain, F1
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
         wait(10, MSEC)
@@ -486,7 +482,6 @@ def vexcode_auton_function():
 
 
 def Autonomous_Control():
-    global path1, drivetrain, brain
     brain.screen.print("Starting auto")
     Robot.autoRoutine.addAutoPaths(path1)
     Robot.autoRoutine.runAuto(0)
@@ -496,7 +491,6 @@ def Autonomous_Control():
 
 
 def vexcode_driver_function():
-    global drivetrain, F1
     driver_control_task_0 = Thread(Driver_Control)
     while (competition.is_driver_control() and competition.is_enabled()):
         wait(10, MSEC)
@@ -532,7 +526,6 @@ def R2_Pressed():
 
 
 def A_Pressed():
-    global drivetrain, path1
     if Robot.autoRoutine.autoIsRunning == False:
         Robot.autoRoutine.addAutoPaths(path1)
         Thread(Robot.autoRoutine.runAuto)
