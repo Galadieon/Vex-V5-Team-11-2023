@@ -266,22 +266,25 @@ class AutonomousRoutine:
     def __init__(self):
         self.autoIsRunning = False
         self.pathList = [[[]]]
+        self.chosenPath = 0
 
     def addAutoPaths(self, pathList):
         self.pathList = pathList
+    
+    def setPath(self, pathNumbber):
+        self.chosenPath = pathNumbber
 
-    def runAuto(self, pathNumber):
+    def runAuto(self):
         Robot.drivetrain.set_stopping(COAST)
 
         self.autoIsRunning = True
 
         atPosition = False
-        for step in self.pathList[pathNumber]:
+        for step in self.pathList[self.chosenPath]:
             while not atPosition:
                 if self.autoIsRunning == False: return
                 atPosition = Robot.drivetrain.driveTo(
-                    step[0], step[1], step[2], step[3], step[4],
-                    self.calcLocalXY(step[0], step[1]))
+                    self.calcLocalXY(step[0], step[1]), step[2], step[3], step[4])
 
     def stopAuto(self):
         self.autoIsRunning = False
@@ -309,8 +312,7 @@ class AutonomousRoutine:
         return localDeltaX, localDeltaY
 
     def goBackToOG(self):
-        Robot.drivetrain.driveTo(0, 0, math.pi / 2, 25, 25,
-                                 self.calcLocalXY(0, 0))
+        Robot.drivetrain.driveTo(self.calcLocalXY(0, 0), math.pi / 2, 25, 25)
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -356,6 +358,18 @@ class MecanumDriveTrain:
         Robot.odometry.start()
 
     def drive(self, forward, strafe, turn):
+        '''
+        ### Drive the drivetrain with provided arguments
+
+        #### Arguments:
+            forward : The forward movement speed
+            strafe : The strafing movement speed
+            turn : The turning movement speed
+
+        #### Returns:
+            None
+        '''
+
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn),
                                           PERCENT)
@@ -367,14 +381,27 @@ class MecanumDriveTrain:
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
 
-    def driveTo(self, xTarget: float, yTarget: float, ΘTarget: float,
-                driveVel: float, turnVel: float, localXY):
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
+        '''
+        ### Drive the drivetrain to target pose
+
+        #### Arguments:
+            localXY : A tuple containing robot centered x-y displacemennt to target
+            ΘTarget : The target Θ angle
+            driveVel : The max drive velocity
+            turnVel : The max turn velocity
+
+        #### Returns:
+            A False if not at target\\
+            A True if at target
+        '''
+
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
         if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
                 deltaTheta) < 0.035:
-            print("AT POSITION")
+            print("AT TARGET")
             return True
 
         forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
@@ -529,20 +556,22 @@ class Robot:
         robot1 = Robot() # unnecessary
     """
 
+    # Subsystem variable instantiation and initialization
     drivetrain = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
                                    Constants.RIGHT_DRIVE_TRAIN_FORWARD,
                                    Constants.RIGHT_DRIVE_TRAIN_BACK,
                                    Constants.LEFT_DRIVE_TRAIN_BACK)
-
-    odometry = Odometry(Constants.RIGHT_ENCODER,
-                        Constants.LEFT_ENCODER,
-                        Constants.AUX_ENCODER)
 
     indexer = Indexer(Constants.INDEXER_PORT)
 
     flywheel = Flywheel(Constants.FLYWHEEL_PORT1)
 
     intake = Intake(Constants.INTAKE_PORT)
+
+    # Utility variable instantiation and initialization
+    odometry = Odometry(Constants.RIGHT_ENCODER, 
+                        Constants.LEFT_ENCODER,
+                        Constants.AUX_ENCODER)
 
     autoRoutine = AutonomousRoutine()
 
@@ -633,7 +662,8 @@ def vexcode_auton_function():
 def Autonomous_Control():
     brain.screen.print("Starting auto")
     Robot.autoRoutine.addAutoPaths(path1)
-    Robot.autoRoutine.runAuto(0)
+    Robot.autoRoutine.setPath(0)
+    Robot.autoRoutine.runAuto()
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
