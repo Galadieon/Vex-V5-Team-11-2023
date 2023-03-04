@@ -40,7 +40,7 @@ class Constants:
     """
     ### Constants class - class to hold final constants
 
-    This class holds constants that won't be changed while running
+    This class holds constants that won't be changed while running.
 
     #### Arguments:
         None
@@ -101,7 +101,7 @@ class PID:
     """
     ### PID class - create PID controller
 
-    This class is used to simplify creation of PID controllers
+    This class is used to simplify creation of PID controllers.
 
     #### Arguments:
         Kp (optional) : The proportional constant (how reactive the PID controller is)
@@ -123,7 +123,6 @@ class PID:
         self.Kd = Kd
         self.prevError = 0.0
         self.integral = 0.0
-        self.value = 0.0
 
     def update(self, target, current):
         error = target - current
@@ -134,20 +133,20 @@ class PID:
         derivative = error - self.previousError
         self.previousError = error
 
-        self.value = abs((self.Kp * error) + (self.Ki * self.integral) +
-                         (self.Kd * derivative))
+        controlledValue = abs((self.Kp * error) + (self.Ki * self.integral) +
+                              (self.Kd * derivative))
 
-        if self.value > 100: self.value = 100
-        if self.value < -100: self.value = -100
+        if controlledValue > 100: controlledValue = 100
+        if controlledValue < -100: controlledValue = -100
 
-        return self.value
+        return controlledValue
 
 
 class Odometry:
     """
     ### Odometry class - creates odometry object
 
-    This class is used to hold information about robot pose and quadrature encoders
+    This class is used to hold information about robot pose and quadrature encoders.
 
     #### Arguments:
         rightEncoder : The encoder on the right of robot
@@ -175,13 +174,10 @@ class Odometry:
         self.threadIsRunning = False
         self.threadIsPaused = False
 
-    def start(self):
-        Thread(self.updatePose)
-
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
-        LRDistance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
-        BDistance = Constants.AUX_ODOMETRY_DISTANCE
+        LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
+        B_Distance = Constants.AUX_ODOMETRY_DISTANCE
 
         currRightVal = 0  # current encoder value for right wheel
         currLeftVal = 0  # current encoder value for left wheel
@@ -194,7 +190,9 @@ class Odometry:
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
-            if self.threadIsPaused: continue
+            if self.threadIsPaused: 
+                wait(1, MSEC)
+                continue
 
             start = brain.timer.time(MSEC)
 
@@ -210,10 +208,10 @@ class Odometry:
             dn1 = currLeftVal - prevLeftVal
             dn3 = currAuxVal - prevAuxVal
 
-            dtheta = inchsPerTick * ((dn2 - dn1) / LRDistance)
+            dtheta = inchsPerTick * ((dn2 - dn1) / LR_Distance)
             dx = inchsPerTick * ((dn1 + dn2) / 2.0)
             dy = inchsPerTick * (dn3 - ((dn2 - dn1) *
-                                        (BDistance / LRDistance)))
+                                        (B_Distance / LR_Distance)))
 
             theta = self.Θ + (dtheta / 2.0)
             self.x -= -dx * math.cos(-theta) + dy * math.sin(-theta)
@@ -231,7 +229,7 @@ class Odometry:
 
     def setPose(self, newX, newY, newΘ):
         self.threadIsPaused = True
-        wait(0.5, MSEC)
+        wait(5, MSEC)
         self.x = newX
         self.y = newY
         self.Θ = newΘ
@@ -251,7 +249,7 @@ class AutonomousRoutine:
     """
     ### Autonomous routine class - creates autonomous routines object
 
-    This class is used to pick and run autonomous routines
+    This class is used to pick and run autonomous routines.
 
     #### Arguments:
         None
@@ -270,7 +268,7 @@ class AutonomousRoutine:
 
     def addAutoPaths(self, pathList):
         self.pathList = pathList
-    
+
     def setPath(self, pathNumbber):
         self.chosenPath = pathNumbber
 
@@ -284,7 +282,8 @@ class AutonomousRoutine:
             while not atPosition:
                 if self.autoIsRunning == False: return
                 atPosition = Robot.drivetrain.driveTo(
-                    self.calcLocalXY(step[0], step[1]), step[2], step[3], step[4])
+                    self.calcLocalXY(step[0], step[1]), step[2], step[3],
+                    step[4])
 
     def stopAuto(self):
         self.autoIsRunning = False
@@ -322,7 +321,7 @@ class MecanumDriveTrain:
     """
     ### MecanumDrivetrain class - creates mecanum drivetrain
 
-    This class is used to create and use mecanum drivetrain
+    This class is used to create and use mecanum drivetrain.
 
     #### Arguments:
         FL : The front left motor
@@ -355,7 +354,9 @@ class MecanumDriveTrain:
         self.turnPID = PID(Kp=1)
 
         Robot.odometry.resetEncoders()
-        Robot.odometry.start()
+
+        # Start odometry thread to run independetly of other threads
+        Thread(Robot.odometry.updatePose)
 
     def drive(self, forward, strafe, turn):
         '''
@@ -381,7 +382,8 @@ class MecanumDriveTrain:
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
 
-    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float,
+                turnVel: float):
         '''
         ### Drive the drivetrain to target pose
 
@@ -448,7 +450,7 @@ class Flywheel:
     """
     ### Flywheel class - creates flywheel object
 
-    This class is to create and run robot flywheel that launches discs
+    This class is to create and run robot flywheel that launches discs.
 
     #### Arguments:
         One or more Motor class instances (Motor objects)
@@ -484,7 +486,7 @@ class Indexer:
     """
     ### Indexer class - creates indexer object
 
-    This class is to create and run robot indexer to push discs into flywheel
+    This class is to create and run robot indexer to push discs into flywheel.
 
     #### Arguments:
         motor : The indexer motor to push discs
@@ -516,7 +518,7 @@ class Intake:
     """
     ### Flywheel class - creates flywheel object
 
-    This class is to create and run robot flywheel
+    This class is to create and run robot flywheel.
 
     #### Arguments:
         motor : The intake motor to collect or remove jammed discs
@@ -544,7 +546,7 @@ class Robot:
     """
     ### Robot class - creates robot object
 
-    This class is to create and run robot subsystems and autonomous from a static context
+    This class is to create and run robot subsystems and autonomous from a static context.
 
     #### Arguments:
         None
@@ -569,8 +571,7 @@ class Robot:
     intake = Intake(Constants.INTAKE_PORT)
 
     # Utility variable instantiation and initialization
-    odometry = Odometry(Constants.RIGHT_ENCODER, 
-                        Constants.LEFT_ENCODER,
+    odometry = Odometry(Constants.RIGHT_ENCODER, Constants.LEFT_ENCODER,
                         Constants.AUX_ENCODER)
 
     autoRoutine = AutonomousRoutine()
@@ -706,7 +707,8 @@ def R2_Pressed():
 
 def A_Pressed():
     if Robot.autoRoutine.autoIsRunning == False:
-        Robot.autoRoutine.addAutoPaths(path1)
+        Robot.autoRoutine.addAutoPaths([path1])
+        Robot.autoRoutine.setPath(0)
         Thread(Robot.autoRoutine.runAuto)
     else:
         Robot.autoRoutine.stopAuto()
