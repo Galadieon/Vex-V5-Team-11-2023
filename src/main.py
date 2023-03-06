@@ -33,6 +33,25 @@ path1 = [[0.0, 10.0, math.pi / 2, 25, 25]]
 wait(30, MSEC)
 
 # ---------------------------CLASS DECLARATION---------------------------
+
+# ------------------------------AUTONOMOUS-------------------------------
+
+
+class RunCommands:
+    
+    def __init__(self, *commandList):
+        for command in commandList:
+            command.execute()
+
+
+
+class TestMode(SequentialCommandGroup):
+    def __init__(self):
+        RunCommands(
+            
+        )
+
+
 # -------------------------------UTILITIES-------------------------------
 
 
