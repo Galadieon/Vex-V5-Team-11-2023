@@ -60,7 +60,8 @@ class RunCommands:
 class TestMode:
 
     def __init__(self):
-        commandRun = RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True))
+        commandRun = RunCommands(
+            AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True))
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -296,7 +297,13 @@ class AutoDrive:
         RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
     """
 
-    def __init__(self, xTarget=0, yTarget=0, ΘTarget=math.pi / 2, driveVel = 25, turnVel = 25, blocking=True):
+    def __init__(self,
+                 xTarget=0.0,
+                 yTarget=0.0,
+                 ΘTarget=math.pi / 2,
+                 driveVel=25.0,
+                 turnVel=25.0,
+                 blocking=True):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
@@ -326,18 +333,7 @@ class AutoDrive:
 
         return localDeltaX, localDeltaY
 
-    @staticmethod
-    def driveToOrigin():
-        atTarget = False
-        
-        while not atTarget: 
-            atTarget = AutoDrive.driveTo([0, 0], math.pi / 2, 25, 25)
-            
-            wait(10, MSEC)
-
-    @staticmethod
-    def driveTo(localXY, ΘTarget: float, driveVel: float,
-                turnVel: float):
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
         '''
         ### AutoDrive
         '''
@@ -358,15 +354,31 @@ class AutoDrive:
 
         return False
 
-    def execute(self):
-        atTarget = False
-        
+    def driveToOrigin(self):
+        self.xTarget = 0
+        self.yTarget = 0
+        self.ΘTarget = math.pi / 2
+
         if self.blocking:
-            while not atTarget: 
-                atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+            self.run()
+        else:
+            Thread(self.run)
+
+    def execute(self):
+        if self.blocking:
+            self.run()
+        else:
+            Thread(self.run)
+        
+    def run(self):
+        atTarget = False
+
+        while not atTarget:
+            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
                                     self.driveVel, self.turnVel)
-                
-                wait(10, MSEC)
+
+            wait(10, MSEC)
+
 
 
 class MyController:
@@ -407,6 +419,7 @@ class MyController:
 
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                    RunCommands.stop()
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
@@ -471,7 +484,7 @@ class MyController:
         if Robot.drivetrain.driveVel == 100:
             Robot.drivetrain.set_turn_velocity(50)
             Robot.drivetrain.set_drive_velocity(50)
-        else:
+        elif Robot.drivetrain.driveVel == 50:
             Robot.drivetrain.set_turn_velocity(100)
             Robot.drivetrain.set_drive_velocity(100)
 
@@ -606,7 +619,7 @@ class MecanumDriveTrain:
         self.motorFrontRight.set_stopping(mode)
         self.motorBackRight.set_stopping(mode)
         self.motorBackLeft.set_stopping(mode)
-    
+
     def getMotorMode(self):
         return self.motorMode
 
