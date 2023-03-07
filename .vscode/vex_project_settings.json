@@ -4,12 +4,12 @@
 		"json": 1
 	},
 	"project": {
-		"name": "Team 11 Cleaned Up Code",
+		"name": "Team 11 Cleaner Code Branch",
 		"description": "",
 		"creationDate": "1/20/2023, 12:14:12 AM",
 		"platform": "V5",
 		"language": "python",
-		"slot": 1,
+		"slot": 2,
 		"sdkVersion": "V5_1_0_1_14",
 		"python": {
 			"main": "src/main.py"
