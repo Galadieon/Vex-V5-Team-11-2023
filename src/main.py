@@ -758,6 +758,10 @@ class Robot:
         robot1 = Robot() # unnecessary
     """
 
+    # Utility variable instantiation and initialization
+    odometry = Odometry(Constants.RIGHT_ENCODER, Constants.LEFT_ENCODER,
+                        Constants.AUX_ENCODER)
+
     # Subsystem variable instantiation and initialization
     drivetrain = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
                                    Constants.RIGHT_DRIVE_TRAIN_FORWARD,
@@ -769,10 +773,6 @@ class Robot:
     flywheel = Flywheel(Constants.FLYWHEEL_PORT1)
 
     intake = Intake(Constants.INTAKE_PORT)
-
-    # Utility variable instantiation and initialization
-    odometry = Odometry(Constants.RIGHT_ENCODER, Constants.LEFT_ENCODER,
-                        Constants.AUX_ENCODER)
 
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
