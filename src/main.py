@@ -64,6 +64,125 @@ class TestMode:
             AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True))
 
 
+class AutoDrive:
+    """
+    ### AutoDrive class - creates an auto drive object
+
+    This class is used to command drivetrain to move to global target.
+
+    #### Arguments:
+        xTarget : The global x target
+        xTarget : The global y target
+        ΘTarget : The global Θ target
+        driveVel : The max drive velocity
+        turnVel : The max turn velocity
+        blocking (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoDrive command object
+
+    #### Examples:
+        RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
+    """
+
+    def __init__(self,
+                 xTarget=0.0,
+                 yTarget=0.0,
+                 ΘTarget=math.pi / 2,
+                 driveVel=25.0,
+                 turnVel=25.0,
+                 blocking=True):
+        self.xTarget = xTarget
+        self.yTarget = yTarget
+        self.ΘTarget = ΘTarget
+        self.driveVel = driveVel
+        self.turnVel = turnVel
+        self.blocking = blocking
+
+    def calcLocalXY(self):
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
+
+        deltaX = self.xTarget - robotX
+        deltaY = self.yTarget - robotY
+
+        # dist = math.hypot(deltaY, deltaX)
+        dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
+
+        targetTheta = math.atan2(deltaY, deltaX)
+        localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
+                         (2 * math.pi)) - robotΘ + (math.pi / 2)
+
+        localDeltaX = dist * math.cos(localRelTheta)
+        localDeltaY = dist * math.sin(localRelTheta)
+
+        # limit excessively long and small numbers
+        localDeltaX = round(localDeltaX, 7)  # 10.0000000
+        localDeltaY = round(localDeltaY, 7)  # 10.0000000
+
+        return localDeltaX, localDeltaY
+
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
+        '''
+        ### AutoDrive
+        '''
+
+        deltaX, deltaY = localXY
+        deltaTheta = ΘTarget - Robot.odometry.Θ
+
+        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
+                deltaTheta) < 0.035:
+            print("AT TARGET")
+            return True
+
+        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
+        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
+        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
+
+        Robot.drivetrain.autoDrive(forward, strafe, turn)
+
+        return False
+
+    def driveToOrigin(self):
+        self.xTarget = 0
+        self.yTarget = 0
+        self.ΘTarget = math.pi / 2
+
+        if self.blocking:
+            self.run()
+        else:
+            Thread(self.run)
+
+    def execute(self):
+        if self.blocking:
+            self.run()
+        else:
+            Thread(self.run)
+        
+    def run(self):
+        atTarget = False
+
+        while not atTarget:
+            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+                                    self.driveVel, self.turnVel)
+
+            wait(10, MSEC)
+
+
+class AutoFlywheel:
+    def __init__(self):
+        pass
+
+
+class AutoIntake:
+    def __init__(self):
+        pass
+
+
+class AutoIndexer:
+    def __init__(self):
+        pass
+
+
 # -------------------------------UTILITIES-------------------------------
 
 
@@ -206,6 +325,8 @@ class Odometry:
         self.threadIsPaused = False
 
     def updatePose(self):
+        Robot.odometry.resetEncoders()
+
         inchsPerTick = Constants.INCHES_PER_TICK
         LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
         B_Distance = Constants.AUX_ODOMETRY_DISTANCE
@@ -274,111 +395,6 @@ class Odometry:
         self.rightEncoder.set_position(0, DEGREES)
         self.leftEncoder.set_position(0, DEGREES)
         self.auxEncoder.set_position(0, DEGREES)
-
-
-class AutoDrive:
-    """
-    ### AutoDrive class - creates an auto drive object
-
-    This class is used to command drivetrain to move to global target.
-
-    #### Arguments:
-        xTarget : The global x target
-        xTarget : The global y target
-        ΘTarget : The global Θ target
-        driveVel : The max drive velocity
-        turnVel : The max turn velocity
-        blocking (True) : Determines code execution blocking
-
-    #### Returns:
-        A new AutoDrive command object
-
-    #### Examples:
-        RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
-    """
-
-    def __init__(self,
-                 xTarget=0.0,
-                 yTarget=0.0,
-                 ΘTarget=math.pi / 2,
-                 driveVel=25.0,
-                 turnVel=25.0,
-                 blocking=True):
-        self.xTarget = xTarget
-        self.yTarget = yTarget
-        self.ΘTarget = ΘTarget
-        self.driveVel = driveVel
-        self.turnVel = turnVel
-        self.blocking = blocking
-
-    def calcLocalXY(self):
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
-
-        deltaX = self.xTarget - robotX
-        deltaY = self.yTarget - robotY
-
-        # dist = math.hypot(deltaY, deltaX)
-        dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
-
-        targetTheta = math.atan2(deltaY, deltaX)
-        localRelTheta = (targetTheta if targetTheta >= 0 else targetTheta +
-                         (2 * math.pi)) - robotΘ + (math.pi / 2)
-
-        localDeltaX = dist * math.cos(localRelTheta)
-        localDeltaY = dist * math.sin(localRelTheta)
-
-        # limit excessively long and small numbers
-        localDeltaX = round(localDeltaX, 7)  # 10.0000000
-        localDeltaY = round(localDeltaY, 7)  # 10.0000000
-
-        return localDeltaX, localDeltaY
-
-    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
-        '''
-        ### AutoDrive
-        '''
-
-        deltaX, deltaY = localXY
-        deltaTheta = ΘTarget - Robot.odometry.Θ
-
-        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
-                deltaTheta) < 0.035:
-            print("AT TARGET")
-            return True
-
-        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
-        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
-        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
-
-        Robot.drivetrain.autoDrive(forward, strafe, turn)
-
-        return False
-
-    def driveToOrigin(self):
-        self.xTarget = 0
-        self.yTarget = 0
-        self.ΘTarget = math.pi / 2
-
-        if self.blocking:
-            self.run()
-        else:
-            Thread(self.run)
-
-    def execute(self):
-        if self.blocking:
-            self.run()
-        else:
-            Thread(self.run)
-        
-    def run(self):
-        atTarget = False
-
-        while not atTarget:
-            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
-                                    self.driveVel, self.turnVel)
-
-            wait(10, MSEC)
-
 
 
 class MyController:
@@ -564,8 +580,6 @@ class MecanumDriveTrain:
         self.forwardPID = PID(Kp=1)
         self.strafePID = PID(Kp=1)
         self.turnPID = PID(Kp=1)
-
-        Robot.odometry.resetEncoders()
 
         # Start odometry thread to run independetly of other threads
         Thread(Robot.odometry.updatePose)
