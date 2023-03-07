@@ -21,9 +21,6 @@ brain = Brain()
 
 # Controller variables
 
-controllerEnabled = True
-controller = Controller(PRIMARY)
-
 # Autonomous paths
 
 #        x,  y, Θ, driveVel, turnVel
@@ -38,18 +35,16 @@ wait(30, MSEC)
 
 
 class RunCommands:
-    
+
     def __init__(self, *commandList):
         for command in commandList:
             command.execute()
 
 
+class TestMode():
 
-class TestMode(SequentialCommandGroup):
     def __init__(self):
-        RunCommands(
-            
-        )
+        RunCommands()
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -209,7 +204,7 @@ class Odometry:
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
-            if self.threadIsPaused: 
+            if self.threadIsPaused:
                 wait(1, MSEC)
                 continue
 
@@ -331,6 +326,146 @@ class AutonomousRoutine:
 
     def goBackToOG(self):
         Robot.drivetrain.driveTo(self.calcLocalXY(0, 0), math.pi / 2, 25, 25)
+
+
+class MyController:
+
+    def __init__(self):
+        self.controllerEnabled = True
+        self.controller = Controller(PRIMARY)
+
+    def run(self):
+        Thread(self.printToController)
+
+        Thread(self.controllerLoop)
+
+    def controllerLoop(self):
+        deadZoneVal = self.axisCurve(0.1)
+        while (True):
+            if self.controllerEnabled:
+                forward = self.axisCurve(self.controller.axis3.position())
+                strafe = self.axisCurve(self.controller.axis4.position())
+                turn = self.axisCurve(self.controller.axis1.position())
+
+                if abs(forward) > deadZoneVal or abs(
+                        strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                    Robot.drivetrain.drive(
+                        forward * (Robot.drivetrain.driveVel / 100),
+                        strafe * (Robot.drivetrain.driveVel / 100),
+                        turn * (Robot.drivetrain.turnVel / 100))
+                elif Robot.autoRoutine.autoIsRunning == True:
+                    pass
+                else:
+                    Robot.drivetrain.stop()
+
+            wait(10, MSEC)
+
+    def printToController(self):
+        while (True):
+            # self.controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
+            # self.controller.screen.next_row()
+            # self.controller.screen.print("Left Encoder: ", Robot.drivetrain.leftEncoder.value())
+            # self.controller.screen.next_row()
+            # self.controller.screen.print("Aux Encoder: ", Robot.drivetrain.auxEncoder.value())
+            # self.controller.screen.next_row()
+
+            robotX, robotY, robotΘ = Robot.odometry.getPose()
+
+            self.controller.screen.print("Global X: ", robotX)
+            self.controller.screen.next_row()
+            self.controller.screen.print("Global Y: ", robotY)
+            self.controller.screen.next_row()
+            self.controller.screen.print("Global Θ: ", math.degrees(robotΘ))
+            self.controller.screen.next_row()
+
+            wait(100, MSEC)
+
+            self.controller.screen.clear_screen()
+            self.controller.screen.set_cursor(1, 1)
+
+    def registerEventHandlers(self):
+        self.controller.buttonL1.pressed(self.L1_Pressed)
+        self.controller.buttonL2.pressed(self.L2_Pressed)
+        self.controller.buttonR1.pressed(self.R1_Pressed)
+        self.controller.buttonR2.pressed(self.R2_Pressed)
+
+        self.controller.buttonA.pressed(self.A_Pressed)
+        self.controller.buttonB.pressed(self.B_Pressed)
+        self.controller.buttonX.pressed(self.X_Pressed)
+        self.controller.buttonY.pressed(self.Y_Pressed)
+
+        self.controller.buttonUp.pressed(self.Up_Pressed)
+        self.controller.buttonDown.pressed(self.Down_Pressed)
+        self.controller.buttonLeft.pressed(self.Left_Pressed)
+        self.controller.buttonRight.pressed(self.Right_Pressed)
+
+    def axisCurve(self, x):
+        return (pow(x, 3)) / 10_000
+        # if x > 0: return (x ** 2) / 100
+        # return (x ** 2) / -100
+
+
+    # ---------------------------BUTTON FUNCTIONS---------------------------
+
+
+    def L1_Pressed(self):
+        pass
+
+
+    def L2_Pressed(self):
+        if Robot.drivetrain.turnVel == 100: Robot.drivetrain.set_turn_velocity(50)
+        else: Robot.drivetrain.set_turn_velocity(100)
+
+
+    def R1_Pressed(self):
+        pass
+
+
+    def R2_Pressed(self):
+        if Robot.drivetrain.driveVel == 100:
+            Robot.drivetrain.set_drive_velocity(50)
+        else:
+            Robot.drivetrain.set_drive_velocity(100)
+
+
+    def A_Pressed(self):
+        if Robot.autoRoutine.autoIsRunning == False:
+            Robot.autoRoutine.addAutoPaths([path1])
+            Robot.autoRoutine.setPath(0)
+            Thread(Robot.autoRoutine.runAuto)
+        else:
+            Robot.autoRoutine.stopAuto()
+
+
+    def B_Pressed(self):
+        if Robot.drivetrain.motorMode == BRAKE:
+            Robot.drivetrain.set_stopping(COAST)
+        elif Robot.drivetrain.motorMode == COAST:
+            Robot.drivetrain.set_stopping(BRAKE)
+
+
+    def X_Pressed(self):
+        Robot.odometry.resetPose()
+
+
+    def Y_Pressed(self):
+        pass
+
+
+    def Up_Pressed(self):
+        Robot.autoRoutine.goBackToOG()
+
+
+    def Down_Pressed(self):
+        pass
+
+
+    def Left_Pressed(self):
+        pass
+
+
+    def Right_Pressed(self):
+        pass
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -596,65 +731,6 @@ class Robot:
     autoRoutine = AutonomousRoutine()
 
 
-# ---------------------------CONTROLLER LOOP---------------------------
-
-
-# Controller loop to handle controller readings
-def controllerLoop():
-    deadZoneVal = axisCurve(0.1)
-
-    printThread = Thread(printToController)
-
-    while (True):
-        if controllerEnabled:
-            forward = axisCurve(controller.axis3.position())
-            strafe = axisCurve(controller.axis4.position())
-            turn = axisCurve(controller.axis1.position())
-
-            if abs(forward) > deadZoneVal or abs(strafe) > deadZoneVal or abs(
-                    turn) > deadZoneVal:
-                Robot.drivetrain.drive(
-                    forward * (Robot.drivetrain.driveVel / 100),
-                    strafe * (Robot.drivetrain.driveVel / 100),
-                    turn * (Robot.drivetrain.turnVel / 100))
-            elif Robot.autoRoutine.autoIsRunning == True:
-                pass
-            else:
-                Robot.drivetrain.stop()
-
-        wait(10, MSEC)
-
-
-def printToController():
-    while (True):
-        # controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
-        # controller.screen.next_row()
-        # controller.screen.print("Left Encoder: ", Robot.drivetrain.leftEncoder.value())
-        # controller.screen.next_row()
-        # controller.screen.print("Aux Encoder: ", Robot.drivetrain.auxEncoder.value())
-        # controller.screen.next_row()
-
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
-
-        controller.screen.print("Global X: ", robotX)
-        controller.screen.next_row()
-        controller.screen.print("Global Y: ", robotY)
-        controller.screen.next_row()
-        controller.screen.print("Global Θ: ", math.degrees(robotΘ))
-        controller.screen.next_row()
-
-        wait(100, MSEC)
-
-        controller.screen.clear_screen()
-        controller.screen.set_cursor(1, 1)
-
-
-def axisCurve(x):
-    return (pow(x, 3)) / 10_000
-    # if x > 0: return (x ** 2) / 100
-    # return (x ** 2) / -100
-
-
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
 
 
@@ -701,91 +777,14 @@ def Driver_Control():
     Default_Motor_Speed()
 
 
-# ---------------------------BUTTON FUNCTIONS---------------------------
-
-
-def L1_Pressed():
-    pass
-
-
-def L2_Pressed():
-    if Robot.drivetrain.turnVel == 100: Robot.drivetrain.set_turn_velocity(50)
-    else: Robot.drivetrain.set_turn_velocity(100)
-
-
-def R1_Pressed():
-    pass
-
-
-def R2_Pressed():
-    if Robot.drivetrain.driveVel == 100:
-        Robot.drivetrain.set_drive_velocity(50)
-    else:
-        Robot.drivetrain.set_drive_velocity(100)
-
-
-def A_Pressed():
-    if Robot.autoRoutine.autoIsRunning == False:
-        Robot.autoRoutine.addAutoPaths([path1])
-        Robot.autoRoutine.setPath(0)
-        Thread(Robot.autoRoutine.runAuto)
-    else:
-        Robot.autoRoutine.stopAuto()
-
-
-def B_Pressed():
-    if Robot.drivetrain.motorMode == BRAKE:
-        Robot.drivetrain.set_stopping(COAST)
-    elif Robot.drivetrain.motorMode == COAST:
-        Robot.drivetrain.set_stopping(BRAKE)
-
-
-def X_Pressed():
-    Robot.odometry.resetPose()
-
-
-def Y_Pressed():
-    pass
-
-
-def Up_Pressed():
-    Robot.autoRoutine.goBackToOG()
-
-
-def Down_Pressed():
-    pass
-
-
-def Left_Pressed():
-    pass
-
-
-def Right_Pressed():
-    pass
-
-
 # ---------------------------REQUIRED CODE---------------------------
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
-# system event handlers
-controller.buttonL1.pressed(L1_Pressed)
-controller.buttonL2.pressed(L2_Pressed)
-controller.buttonR1.pressed(R1_Pressed)
-controller.buttonR2.pressed(R2_Pressed)
-
-controller.buttonA.pressed(A_Pressed)
-controller.buttonB.pressed(B_Pressed)
-controller.buttonX.pressed(X_Pressed)
-controller.buttonY.pressed(Y_Pressed)
-
-controller.buttonUp.pressed(Up_Pressed)
-controller.buttonDown.pressed(Down_Pressed)
-controller.buttonLeft.pressed(Left_Pressed)
-controller.buttonRight.pressed(Right_Pressed)
-
-controllerThread = Thread(controllerLoop)
+myController = MyController()
+myController.registerEventHandlers()
+myController.run()
 
 competition = Competition(vexcode_driver_function, vexcode_auton_function)
 # add 15ms delay to make sure events are registered correctly.
