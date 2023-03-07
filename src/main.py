@@ -60,7 +60,7 @@ class RunCommands:
 class TestMode:
 
     def __init__(self):
-        commandRun = RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25))
+        commandRun = RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True))
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -282,11 +282,12 @@ class AutoDrive:
     This class is used to command drivetrain to move to global target.
 
     #### Arguments:
-        xTarget = The global x target
-        xTarget = The global y target
-        ΘTarget = The global Θ target
-        driveVel = The max drive velocity
-        turnVel = The max turn velocity
+        xTarget : The global x target
+        xTarget : The global y target
+        ΘTarget : The global Θ target
+        driveVel : The max drive velocity
+        turnVel : The max turn velocity
+        blocking (True) : Determines code execution blocking
 
     #### Returns:
         A new AutoDrive command object
@@ -295,12 +296,13 @@ class AutoDrive:
         RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
     """
 
-    def __init__(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
+    def __init__(self, xTarget=0, yTarget=0, ΘTarget=math.pi / 2, driveVel = 25, turnVel = 25, blocking=True):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
+        self.blocking = blocking
 
     def calcLocalXY(self):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
@@ -359,11 +361,12 @@ class AutoDrive:
     def execute(self):
         atTarget = False
         
-        while not atTarget: 
-            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
-                                 self.driveVel, self.turnVel)
-            
-            wait(10, MSEC)
+        if self.blocking:
+            while not atTarget: 
+                atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+                                    self.driveVel, self.turnVel)
+                
+                wait(10, MSEC)
 
 
 class MyController:
@@ -497,10 +500,11 @@ class MyController:
         pass
 
     def Up_Pressed(self):
-        AutoDrive.driveToOrigin()
+        pass
 
     def Down_Pressed(self):
-        pass
+        autoDrive = AutoDrive()
+        autoDrive.driveToOrigin()
 
     def Left_Pressed(self):
         pass
@@ -588,10 +592,12 @@ class MecanumDriveTrain:
 
         return False
 
-    def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
+    def set_drive_velocity(self, velocity):
+        """ #### Assume Percent """
         self.driveVel = velocity
 
-    def set_turn_velocity(self, velocity, units=VelocityUnits.RPM):
+    def set_turn_velocity(self, velocity):
+        """ #### Assume Percent """
         self.turnVel = velocity
 
     def set_stopping(self, mode=BrakeType.COAST):
@@ -751,8 +757,8 @@ def non_competition_start():
 
 
 def Default_Motor_Speed():
-    Robot.drivetrain.set_drive_velocity(100, VelocityUnits.PERCENT)
-    Robot.drivetrain.set_turn_velocity(100, VelocityUnits.PERCENT)
+    Robot.drivetrain.set_drive_velocity(100)
+    Robot.drivetrain.set_turn_velocity(100)
     Robot.drivetrain.set_stopping(COAST)
 
 
