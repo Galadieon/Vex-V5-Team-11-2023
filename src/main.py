@@ -40,17 +40,18 @@ class RunCommands:
     def __init__(self, *commandList):
 
         for command in commandList:
-            if RunCommands.stopCommands: 
+            if RunCommands.stopCommands:
                 RunCommands.stopCommands = False
                 break
             command.execute()
-    
+
     @staticmethod
     def stop():
         RunCommands.stopCommands = True
 
 
 class TestMode():
+
     def __init__(self):
         RunCommands(
             # Robot.drivetrain.drive(1, 1, 1)
@@ -339,6 +340,20 @@ class AutonomousRoutine:
 
 
 class MyController:
+    """
+    ### MyController class - holds all controller features
+
+    Allows controller use in a separate class.
+
+    #### Arguments:
+        None
+
+    #### Returns:
+        A new MyController object.
+
+    #### Examples:
+        myController1 = MyController()
+    """
 
     def __init__(self):
         self.controllerEnabled = True
