@@ -35,16 +35,26 @@ wait(30, MSEC)
 
 
 class RunCommands:
+    stopCommands = False
 
     def __init__(self, *commandList):
+
         for command in commandList:
+            if RunCommands.stopCommands: 
+                RunCommands.stopCommands = False
+                break
             command.execute()
+    
+    @staticmethod
+    def stop():
+        RunCommands.stopCommands = True
 
 
 class TestMode():
-
     def __init__(self):
-        RunCommands()
+        RunCommands(
+            # Robot.drivetrain.drive(1, 1, 1)
+        )
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -334,6 +344,9 @@ class MyController:
         self.controllerEnabled = True
         self.controller = Controller(PRIMARY)
 
+        self.registerEventHandlers()
+        self.run()
+
     def run(self):
         Thread(self.printToController)
 
@@ -404,29 +417,25 @@ class MyController:
         # if x > 0: return (x ** 2) / 100
         # return (x ** 2) / -100
 
-
     # ---------------------------BUTTON FUNCTIONS---------------------------
-
 
     def L1_Pressed(self):
         pass
 
-
     def L2_Pressed(self):
-        if Robot.drivetrain.turnVel == 100: Robot.drivetrain.set_turn_velocity(50)
-        else: Robot.drivetrain.set_turn_velocity(100)
-
+        if Robot.drivetrain.turnVel == 100:
+            Robot.drivetrain.set_turn_velocity(50)
+        else:
+            Robot.drivetrain.set_turn_velocity(100)
 
     def R1_Pressed(self):
         pass
-
 
     def R2_Pressed(self):
         if Robot.drivetrain.driveVel == 100:
             Robot.drivetrain.set_drive_velocity(50)
         else:
             Robot.drivetrain.set_drive_velocity(100)
-
 
     def A_Pressed(self):
         if Robot.autoRoutine.autoIsRunning == False:
@@ -436,33 +445,26 @@ class MyController:
         else:
             Robot.autoRoutine.stopAuto()
 
-
     def B_Pressed(self):
         if Robot.drivetrain.motorMode == BRAKE:
             Robot.drivetrain.set_stopping(COAST)
         elif Robot.drivetrain.motorMode == COAST:
             Robot.drivetrain.set_stopping(BRAKE)
 
-
     def X_Pressed(self):
         Robot.odometry.resetPose()
-
 
     def Y_Pressed(self):
         pass
 
-
     def Up_Pressed(self):
         Robot.autoRoutine.goBackToOG()
-
 
     def Down_Pressed(self):
         pass
 
-
     def Left_Pressed(self):
         pass
-
 
     def Right_Pressed(self):
         pass
@@ -783,8 +785,6 @@ def Driver_Control():
 wait(30, MSEC)
 
 myController = MyController()
-myController.registerEventHandlers()
-myController.run()
 
 competition = Competition(vexcode_driver_function, vexcode_auton_function)
 # add 15ms delay to make sure events are registered correctly.
