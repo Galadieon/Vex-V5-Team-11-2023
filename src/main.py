@@ -15,16 +15,7 @@ import math
 # Begin project code
 brain = Brain()
 
-# Robot variables and configuration code
-
 # BAD PORT: 5, 6, 7, 8, 11, 12
-
-# Controller variables
-
-# Autonomous paths
-
-#        x,  y, Θ, driveVel, turnVel
-path1 = [[0.0, 10.0, math.pi / 2, 25, 25]]
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -35,27 +26,41 @@ wait(30, MSEC)
 
 
 class RunCommands:
-    stopCommands = False
+    stopAuto = False
+    pauseAuto = False
+    autoIsRunning = False
 
     def __init__(self, *commandList):
+        RunCommands.autoIsRunning = True
 
         for command in commandList:
-            if RunCommands.stopCommands:
-                RunCommands.stopCommands = False
-                break
+            while RunCommands.pauseAuto:
+                pass
+            if RunCommands.stopAuto:
+                RunCommands.stopAuto = False
+                RunCommands.autoIsRunning = False
+                return
             command.execute()
+
+        RunCommands.autoIsRunning = False
 
     @staticmethod
     def stop():
-        RunCommands.stopCommands = True
+        RunCommands.stopAuto = True
+
+    @staticmethod
+    def pause():
+        RunCommands.pauseAuto = True
+
+    @staticmethod
+    def unpause():
+        RunCommands.pauseAuto = False
 
 
 class TestMode:
 
     def __init__(self):
-        RunCommands(
-            # Robot.drivetrain.drive(1, 1, 1)
-        )
+        commandRun = RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25))
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -270,54 +275,38 @@ class Odometry:
         self.auxEncoder.set_position(0, DEGREES)
 
 
-class AutonomousRoutine:
+class AutoDrive:
     """
-    ### Autonomous routine class - creates autonomous routines object
+    ### AutoDrive class - creates an auto drive object
 
-    This class is used to pick and run autonomous routines.
+    This class is used to command drivetrain to move to global target.
 
     #### Arguments:
-        None
+        xTarget = The global x target
+        xTarget = The global y target
+        ΘTarget = The global Θ target
+        driveVel = The max drive velocity
+        turnVel = The max turn velocity
 
     #### Returns:
-        A new AutonomousRoutine object.
+        A new AutoDrive command object
 
     #### Examples:
-        autoRoutine1 = AutonomousRoutine()
+        RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
     """
 
-    def __init__(self):
-        self.autoIsRunning = False
-        self.pathList = [[[]]]
-        self.chosenPath = 0
+    def __init__(self, xTarget, yTarget, ΘTarget, driveVel, turnVel):
+        self.xTarget = xTarget
+        self.yTarget = yTarget
+        self.ΘTarget = ΘTarget
+        self.driveVel = driveVel
+        self.turnVel = turnVel
 
-    def addAutoPaths(self, pathList):
-        self.pathList = pathList
-
-    def setPath(self, pathNumbber):
-        self.chosenPath = pathNumbber
-
-    def runAuto(self):
-        Robot.drivetrain.set_stopping(COAST)
-
-        self.autoIsRunning = True
-
-        atPosition = False
-        for step in self.pathList[self.chosenPath]:
-            while not atPosition:
-                if self.autoIsRunning == False: return
-                atPosition = Robot.drivetrain.driveTo(
-                    self.calcLocalXY(step[0], step[1]), step[2], step[3],
-                    step[4])
-
-    def stopAuto(self):
-        self.autoIsRunning = False
-
-    def calcLocalXY(self, xTarget, yTarget):
+    def calcLocalXY(self):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-        deltaX = xTarget - robotX
-        deltaY = yTarget - robotY
+        deltaX = self.xTarget - robotX
+        deltaY = self.yTarget - robotY
 
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
@@ -335,8 +324,46 @@ class AutonomousRoutine:
 
         return localDeltaX, localDeltaY
 
-    def goBackToOG(self):
-        Robot.drivetrain.driveTo(self.calcLocalXY(0, 0), math.pi / 2, 25, 25)
+    @staticmethod
+    def driveToOrigin():
+        atTarget = False
+        
+        while not atTarget: 
+            atTarget = AutoDrive.driveTo([0, 0], math.pi / 2, 25, 25)
+            
+            wait(10, MSEC)
+
+    @staticmethod
+    def driveTo(localXY, ΘTarget: float, driveVel: float,
+                turnVel: float):
+        '''
+        ### AutoDrive
+        '''
+
+        deltaX, deltaY = localXY
+        deltaTheta = ΘTarget - Robot.odometry.Θ
+
+        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
+                deltaTheta) < 0.035:
+            print("AT TARGET")
+            return True
+
+        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
+        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
+        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
+
+        Robot.drivetrain.autoDrive(forward, strafe, turn)
+
+        return False
+
+    def execute(self):
+        atTarget = False
+        
+        while not atTarget: 
+            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+                                 self.driveVel, self.turnVel)
+            
+            wait(10, MSEC)
 
 
 class MyController:
@@ -381,7 +408,7 @@ class MyController:
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
                         turn * (Robot.drivetrain.turnVel / 100))
-                elif Robot.autoRoutine.autoIsRunning == True:
+                elif RunCommands.autoIsRunning == True:
                     pass
                 else:
                     Robot.drivetrain.stop()
@@ -438,32 +465,29 @@ class MyController:
         pass
 
     def L2_Pressed(self):
-        if Robot.drivetrain.turnVel == 100:
+        if Robot.drivetrain.driveVel == 100:
             Robot.drivetrain.set_turn_velocity(50)
+            Robot.drivetrain.set_drive_velocity(50)
         else:
             Robot.drivetrain.set_turn_velocity(100)
+            Robot.drivetrain.set_drive_velocity(100)
 
     def R1_Pressed(self):
         pass
 
     def R2_Pressed(self):
-        if Robot.drivetrain.driveVel == 100:
-            Robot.drivetrain.set_drive_velocity(50)
-        else:
-            Robot.drivetrain.set_drive_velocity(100)
+        pass
 
     def A_Pressed(self):
-        if Robot.autoRoutine.autoIsRunning == False:
-            Robot.autoRoutine.addAutoPaths([path1])
-            Robot.autoRoutine.setPath(0)
-            Thread(Robot.autoRoutine.runAuto)
+        if RunCommands.autoIsRunning == False:
+            TestMode()
         else:
-            Robot.autoRoutine.stopAuto()
+            RunCommands.stop()
 
     def B_Pressed(self):
-        if Robot.drivetrain.motorMode == BRAKE:
+        if Robot.drivetrain.getMotorMode() == BRAKE:
             Robot.drivetrain.set_stopping(COAST)
-        elif Robot.drivetrain.motorMode == COAST:
+        elif Robot.drivetrain.getMotorMode() == COAST:
             Robot.drivetrain.set_stopping(BRAKE)
 
     def X_Pressed(self):
@@ -473,7 +497,7 @@ class MyController:
         pass
 
     def Up_Pressed(self):
-        Robot.autoRoutine.goBackToOG()
+        AutoDrive.driveToOrigin()
 
     def Down_Pressed(self):
         pass
@@ -531,15 +555,7 @@ class MecanumDriveTrain:
 
     def drive(self, forward, strafe, turn):
         '''
-        ### Drive the drivetrain with provided arguments
-
-        #### Arguments:
-            forward : The forward movement speed
-            strafe : The strafing movement speed
-            turn : The turning movement speed
-
-        #### Returns:
-            None
+        ### TeleOp drive
         '''
 
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
@@ -553,38 +569,6 @@ class MecanumDriveTrain:
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
 
-    def driveTo(self, localXY, ΘTarget: float, driveVel: float,
-                turnVel: float):
-        '''
-        ### Drive the drivetrain to target pose
-
-        #### Arguments:
-            localXY : A tuple containing robot centered x-y displacemennt to target
-            ΘTarget : The target Θ angle
-            driveVel : The max drive velocity
-            turnVel : The max turn velocity
-
-        #### Returns:
-            A False if not at target\\
-            A True if at target
-        '''
-
-        deltaX, deltaY = localXY
-        deltaTheta = ΘTarget - Robot.odometry.Θ
-
-        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
-                deltaTheta) < 0.035:
-            print("AT TARGET")
-            return True
-
-        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
-        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
-        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
-
-        Robot.drivetrain.autoDrive(forward, strafe, turn)
-
-        return False
-
     def autoDrive(self, forward, strafe, turn):
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn),
@@ -592,10 +576,17 @@ class MecanumDriveTrain:
         self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
         self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
-        self.motorFrontLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.motorFrontRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.motorBackRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        self.motorBackLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        # self.motorFrontLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        # self.motorFrontRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        # self.motorBackRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+        # self.motorBackLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
+
+        self.motorFrontLeft.spin(FORWARD, wait=False)
+        self.motorFrontRight.spin(FORWARD, wait=False)
+        self.motorBackRight.spin(FORWARD, wait=False)
+        self.motorBackLeft.spin(FORWARD, wait=False)
+
+        return False
 
     def set_drive_velocity(self, velocity, units=VelocityUnits.RPM):
         self.driveVel = velocity
@@ -609,6 +600,9 @@ class MecanumDriveTrain:
         self.motorFrontRight.set_stopping(mode)
         self.motorBackRight.set_stopping(mode)
         self.motorBackLeft.set_stopping(mode)
+    
+    def getMotorMode(self):
+        return self.motorMode
 
     def stop(self):
         self.motorFrontLeft.stop()
@@ -726,7 +720,7 @@ class Robot:
         None
 
     #### Returns:
-        A new Robot object (unnecessary to access subsystem functions).
+        A new Robot object (unnecessary if accessing subsystem functions).
 
     #### Examples:
         robot1 = Robot() # unnecessary
@@ -747,8 +741,6 @@ class Robot:
     # Utility variable instantiation and initialization
     odometry = Odometry(Constants.RIGHT_ENCODER, Constants.LEFT_ENCODER,
                         Constants.AUX_ENCODER)
-
-    autoRoutine = AutonomousRoutine()
 
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
@@ -777,9 +769,7 @@ def vexcode_auton_function():
 
 def Autonomous_Control():
     brain.screen.print("Starting auto")
-    Robot.autoRoutine.addAutoPaths(path1)
-    Robot.autoRoutine.setPath(0)
-    Robot.autoRoutine.runAuto()
+    TestMode()
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
@@ -805,6 +795,7 @@ wait(30, MSEC)
 myController = MyController()
 
 competition = Competition(vexcode_driver_function, vexcode_auton_function)
+
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
