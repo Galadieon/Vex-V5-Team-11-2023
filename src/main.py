@@ -61,7 +61,10 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True))
+            AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(10, 0, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(0, 0, math.pi / 2, 25, 25, blocking=True))
 
 
 class AutoDrive:
@@ -129,8 +132,8 @@ class AutoDrive:
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
-        if abs(deltaX) < 0.25 and abs(deltaY) < 0.25 and abs(
-                deltaTheta) < 0.035:
+        if abs(deltaX) < 0.1 and abs(deltaY) < 0.1 and abs(
+                math.degrees(deltaTheta)) < 1:
             print("AT TARGET")
             return True
 
@@ -139,6 +142,8 @@ class AutoDrive:
         turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
 
         Robot.drivetrain.autoDrive(forward, strafe, turn)
+
+        wait(10, MSEC)
 
         return False
 
@@ -164,8 +169,6 @@ class AutoDrive:
         while not atTarget:
             atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
                                     self.driveVel, self.turnVel)
-
-            wait(10, MSEC)
 
 
 class AutoFlywheel:
@@ -601,21 +604,17 @@ class MecanumDriveTrain:
         self.motorBackLeft.spin(FORWARD)
 
     def autoDrive(self, forward, strafe, turn):
-        self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
+        print(turn)
+        self.motorFrontLeft.set_velocity(forward + strafe - turn, PERCENT)
         self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn),
                                           PERCENT)
         self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
         self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
-        # self.motorFrontLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        # self.motorFrontRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        # self.motorBackRight.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-        # self.motorBackLeft.spin_for(FORWARD, 0.01, SECONDS, wait=False)
-
-        self.motorFrontLeft.spin(FORWARD, wait=False)
-        self.motorFrontRight.spin(FORWARD, wait=False)
-        self.motorBackRight.spin(FORWARD, wait=False)
-        self.motorBackLeft.spin(FORWARD, wait=False)
+        self.motorFrontLeft.spin(FORWARD)
+        self.motorFrontRight.spin(FORWARD)
+        self.motorBackRight.spin(FORWARD)
+        self.motorBackLeft.spin(FORWARD)
 
         return False
 
