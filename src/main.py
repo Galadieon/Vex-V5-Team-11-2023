@@ -50,7 +50,7 @@ class RunCommands:
         RunCommands.stopCommands = True
 
 
-class TestMode():
+class TestMode:
 
     def __init__(self):
         RunCommands(
@@ -711,6 +711,9 @@ class Intake:
     def reverseMotor(self):
         # TODO: add code to reverse motor in the event of jam
         pass
+
+
+# ---------------------------------ROBOT--------------------------------
 
 
 class Robot:
