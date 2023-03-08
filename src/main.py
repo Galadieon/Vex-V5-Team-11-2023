@@ -144,7 +144,8 @@ class AutoDrive:
 
         return localDeltaX, localDeltaY
 
-    def driveTo(self, localXY, ΘTarget: float, driveVel: float, turnVel: float):
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float,
+                turnVel: float):
         '''
         ### AutoDrive
         '''
@@ -152,14 +153,17 @@ class AutoDrive:
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
-        if abs(deltaX) < 0.1 and abs(deltaY) < 0.1 and abs(
-                math.degrees(deltaTheta)) < 1:
+        limitXY = 0.1
+        limitTheta = 0.0174533
+
+        if abs(deltaX) < limitXY and abs(deltaY) < limitXY and abs(
+                deltaTheta) < limitTheta:
             print("AT TARGET")
             return True
 
-        forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
-        strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
-        turn = -10 if deltaTheta > 0.045 else 10 if deltaTheta < -0.045 else 0
+        forward = 10 if deltaY > limitXY else -10 if deltaY < -limitXY else 0
+        strafe = 10 if deltaX > limitXY else -10 if deltaX < -limitXY else 0
+        turn = -10 if deltaTheta > limitTheta else 10 if deltaTheta < -limitTheta else 0
 
         Robot.drivetrain.drive(forward, strafe, turn)
 
@@ -182,7 +186,7 @@ class AutoDrive:
             self.run()
         else:
             Thread(self.run)
-        
+
     def run(self):
         atTarget = False
 
@@ -192,16 +196,19 @@ class AutoDrive:
 
 
 class AutoFlywheel:
+
     def __init__(self):
         pass
 
 
 class AutoIntake:
+
     def __init__(self):
         pass
 
 
 class AutoIndexer:
+
     def __init__(self):
         pass
 
