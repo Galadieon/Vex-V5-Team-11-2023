@@ -20,51 +20,71 @@ brain = Brain()
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
-# ---------------------------CLASS DECLARATION---------------------------
-
-# ------------------------------AUTONOMOUS-------------------------------
+# -----------------------------CLASS DECLARATION----------------------------
 
 
-class RunCommands:
-    stopAuto = False
-    pauseAuto = False
-    autoIsRunning = False
+class Constants:
+    """
+    ### Constants class - class to hold final constants
 
-    def __init__(self, *commandList):
-        RunCommands.autoIsRunning = True
+    This class holds constants that won't be changed while running.
 
-        for command in commandList:
-            while RunCommands.pauseAuto:
-                pass
-            if RunCommands.stopAuto:
-                RunCommands.stopAuto = False
-                RunCommands.autoIsRunning = False
-                return
-            command.execute()
+    #### Arguments:
+        None
 
-        RunCommands.autoIsRunning = False
+    #### Returns:
+        None
 
-    @staticmethod
-    def stop():
-        RunCommands.stopAuto = True
+    #### Examples:
+        Constants.DRIVETRAIN_FRONT_LEFT\\
+        Constants.INDEXER_PORT\\
+        Constants.WHEEL_TRAVEL
+    """
 
-    @staticmethod
-    def pause():
-        RunCommands.pauseAuto = True
+    DRIVETRAIN_FRONT_LEFT = Ports.PORT1
+    DRIVETRAIN_FRONT_RIGHT = Ports.PORT2
+    DRIVETRAIN_BACK_RIGHT = Ports.PORT10
+    DRIVETRAIN_BACK_LEFT = Ports.PORT9
 
-    @staticmethod
-    def unpause():
-        RunCommands.pauseAuto = False
+    # subject to change
+    INDEXER_PORT = Ports.PORT11
+    FLYWHEEL_PORT1 = Ports.PORT15
+    FLYWHEEL_PORT2 = Ports.PORT16
+    INTAKE_PORT = Ports.PORT20
+
+    RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
+    LEFT_ENCODER = Encoder(brain.three_wire_port.a)
+    AUX_ENCODER = Encoder(brain.three_wire_port.c)
+
+    WHEEL_TRAVEL = 4 * math.pi
+    TRACK_WIDTH = 14.097242
+    WHEEL_BASE = 11.5
+
+    LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
+    AUX_ODOMETRY_DISTANCE = 5.0
+    ODOMETRY_DIAMETER = 2.75
+    QUADRATURE_ENCODER_TICKS = 360
+    ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
+    INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
+
+    FLYWHEEL_KP = 1
+    FLYWHEEL_KI = 0
+    FLYWHEEL_KD = 0
+
+    DRIVETRAIN_FORWARD_KP = 1
+    DRIVETRAIN_FORWARD_KI = 0
+    DRIVETRAIN_FORWARD_KD = 0
+
+    DRIVETRAIN_STRAFE_KP = 1
+    DRIVETRAIN_STRAFE_KI = 0
+    DRIVETRAIN_STRAFE_KD = 0
+
+    DRIVETRAIN_TURN_KP = 1
+    DRIVETRAIN_TURN_KI = 0
+    DRIVETRAIN_TURN_KD = 0
 
 
-class TestMode:
-
-    def __init__(self):
-        commandRun = RunCommands(
-            AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True),
-            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True),
-            AutoDrive(10, 0, math.pi / 2, 25, 25, blocking=True),
-            AutoDrive(0, 0, math.pi / 2, 25, 25, blocking=True))
+# ---------------------------AUTONOMOUS COMMANDS----------------------------
 
 
 class AutoDrive:
@@ -139,9 +159,9 @@ class AutoDrive:
 
         forward = 10 if deltaY > 1 else -10 if deltaY < -1 else 0
         strafe = 10 if deltaX > 1 else -10 if deltaX < -1 else 0
-        turn = 10 if deltaTheta > 0.045 else -10 if deltaTheta < -0.045 else 0
+        turn = -10 if deltaTheta > 0.045 else 10 if deltaTheta < -0.045 else 0
 
-        Robot.drivetrain.autoDrive(forward, strafe, turn)
+        Robot.drivetrain.drive(forward, strafe, turn)
 
         wait(10, MSEC)
 
@@ -186,68 +206,49 @@ class AutoIndexer:
         pass
 
 
+# ---------------------------AUTONOMOUS ROUTINES----------------------------
+
+
+class RunCommands:
+    stopAuto = False
+    pauseAuto = False
+    autoIsRunning = False
+
+    def __init__(self, *commandList):
+        RunCommands.autoIsRunning = True
+
+        for command in commandList:
+            while RunCommands.pauseAuto:
+                pass
+            if RunCommands.stopAuto:
+                RunCommands.stopAuto = False
+                RunCommands.autoIsRunning = False
+                return
+            command.execute()
+
+        RunCommands.autoIsRunning = False
+
+    @staticmethod
+    def stop():
+        RunCommands.stopAuto = True
+
+    @staticmethod
+    def pause():
+        RunCommands.pauseAuto = True
+
+    @staticmethod
+    def unpause():
+        RunCommands.pauseAuto = False
+
+
+class TestMode:
+
+    def __init__(self):
+        commandRun = RunCommands(
+            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True))
+
+
 # -------------------------------UTILITIES-------------------------------
-
-
-class Constants:
-    """
-    ### Constants class - class to hold final constants
-
-    This class holds constants that won't be changed while running.
-
-    #### Arguments:
-        None
-
-    #### Returns:
-        None
-
-    #### Examples:
-        Constants.LEFT_DRIVE_TRAIN_FORWARD\\
-        Constants.INDEXER_PORT\\
-        Constants.WHEEL_TRAVEL
-    """
-
-    LEFT_DRIVE_TRAIN_FORWARD = Ports.PORT1
-    RIGHT_DRIVE_TRAIN_FORWARD = Ports.PORT2
-    RIGHT_DRIVE_TRAIN_BACK = Ports.PORT10
-    LEFT_DRIVE_TRAIN_BACK = Ports.PORT9
-
-    # subject to change
-    INDEXER_PORT = Ports.PORT11
-    FLYWHEEL_PORT1 = Ports.PORT15
-    FLYWHEEL_PORT2 = Ports.PORT16
-    INTAKE_PORT = Ports.PORT20
-
-    RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
-    LEFT_ENCODER = Encoder(brain.three_wire_port.a)
-    AUX_ENCODER = Encoder(brain.three_wire_port.c)
-
-    WHEEL_TRAVEL = 4 * math.pi
-    TRACK_WIDTH = 14.097242
-    WHEEL_BASE = 11.5
-
-    LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
-    AUX_ODOMETRY_DISTANCE = 5.0
-    ODOMETRY_DIAMETER = 2.75
-    QUADRATURE_ENCODER_TICKS = 360
-    ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
-    INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
-
-    FLYWHEEL_KP = 1
-    FLYWHEEL_KI = 0
-    FLYWHEEL_KD = 0
-
-    DRIVETRAIN_FORWARD_KP = 1
-    DRIVETRAIN_FORWARD_KI = 0
-    DRIVETRAIN_FORWARD_KD = 0
-
-    DRIVETRAIN_STRAFE_KP = 1
-    DRIVETRAIN_STRAFE_KI = 0
-    DRIVETRAIN_STRAFE_KD = 0
-
-    DRIVETRAIN_TURN_KP = 1
-    DRIVETRAIN_TURN_KI = 0
-    DRIVETRAIN_TURN_KD = 0
 
 
 class PID:
@@ -564,15 +565,15 @@ class MecanumDriveTrain:
         A new MecanumDriveTrain object.
 
     #### Examples:
-        drivetrain1 = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,\\
-        Constants.RIGHT_DRIVE_TRAIN_FORWARD,\\
-        Constants.RIGHT_DRIVE_TRAIN_BACK,\\
-        Constants.LEFT_DRIVE_TRAIN_BACK)
+        drivetrain1 = MecanumDriveTrain(Constants.DRIVETRAIN_FRONT_LEFT,\\
+        Constants.DRIVETRAIN_FRONT_RIGHT,\\
+        Constants.DRIVETRAIN_BACK_RIGHT,\\
+        Constants.DRIVETRAIN_BACK_LEFT)
     """
 
     def __init__(self, FL, FR, BR, BL):
         self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
-        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
+        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, True)
         self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
 
@@ -593,8 +594,7 @@ class MecanumDriveTrain:
         '''
 
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
-        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn),
-                                          PERCENT)
+        self.motorFrontRight.set_velocity(-forward + strafe + turn, PERCENT)
         self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
         self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
@@ -602,21 +602,6 @@ class MecanumDriveTrain:
         self.motorFrontRight.spin(FORWARD)
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
-
-    def autoDrive(self, forward, strafe, turn):
-        print(turn)
-        self.motorFrontLeft.set_velocity(forward + strafe - turn, PERCENT)
-        self.motorFrontRight.set_velocity(-1 * (-forward + strafe + turn),
-                                          PERCENT)
-        self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
-        self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
-
-        self.motorFrontLeft.spin(FORWARD)
-        self.motorFrontRight.spin(FORWARD)
-        self.motorBackRight.spin(FORWARD)
-        self.motorBackLeft.spin(FORWARD)
-
-        return False
 
     def set_drive_velocity(self, velocity):
         """ #### Assume Percent """
@@ -763,10 +748,10 @@ class Robot:
                         Constants.AUX_ENCODER)
 
     # Subsystem variable instantiation and initialization
-    drivetrain = MecanumDriveTrain(Constants.LEFT_DRIVE_TRAIN_FORWARD,
-                                   Constants.RIGHT_DRIVE_TRAIN_FORWARD,
-                                   Constants.RIGHT_DRIVE_TRAIN_BACK,
-                                   Constants.LEFT_DRIVE_TRAIN_BACK)
+    drivetrain = MecanumDriveTrain(Constants.DRIVETRAIN_FRONT_LEFT,
+                                   Constants.DRIVETRAIN_FRONT_RIGHT,
+                                   Constants.DRIVETRAIN_BACK_RIGHT,
+                                   Constants.DRIVETRAIN_BACK_LEFT)
 
     indexer = Indexer(Constants.INDEXER_PORT)
 
