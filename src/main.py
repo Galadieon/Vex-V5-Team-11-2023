@@ -91,7 +91,7 @@ class AutoDrive:
     """
     ### AutoDrive class - creates an auto drive object
 
-    This class is used to command drivetrain to move to global target.
+    This class is used to command the drivetrain to move to a global target.
 
     #### Arguments:
         xTarget : The global x target
@@ -196,20 +196,89 @@ class AutoDrive:
 
 
 class AutoFlywheel:
+    """
+    ### AutoFlywheel class - creates an auto flywheel object
 
-    def __init__(self):
+    This class is used to command the flywheel (...) .
+
+    #### Arguments:
+        ...
+        blocking (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoFlywheel command object
+
+    #### Examples:
+        RunCommands(AutoFlywheel(...))
+    """
+
+    def __init__(self, blocking=True):
+        # TODO: add initialization code to run the first time object is created
+        self.blocking = blocking
+        pass
+    
+    # TODO: add any other helper methods
+    
+    def execute(self):
+        # TODO: add code to run flywheel when command is executed
         pass
 
 
 class AutoIntake:
+    """
+    ### AutoIntake class - creates an auto flywheel object
 
-    def __init__(self):
+    This class is used to command the flywheel (...) .
+
+    #### Arguments:
+        ...
+        blocking (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoIntake command object
+
+    #### Examples:
+        RunCommands(AutoIntake(...))
+    """
+
+    def __init__(self, blocking=True):
+        # TODO: add initialization code to run the first time object is created
+        self.blocking = blocking
+        pass
+    
+    # TODO: add any other helper methods
+    
+    def execute(self):
+        # TODO: add code to run intake when command is executed
         pass
 
 
 class AutoIndexer:
+    """
+    ### AutoIndexer class - creates an auto indexer object
 
-    def __init__(self):
+    This class is used to command the indexer (...) .
+
+    #### Arguments:
+        ...
+        blocking (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoIndexer command object
+
+    #### Examples:
+        RunCommands(AutoIndexer(...))
+    """
+
+    def __init__(self, blocking=True):
+        # TODO: add initialization code to run the first time object is created
+        self.blocking = blocking
+        pass
+    
+    # TODO: add any other helper methods
+    
+    def execute(self):
+        # TODO: add code to run indexer when command is executed
         pass
 
 
@@ -656,6 +725,8 @@ class Flywheel:
         self.motorGroup = MotorGroup(*[motors])
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
+    
+    # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -689,6 +760,8 @@ class Indexer:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+    
+    # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -721,6 +794,8 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+    
+    # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
