@@ -153,17 +153,17 @@ class AutoDrive:
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
-        limitXY = 0.1
-        limitTheta = 0.0174533
+        thresholdXY = 0.1
+        thresholdTheta = 0.0174533
 
-        if abs(deltaX) < limitXY and abs(deltaY) < limitXY and abs(
-                deltaTheta) < limitTheta:
+        if abs(deltaX) <= thresholdXY and abs(deltaY) <= thresholdXY and abs(
+                deltaTheta) <= thresholdTheta:
             print("AT TARGET")
             return True
 
-        forward = 10 if deltaY > limitXY else -10 if deltaY < -limitXY else 0
-        strafe = 10 if deltaX > limitXY else -10 if deltaX < -limitXY else 0
-        turn = -10 if deltaTheta > limitTheta else 10 if deltaTheta < -limitTheta else 0
+        forward = 10 if deltaY > thresholdXY else -10 if deltaY < -thresholdXY else 0
+        strafe = 10 if deltaX > thresholdXY else -10 if deltaX < -thresholdXY else 0
+        turn = -10 if deltaTheta > thresholdTheta else 10 if deltaTheta < -thresholdTheta else 0
 
         Robot.drivetrain.drive(forward, strafe, turn)
 
