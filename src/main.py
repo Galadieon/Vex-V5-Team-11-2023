@@ -611,20 +611,22 @@ class MyController:
 
     def L1_Pressed(self): pass
 
-    def L2_Pressed(self): 
-        Robot.intake.toggleMotor(FORWARD)
-
+    def L2_Pressed(self):
         reverse = False
         start = brain.timer.time(MSEC)
-        
+
         while self.controller.buttonL2.pressing:
             if brain.timer.time(MSEC) - start > 1_000:
                 reverse = True
+                break
             
             wait(10, MSEC)
         
         if reverse == True:
             Robot.intake.toggleMotor(REVERSE)
+        elif Robot.intake.isRunning == 
+        Robot.intake.toggleMotor(FORWARD)
+        
 
     def R1_Pressed(self): pass
 
