@@ -122,6 +122,59 @@ class AutoDrive:
         self.turnVel = turnVel
         self.blocking = blocking
 
+        self.forwardPID = PID(Kp=1, Ki=0.0, Kd=0.0)
+        self.strafePID = PID(Kp=1, Ki=0.0, Kd=0.0)
+        self.turnPID = PID(Kp=1, Ki=0.0, Kd=0.0)
+
+    def driveTo(self, localXY, ΘTarget: float, driveVel: float,
+                turnVel: float):
+        '''
+        ### AutoDrive
+        '''
+
+        self.driveVel = driveVel
+        self.turnVel = turnVel
+
+        deltaX, deltaY = localXY
+        deltaTheta = ΘTarget - Robot.odometry.Θ
+
+        thresholdXY = 0.5
+        thresholdTheta = math.radians(2.5)
+
+        if abs(deltaX) <= thresholdXY and abs(deltaY) <= thresholdXY and abs(
+                deltaTheta) <= thresholdTheta:
+            print("AT TARGET")
+            return True
+
+        # forward = 10 if deltaY > thresholdXY else -10 if deltaY < -thresholdXY else 0
+        # strafe = 10 if deltaX > thresholdXY else -10 if deltaX < -thresholdXY else 0
+        # turn = -10 if deltaTheta > thresholdTheta else 10 if deltaTheta < -thresholdTheta else 0
+
+        forward, strafe, turn = self.updatePID(deltaX, deltaY, math.degrees(deltaTheta))
+
+        Robot.drivetrain.drive(forward, strafe, turn)
+
+        wait(10, MSEC)
+
+        return False
+
+    def updatePID(self, deltaX, deltaY, deltaTheta):
+        forward = self.forwardPID.update(deltaY, 0.0)
+        strafe = self.strafePID.update(deltaX, 0.0)
+        turn = self.turnPID.update(deltaTheta, 0.0)
+
+        # limits max speed, everything else same
+        if abs(forward) > self.driveVel:
+            forward = (forward / abs(forward)) * self.driveVel
+
+        if abs(strafe) > self.driveVel:
+            strafe = (strafe / abs(strafe)) * self.driveVel
+
+        if abs(turn) > self.turnVel:
+            turn = (turn / abs(turn)) * self.turnVel
+
+        return forward, strafe, turn
+
     def calcLocalXY(self):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
 
@@ -143,33 +196,6 @@ class AutoDrive:
         localDeltaY = round(localDeltaY, 7)  # 10.0000000
 
         return localDeltaX, localDeltaY
-
-    def driveTo(self, localXY, ΘTarget: float, driveVel: float,
-                turnVel: float):
-        '''
-        ### AutoDrive
-        '''
-
-        deltaX, deltaY = localXY
-        deltaTheta = ΘTarget - Robot.odometry.Θ
-
-        thresholdXY = 0.1
-        thresholdTheta = 0.0174533
-
-        if abs(deltaX) <= thresholdXY and abs(deltaY) <= thresholdXY and abs(
-                deltaTheta) <= thresholdTheta:
-            print("AT TARGET")
-            return True
-
-        forward = 10 if deltaY > thresholdXY else -10 if deltaY < -thresholdXY else 0
-        strafe = 10 if deltaX > thresholdXY else -10 if deltaX < -thresholdXY else 0
-        turn = -10 if deltaTheta > thresholdTheta else 10 if deltaTheta < -thresholdTheta else 0
-
-        Robot.drivetrain.drive(forward, strafe, turn)
-
-        wait(10, MSEC)
-
-        return False
 
     def driveToOrigin(self):
         self.xTarget = 0
@@ -216,9 +242,9 @@ class AutoFlywheel:
         # TODO: add initialization code to run the first time object is created
         self.blocking = blocking
         pass
-    
+
     # TODO: add any other helper methods
-    
+
     def execute(self):
         # TODO: add code to run flywheel when command is executed
         pass
@@ -245,9 +271,9 @@ class AutoIntake:
         # TODO: add initialization code to run the first time object is created
         self.blocking = blocking
         pass
-    
+
     # TODO: add any other helper methods
-    
+
     def execute(self):
         # TODO: add code to run intake when command is executed
         pass
@@ -274,9 +300,9 @@ class AutoIndexer:
         # TODO: add initialization code to run the first time object is created
         self.blocking = blocking
         pass
-    
+
     # TODO: add any other helper methods
-    
+
     def execute(self):
         # TODO: add code to run indexer when command is executed
         pass
@@ -347,7 +373,7 @@ class PID:
         pid2 = PID(1, 0.5, 0.25)
     """
 
-    def __init__(self, Kp=1, Ki=0, Kd=0):
+    def __init__(self, Kp=0.1, Ki=0.0, Kd=0.0):
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
@@ -358,7 +384,7 @@ class PID:
         error = target - current
 
         self.integral += error
-        if error == 0 or abs(error) > 2.0: self.integral = 0.0
+        if abs(error) < 0.5 or abs(error) > 5.0: self.integral = 0.0
 
         derivative = error - self.previousError
         self.previousError = error
@@ -657,10 +683,6 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
 
-        self.forwardPID = PID(Kp=1)
-        self.strafePID = PID(Kp=1)
-        self.turnPID = PID(Kp=1)
-
         # Start odometry thread to run independetly of other threads
         Thread(Robot.odometry.updatePose)
 
@@ -725,7 +747,7 @@ class Flywheel:
         self.motorGroup = MotorGroup(*[motors])
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
-    
+
     # TODO: add any other helper methods
 
     def toggleMotor(self):
@@ -760,7 +782,7 @@ class Indexer:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-    
+
     # TODO: add any other helper methods
 
     def toggleMotor(self):
@@ -794,7 +816,7 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-    
+
     # TODO: add any other helper methods
 
     def toggleMotor(self):
