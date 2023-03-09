@@ -599,54 +599,76 @@ class MyController:
         # return (x ** 2) / -100
 
     # ---------------------------BUTTON FUNCTIONS---------------------------
+    """
+    #### Available button commands in use
+    
+    self.changeDriveTrainVel()
+    Robot.odometry.resetPose()
+    self.toggleAuto()
+    self.toggleDriveTrainMode()
+    AutoDrive().driveToOrigin()
+    """
 
-    def L1_Pressed(self):
-        pass
+    def L1_Pressed(self): pass
 
-    def L2_Pressed(self):
+    def L2_Pressed(self): 
+        Robot.intake.toggleMotor(FORWARD)
+
+        reverse = False
+        start = brain.timer.time(MSEC)
+        
+        while self.controller.buttonL2.pressing:
+            if brain.timer.time(MSEC) - start > 1_000:
+                reverse = True
+            
+            wait(10, MSEC)
+        
+        if reverse == True:
+            Robot.intake.toggleMotor(REVERSE)
+
+    def R1_Pressed(self): pass
+
+    def R2_Pressed(self): pass # shoot disc one by one, when holding shoot multiple
+
+
+    def X_Pressed(self): Robot.odometry.resetPose()
+
+    def A_Pressed(self): self.toggleAuto()
+
+    def B_Pressed(self): self.toggleDriveTrainMode()
+
+    def Y_Pressed(self): self.changeDriveTrainVel()
+
+
+    def Up_Pressed(self): pass
+
+    def Right_Pressed(self): pass
+
+    def Down_Pressed(self): AutoDrive().driveToOrigin()
+
+    def Left_Pressed(self): pass
+
+    # ----------------------BUTTON HELPER METHODS------------------------
+
+    def changeDriveTrainVel(self):
         if Robot.drivetrain.driveVel == 100:
             Robot.drivetrain.set_turn_velocity(50)
             Robot.drivetrain.set_drive_velocity(50)
         elif Robot.drivetrain.driveVel == 50:
             Robot.drivetrain.set_turn_velocity(100)
             Robot.drivetrain.set_drive_velocity(100)
-
-    def R1_Pressed(self):
-        pass
-
-    def R2_Pressed(self):
-        pass
-
-    def A_Pressed(self):
+    
+    def toggleAuto(self):
         if RunCommands.autoIsRunning == False:
             TestMode()
         else:
             RunCommands.stop()
 
-    def B_Pressed(self):
+    def toggleDriveTrainMode(self):
         if Robot.drivetrain.getMotorMode() == BRAKE:
             Robot.drivetrain.set_stopping(COAST)
         elif Robot.drivetrain.getMotorMode() == COAST:
             Robot.drivetrain.set_stopping(BRAKE)
-
-    def X_Pressed(self):
-        Robot.odometry.resetPose()
-
-    def Y_Pressed(self):
-        pass
-
-    def Up_Pressed(self):
-        pass
-
-    def Down_Pressed(self):
-        autoDrive = AutoDrive()
-        autoDrive.driveToOrigin()
-
-    def Left_Pressed(self):
-        pass
-
-    def Right_Pressed(self):
-        pass
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -813,12 +835,20 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.isRunning = False
+
+        self.motor.set_velocity(10, PERCENT)
 
     # TODO: add any other helper methods
 
-    def toggleMotor(self):
+    def toggleMotor(self, direction=FORWARD):
         # TODO: add code to run/stop motor
-        pass
+        if self.isRunning:
+            self.isRunning = False
+            self.motor.stop()
+        else:
+            self.isRunning = True
+            self.motor.spin(direction)
 
     def reverseMotor(self):
         # TODO: add code to reverse motor in the event of jam
