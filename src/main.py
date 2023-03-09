@@ -51,6 +51,7 @@ class Constants:
     FLYWHEEL_PORT1 = Ports.PORT15
     FLYWHEEL_PORT2 = Ports.PORT16
     INTAKE_PORT = Ports.PORT20
+    ROLLER_PORT = INTAKE_PORT
 
     RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
     LEFT_ENCODER = Encoder(brain.three_wire_port.a)
@@ -307,6 +308,10 @@ class AutoIndexer:
     def execute(self):
         # TODO: add code to run indexer when command is executed
         pass
+
+
+class AutoRoller:
+    pass
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
@@ -857,6 +862,38 @@ class Intake:
         pass
 
 
+class Roller:
+    """
+    ### Flywheel class - creates flywheel object
+    This class is to create and run robot flywheel.
+    #### Arguments:
+        motor : The intake motor to collect or remove jammed discs
+    #### Returns:
+        A new Intake object.
+    #### Examples:
+        intake1 = Intake(Constants.INTAKE_PORT)
+    """
+
+    def __init__(self, motor):
+        self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+
+    # TODO: add any other helper methods
+
+    def toggleMotor(self):
+        # TODO: add code to run/stop motor
+        pass
+
+    def flip90(self, direction=FORWARD):
+        self.motor.spin_for(direction, 90, DEGREES, 50, PERCENT, False)
+
+    def flip180(self, direction=FORWARD):
+        self.motor.spin_for(direction, 180, DEGREES, 50, PERCENT, False)
+
+    def reverseMotor(self):
+        # TODO: add code to reverse motor in the event of jam
+        pass
+
+
 # ---------------------------------ROBOT--------------------------------
 
 
@@ -891,6 +928,8 @@ class Robot:
     flywheel = Flywheel(Constants.FLYWHEEL_PORT1)
 
     intake = Intake(Constants.INTAKE_PORT)
+
+    roller = Roller(Constants.ROLLER_PORT)
 
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
