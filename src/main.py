@@ -353,7 +353,10 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True))
+            AutoDrive(0, 10, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(10, 0, math.pi / 2, 25, 25, blocking=True),
+            AutoDrive(0, 0, math.pi / 2, 25, 25, blocking=True))
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -383,7 +386,7 @@ class PID:
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
-        self.prevError = 0.0
+        self.previousError = 0.0
         self.integral = 0.0
 
     def update(self, target, current):
