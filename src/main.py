@@ -616,22 +616,7 @@ class MyController:
 
     def L1_Pressed(self): pass
 
-    def L2_Pressed(self):
-        reverse = False
-        start = brain.timer.time(MSEC)
-
-        while self.controller.buttonL2.pressing:
-            if brain.timer.time(MSEC) - start > 1_000:
-                reverse = True
-                break
-            
-            wait(10, MSEC)
-        
-        if reverse == True:
-            Robot.intake.toggleMotor(REVERSE)
-        elif Robot.intake.isRunning == 
-        Robot.intake.toggleMotor(FORWARD)
-        
+    def L2_Pressed(self): pass
 
     def R1_Pressed(self): pass
 
@@ -842,20 +827,13 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-        self.isRunning = False
-
-        self.motor.set_velocity(10, PERCENT)
+        # TODO: add initialization code
 
     # TODO: add any other helper methods
 
     def toggleMotor(self, direction=FORWARD):
         # TODO: add code to run/stop motor
-        if self.isRunning:
-            self.isRunning = False
-            self.motor.stop()
-        else:
-            self.isRunning = True
-            self.motor.spin(direction)
+        pass
 
     def reverseMotor(self):
         # TODO: add code to reverse motor in the event of jam
