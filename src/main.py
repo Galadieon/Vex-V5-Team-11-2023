@@ -150,9 +150,10 @@ class AutoDrive:
         # strafe = 10 if deltaX > thresholdXY else -10 if deltaX < -thresholdXY else 0
         # turn = -10 if deltaTheta > thresholdTheta else 10 if deltaTheta < -thresholdTheta else 0
 
-        forward, strafe, turn = self.updatePID(deltaX, deltaY, math.degrees(deltaTheta))
+        forward, strafe, turn = self.updatePID(deltaX, deltaY,
+                                               math.degrees(deltaTheta))
 
-        Robot.drivetrain.drive(forward, strafe, turn)
+        Robot.drivetrain.drive(forward, strafe, -turn)
 
         wait(10, MSEC)
 
@@ -373,7 +374,7 @@ class PID:
         pid2 = PID(1, 0.5, 0.25)
     """
 
-    def __init__(self, Kp=0.1, Ki=0.0, Kd=0.0):
+    def __init__(self, Kp=1.0, Ki=0.0, Kd=0.0):
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
@@ -389,8 +390,8 @@ class PID:
         derivative = error - self.previousError
         self.previousError = error
 
-        controlledValue = abs((self.Kp * error) + (self.Ki * self.integral) +
-                              (self.Kd * derivative))
+        controlledValue = (self.Kp * error) + (self.Ki * self.integral) + (
+            self.Kd * derivative)
 
         if controlledValue > 100: controlledValue = 100
         if controlledValue < -100: controlledValue = -100
@@ -675,8 +676,8 @@ class MecanumDriveTrain:
 
     def __init__(self, FL, FR, BR, BL):
         self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
-        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, True)
-        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
+        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
+        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
 
         self.driveVel = 100
@@ -687,13 +688,9 @@ class MecanumDriveTrain:
         Thread(Robot.odometry.updatePose)
 
     def drive(self, forward, strafe, turn):
-        '''
-        ### TeleOp drive
-        '''
-
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
-        self.motorFrontRight.set_velocity(-forward + strafe + turn, PERCENT)
-        self.motorBackRight.set_velocity(-forward - strafe + turn, PERCENT)
+        self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
+        self.motorBackRight.set_velocity(forward + strafe - turn, PERCENT)
         self.motorBackLeft.set_velocity(forward - strafe + turn, PERCENT)
 
         self.motorFrontLeft.spin(FORWARD)
