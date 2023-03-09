@@ -698,9 +698,6 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
 
-        # Start odometry thread to run independetly of other threads
-        Thread(Robot.odometry.updatePose)
-
     def drive(self, forward, strafe, turn):
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
@@ -758,18 +755,12 @@ class Flywheel:
         self.motorGroup = MotorGroup(*[motors])
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
-        self.velocity = 50
-
-        self.motorGroup.set_velocity(50, PERCENT)
 
     # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
-        if self.motorGroup.is_spinning:
-            self.motorGroup.stop()
-        else:
-            self.motorGroup.spin(FORWARD)
+        pass
 
     def launchEndgame(self):
         # TODO: add code to reverse flywheel to specific angle to launch endgame
@@ -778,11 +769,7 @@ class Flywheel:
 
     def changeSpeed(self):
         # TODO: add code to change motor speed low to high and low again
-        if self.velocity == 100:
-            self.velocity=50
-        else:
-            self.velocity=100
-        self.motorGroup.set_velocity(self.velocity, PERCENT)
+        pass
 
 
 class Indexer:
@@ -842,12 +829,10 @@ class Intake:
     # TODO: add any other helper methods
 
     def toggleMotor(self, direction=FORWARD):
-        self.motor.spin(FORWARD)
         # TODO: add code to run/stop motor
         pass
 
     def reverseMotor(self):
-        self.motor.spin(REVERSE)
         # TODO: add code to reverse motor in the event of jam
         pass
 
@@ -970,6 +955,10 @@ def Driver_Control():
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
+
+wait(100, MSEC)
+
+Thread(Robot.odometry.updatePose)
 
 myController = MyController()
 
