@@ -807,13 +807,14 @@ class Indexer:
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
         self.motor.set_stopping(HOLD)
+        self.motor.set_velocity(120, RPM)
         self.isRunning = False
 
+        # calculate the degrees the motor turns to move 1 chain forward
         self.degreesPerTeeth = 360 / Constants.INDEXER_GEAR_TEETH
 
+        # calculate the total degrees the motor turns to complete 1 cycle
         self.degreesPerCycle = Constants.INDEXER_CHAIN_LINKS * self.degreesPerTeeth
-
-    # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -821,12 +822,6 @@ class Indexer:
     
     def push(self):
         self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
-        
-    def 
-
-    def changeSpeed(self):
-        # TODO: (maybe) add code to change motor speed
-        pass
 
 
 class Intake:
