@@ -73,6 +73,7 @@ class Constants:
     FLYWHEEL_KD = 0
 
     INDEXER_GEAR_TEETH = 6
+    INDEXER_CHAIN_LINKS = 18
 
     DRIVETRAIN_FORWARD_KP = 1
     DRIVETRAIN_FORWARD_KI = 0
@@ -805,16 +806,12 @@ class Indexer:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.motor.set_stopping(HOLD)
         self.isRunning = False
 
         self.degreesPerTeeth = 360 / Constants.INDEXER_GEAR_TEETH
-        self.numChainLinks = 18
 
-        self.degreesPerCycle = self.numChainLinks * self.degreesPerTeeth
-        self.motor.set_stopping(HOLD)
-    
-    def calcCycleDegrees(self):
-        return self.numChainLinks
+        self.degreesPerCycle = Constants.INDEXER_CHAIN_LINKS * self.degreesPerTeeth
 
     # TODO: add any other helper methods
 
@@ -824,10 +821,8 @@ class Indexer:
     
     def push(self):
         self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
-
-    def reverseMotor(self):
-        # TODO: add code to reverse motor in case of jam when holding button
-        pass
+        
+    def 
 
     def changeSpeed(self):
         # TODO: (maybe) add code to change motor speed
