@@ -103,7 +103,7 @@ class AutoDrive:
         ΘTarget : The global Θ target
         driveVel : The max drive velocity
         turnVel : The max turn velocity
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution blocking
 
     #### Returns:
         A new AutoDrive command object
@@ -118,13 +118,15 @@ class AutoDrive:
                  ΘTarget=math.pi / 2,
                  driveVel=25.0,
                  turnVel=25.0,
-                 blocking=True):
+                 wait=True,
+                 timeOut=5_000):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
-        self.blocking = blocking
+        self.wait = wait
+        self.timeOut = timeOut
 
         self.forwardPID = PID(Kp=1, Ki=0.0, Kd=0.0)
         self.strafePID = PID(Kp=1, Ki=0.0, Kd=0.0)
@@ -186,6 +188,9 @@ class AutoDrive:
         deltaX = self.xTarget - robotX
         deltaY = self.yTarget - robotY
 
+        if self.notClearedAutoLine(robotX, robotY):
+            deltaX, deltaY = self.calcAutoLineClear(robotX, robotY)
+
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
 
@@ -201,19 +206,30 @@ class AutoDrive:
         localDeltaY = round(localDeltaY, 7)  # 10.0000000
 
         return localDeltaX, localDeltaY
+    
+    def notClearedAutoLine(self, x, y):
+        return y > self.calcAutoLineY(x)
+    
+    def calcAutoLineClear(self, robotX, robotY):
+        deltaX = (robotX + robotY + 24 + 19.8) / 2.0
+        deltaY = self.calcAutoLineY(deltaX)
+        return deltaX, deltaY
+    
+    def calcAutoLineY(self, x):
+        return x - (17.5 + 2.3)
 
     def driveToOrigin(self):
         self.xTarget = 0
         self.yTarget = 0
         self.ΘTarget = math.pi / 2
 
-        if self.blocking:
+        if self.wait:
             self.run()
         else:
             Thread(self.run)
-
+    
     def execute(self):
-        if self.blocking:
+        if self.wait:
             self.run()
         else:
             Thread(self.run)
@@ -234,7 +250,7 @@ class AutoFlywheel:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution blocking
 
     #### Returns:
         A new AutoFlywheel command object
@@ -243,9 +259,9 @@ class AutoFlywheel:
         RunCommands(AutoFlywheel(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -263,7 +279,7 @@ class AutoIntake:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution blocking
 
     #### Returns:
         A new AutoIntake command object
@@ -272,9 +288,9 @@ class AutoIntake:
         RunCommands(AutoIntake(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -292,7 +308,7 @@ class AutoIndexer:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution blocking
 
     #### Returns:
         A new AutoIndexer command object
@@ -301,9 +317,9 @@ class AutoIndexer:
         RunCommands(AutoIndexer(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -314,7 +330,31 @@ class AutoIndexer:
 
 
 class AutoRoller:
-    pass
+    """
+    ### AutoRoller class - creates an auto roller object
+
+    This class is used to command the roller (...) .
+
+    #### Arguments:
+        flipDegrees : Degrees to flip the rollers
+        wait (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoRoller command object
+
+    #### Examples:
+        RunCommands(AutoRoller(...))
+    """
+
+    def __init__(self, flipDegrees=90, wait=True):
+        # TODO: add initialization code to run the first time object is created\
+        self.flipDegrees = flipDegrees
+        self.wait = wait
+
+    # TODO: add any other helper methods
+
+    def execute(self):
+        Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
@@ -356,7 +396,12 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True))
+            AutoDrive(24, -1, math.pi / 2, 25, 25, 
+                      wait=True, timeOut=1_000),
+            AutoRoller(flipDegrees=90, wait=True),
+            AutoDrive(24, -1, math.pi / 2, 25, 25, 
+                      wait=True, timeOut=1_000),
+        )
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -386,7 +431,7 @@ class PID:
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
-        self.prevError = 0.0
+        self.previousError = 0.0
         self.integral = 0.0
 
     def update(self, target, current):
@@ -428,7 +473,7 @@ class Odometry:
     """
 
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
-        self.x = 0
+        self.x = 24
         self.y = 0
         self.Θ = math.pi / 2
 
@@ -878,11 +923,8 @@ class Roller:
         # TODO: add code to run/stop motor
         pass
 
-    def flip90(self, direction=FORWARD):
-        self.motor.spin_for(direction, 90, DEGREES, 50, PERCENT, False)
-
-    def flip180(self, direction=FORWARD):
-        self.motor.spin_for(direction, 180, DEGREES, 50, PERCENT, False)
+    def flip(self, direction=FORWARD, flipDegrees=90, wait=False):
+        self.motor.spin_for(direction, flipDegrees, DEGREES, 50, PERCENT, wait)
 
     def reverseMotor(self):
         # TODO: add code to reverse motor in the event of jam
