@@ -41,10 +41,12 @@ class Constants:
         Constants.WHEEL_TRAVEL
     """
 
-    DRIVETRAIN_FRONT_LEFT = Ports.PORT1
-    DRIVETRAIN_FRONT_RIGHT = Ports.PORT2
-    DRIVETRAIN_BACK_RIGHT = Ports.PORT10
-    DRIVETRAIN_BACK_LEFT = Ports.PORT9
+    HIGH_GOAL_X = 24 * 0.25  # from center of 1st square
+    HIGH_GOAL_Y = 24 * 4.61  # from center of 1st square
+
+    WHEEL_TRAVEL = 4 * math.pi
+    TRACK_WIDTH = 14.097242
+    WHEEL_BASE = 11.5
 
     # subject to change
     INDEXER_PORT = Ports.PORT11
@@ -57,23 +59,10 @@ class Constants:
     LEFT_ENCODER = Encoder(brain.three_wire_port.a)
     AUX_ENCODER = Encoder(brain.three_wire_port.c)
 
-    WHEEL_TRAVEL = 4 * math.pi
-    TRACK_WIDTH = 14.097242
-    WHEEL_BASE = 11.5
-
-    LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
-    AUX_ODOMETRY_DISTANCE = 5.0
-    ODOMETRY_DIAMETER = 2.75
-    QUADRATURE_ENCODER_TICKS = 360
-    ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
-    INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
-
-    FLYWHEEL_KP = 1
-    FLYWHEEL_KI = 0
-    FLYWHEEL_KD = 0
-
-    INDEXER_GEAR_TEETH = 6
-    INDEXER_CHAIN_LINKS = 18
+    DRIVETRAIN_FRONT_LEFT = Ports.PORT1
+    DRIVETRAIN_FRONT_RIGHT = Ports.PORT2
+    DRIVETRAIN_BACK_RIGHT = Ports.PORT10
+    DRIVETRAIN_BACK_LEFT = Ports.PORT9
 
     DRIVETRAIN_FORWARD_KP = 1
     DRIVETRAIN_FORWARD_KI = 0
@@ -86,6 +75,21 @@ class Constants:
     DRIVETRAIN_TURN_KP = 1
     DRIVETRAIN_TURN_KI = 0
     DRIVETRAIN_TURN_KD = 0
+
+    LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
+    AUX_ODOMETRY_DISTANCE = 5.0
+    ODOMETRY_DIAMETER = 2.75
+    QUADRATURE_ENCODER_TICKS = 360
+    ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
+    INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
+
+    FLYWHEEL_KP = 1
+    FLYWHEEL_KI = 0
+    FLYWHEEL_KD = 0
+    FLYWHEEL_GEAR_RATIO = 84 / 12
+
+    INDEXER_GEAR_TEETH = 6
+    INDEXER_CHAIN_LINKS = 18
 
 
 # ---------------------------AUTONOMOUS COMMANDS----------------------------
@@ -119,7 +123,7 @@ class AutoDrive:
                  driveVel=25.0,
                  turnVel=25.0,
                  wait=True,
-                 timeOut=5_000):
+                 timeOut=15_000):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
@@ -130,6 +134,9 @@ class AutoDrive:
 
         self.thresholdXY = 0.5
         self.thresholdTheta = math.radians(2.5)
+        self.atTarget = False
+        self.thread = None
+        self.maintainPos = False
 
         self.forwardPID = PID(Kp=5, Ki=0.0, Kd=0.0)
         self.strafePID = PID(Kp=5, Ki=0.0, Kd=0.0)
@@ -147,9 +154,10 @@ class AutoDrive:
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
-        if abs(deltaX) <= self.thresholdXY and abs(deltaY) <= self.thresholdXY and abs(
-                deltaTheta) <= self.thresholdTheta:
-            print("AT TARGET")
+        if abs(deltaX) <= self.thresholdXY and abs(
+                deltaY) <= self.thresholdXY and abs(
+                    deltaTheta
+                ) <= self.thresholdTheta and self.maintainPos == False:
             return True
 
         forward, strafe, turn = self.updatePID(deltaX, deltaY,
@@ -204,15 +212,15 @@ class AutoDrive:
         localDeltaY = round(localDeltaY, 7)  # 10.0000000
 
         return localDeltaX, localDeltaY
-    
+
     def notClearedAutoLine(self, x, y):
         return y > self.calcAutoLineY(x)
-    
+
     def calcAutoLineClear(self, robotX, robotY):
         xTarget = (robotX + robotY + 24 + 19.8) / 2.0
         yTarget = self.calcAutoLineY(xTarget)
         return xTarget, yTarget
-    
+
     def calcAutoLineY(self, x):
         return x - 19.8
 
@@ -225,19 +233,51 @@ class AutoDrive:
             self.run()
         else:
             Thread(self.run)
-    
+
     def execute(self):
         if self.wait:
             self.run()
         else:
-            Thread(self.run)
+            self.thread = Thread(self.run)
 
     def run(self):
-        atTarget = False
+        self.atTarget = False
 
-        while not atTarget:
-            atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
-                                    self.driveVel, self.turnVel)
+        while not self.atTarget:
+            self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+                                         self.driveVel, self.turnVel)
+
+
+class AutoAlignShoot(AutoDrive):
+
+    def __init__(self,
+                 xTarget=0.0,
+                 yTarget=0.0,
+                 ΘTarget=math.pi / 2,
+                 driveVel=25.0,
+                 turnVel=25.0,
+                 wait=True,
+                 timeOut=15_000):
+        self.wait = wait
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
+        super().__init__(xTarget, yTarget, ΘTarget, driveVel, turnVel, wait,
+                         timeOut)
+
+    def calcAngleToHi(self, robotX, robotY):
+        return math.atan2(Constants.HIGH_GOAL_Y - robotY,
+                          Constants.HIGH_GOAL_X - robotX)
+
+    def execute(self):
+        autoFlywheel = AutoFlywheel(distance="sideAuto")
+        autoFlywheel.execute()
+
+        super().execute()
+        print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
+        super().maintainPos = True
+        super().wait = False
+        super().execute()
+
+        autoFlywheel.stop()
 
 
 class AutoFlywheel:
@@ -247,7 +287,7 @@ class AutoFlywheel:
     This class is used to command the flywheel (...) .
 
     #### Arguments:
-        ...
+        distance : The general distance to high goal
         wait (True) : Determines code execution blocking
 
     #### Returns:
@@ -257,18 +297,33 @@ class AutoFlywheel:
         RunCommands(AutoFlywheel(...))
     """
 
-    def __init__(self, wait=True):
+    def __init__(self, distance="sideAuto"):
         # TODO: add initialization code to run the first time object is created
-        self.wait = wait
+        self.distance = distance
+
+        # for 84 : 12 max: 4_200 RPM (Our robot's max)
+        # for 84 : 36 max: 1_400 RPM
         self.velocityDict = {
-            
+            # need empirical data & verification
+            "centerAuto" : 4_200 / 2.0 + 4_200 / 8.0,
+            "sideAuto" : 4_200 * (2.0 / 3.0) + 4_200 / 8.0,
+            24  : 4_200 / 4.0,
+            48  : 4_200 / 3.0,
+            72  : 4_200 / 2.0,
+            96  : 4_200 * (2.0 / 3.0),
+            120 : 4_200 * (3.0 / 4.0),
+            144 : 4_200 * (4.0 / 4.0),
         }
-        pass
 
     # TODO: add any other helper methods
 
     def execute(self):
-        # TODO: add code to run flywheel when command is executed
+        Robot.flywheel.startSpin()
+    
+    def stop(self):
+        Robot.flywheel.stop()
+
+    def run(self):
         pass
 
 
@@ -397,11 +452,15 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(24, -1, math.pi / 2, 25, 25, 
-                      wait=True, timeOut=1_000),
+            AutoDrive(24, -1, math.pi / 2, 25, 25, wait=True, timeOut=1_000),
             AutoRoller(flipDegrees=90, wait=True),
-            AutoDrive(24, -1, math.pi / 2, 25, 25, 
-                      wait=True, timeOut=1_000),
+            AutoAlignShoot(24,
+                               0,
+                               math.pi / 2,
+                               25,
+                               25,
+                               wait=True,
+                               timeOut=5_000),
         )
 
 
@@ -663,31 +722,41 @@ class MyController:
     AutoDrive().driveToOrigin()
     """
 
-    def L1_Pressed(self): pass
+    def L1_Pressed(self):
+        pass
 
-    def L2_Pressed(self): pass
+    def L2_Pressed(self):
+        pass
 
-    def R1_Pressed(self): pass
+    def R1_Pressed(self):
+        pass
 
-    def R2_Pressed(self): pass # shoot disc one by one, when holding shoot multiple
+    def R2_Pressed(self):
+        pass  # shoot disc one by one, when holding shoot multiple
 
+    def X_Pressed(self):
+        Robot.odometry.resetPose()
 
-    def X_Pressed(self): Robot.odometry.resetPose()
+    def A_Pressed(self):
+        self.toggleAuto()
 
-    def A_Pressed(self): self.toggleAuto()
+    def B_Pressed(self):
+        self.toggleDriveTrainMode()
 
-    def B_Pressed(self): self.toggleDriveTrainMode()
+    def Y_Pressed(self):
+        self.changeDriveTrainVel()
 
-    def Y_Pressed(self): self.changeDriveTrainVel()
+    def Up_Pressed(self):
+        pass
 
+    def Right_Pressed(self):
+        pass
 
-    def Up_Pressed(self): pass
+    def Down_Pressed(self):
+        AutoDrive().driveToOrigin()
 
-    def Right_Pressed(self): pass
-
-    def Down_Pressed(self): AutoDrive().driveToOrigin()
-
-    def Left_Pressed(self): pass
+    def Left_Pressed(self):
+        pass
 
     # ----------------------BUTTON HELPER METHODS------------------------
 
@@ -698,7 +767,7 @@ class MyController:
         elif Robot.drivetrain.driveVel == 50:
             Robot.drivetrain.set_turn_velocity(100)
             Robot.drivetrain.set_drive_velocity(100)
-    
+
     def toggleAuto(self):
         if RunCommands.autoIsRunning == False:
             TestMode()
@@ -805,13 +874,22 @@ class Flywheel:
 
     def __init__(self, *motors):
         self.motorGroup = MotorGroup(*[motors])
+        
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
-        self.velocity = 50
-
-        self.motorGroup.set_velocity(50, PERCENT)
+        self.flywheelVel = 1_400
+        self.motorVelocity = self.calcMotorVel(self.flywheelVel)
 
     # TODO: add any other helper methods
+
+    def startSpin(self):
+        self.motorGroup.spin(FORWARD, self.motorVelocity, RPM)
+    
+    def stop(self):
+        self.motorGroup.stop()
+
+    def calcMotorVel(self, flywheelVel):
+        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -828,9 +906,9 @@ class Flywheel:
     def changeSpeed(self):
         # TODO: add code to change motor speed low to high and low again
         if self.velocity == 100:
-            self.velocity=50
+            self.velocity = 50
         else:
-            self.velocity=100
+            self.velocity = 100
         self.motorGroup.set_velocity(self.velocity, PERCENT)
 
 
@@ -865,7 +943,7 @@ class Indexer:
     def toggleMotor(self):
         # TODO: add code to run/stop motor
         self.push()
-    
+
     def push(self):
         self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
 
