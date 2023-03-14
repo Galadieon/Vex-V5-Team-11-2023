@@ -383,7 +383,7 @@ class PID:
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
-        self.prevError = 0.0
+        self.previousError = 0.0
         self.integral = 0.0
 
     def update(self, target, current):
