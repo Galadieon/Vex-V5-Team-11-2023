@@ -128,9 +128,12 @@ class AutoDrive:
         self.wait = wait
         self.timeOut = timeOut
 
-        self.forwardPID = PID(Kp=1, Ki=0.0, Kd=0.0)
-        self.strafePID = PID(Kp=1, Ki=0.0, Kd=0.0)
-        self.turnPID = PID(Kp=1, Ki=0.0, Kd=0.0)
+        self.thresholdXY = 0.5
+        self.thresholdTheta = math.radians(2.5)
+
+        self.forwardPID = PID(Kp=5, Ki=0.0, Kd=0.0)
+        self.strafePID = PID(Kp=5, Ki=0.0, Kd=0.0)
+        self.turnPID = PID(Kp=5, Ki=0.0, Kd=0.0)
 
     def driveTo(self, localXY, ΘTarget: float, driveVel: float,
                 turnVel: float):
@@ -144,17 +147,10 @@ class AutoDrive:
         deltaX, deltaY = localXY
         deltaTheta = ΘTarget - Robot.odometry.Θ
 
-        thresholdXY = 0.5
-        thresholdTheta = math.radians(2.5)
-
-        if abs(deltaX) <= thresholdXY and abs(deltaY) <= thresholdXY and abs(
-                deltaTheta) <= thresholdTheta:
+        if abs(deltaX) <= self.thresholdXY and abs(deltaY) <= self.thresholdXY and abs(
+                deltaTheta) <= self.thresholdTheta:
             print("AT TARGET")
             return True
-
-        # forward = 10 if deltaY > thresholdXY else -10 if deltaY < -thresholdXY else 0
-        # strafe = 10 if deltaX > thresholdXY else -10 if deltaX < -thresholdXY else 0
-        # turn = -10 if deltaTheta > thresholdTheta else 10 if deltaTheta < -thresholdTheta else 0
 
         forward, strafe, turn = self.updatePID(deltaX, deltaY,
                                                math.degrees(deltaTheta))
@@ -189,7 +185,9 @@ class AutoDrive:
         deltaY = self.yTarget - robotY
 
         if self.notClearedAutoLine(robotX, robotY):
-            deltaX, deltaY = self.calcAutoLineClear(robotX, robotY)
+            xT, yT = self.calcAutoLineClear(robotX, robotY)
+            deltaX = xT - robotX
+            deltaY = yT - robotY
 
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
@@ -211,12 +209,12 @@ class AutoDrive:
         return y > self.calcAutoLineY(x)
     
     def calcAutoLineClear(self, robotX, robotY):
-        deltaX = (robotX + robotY + 24 + 19.8) / 2.0
-        deltaY = self.calcAutoLineY(deltaX)
-        return deltaX, deltaY
+        xTarget = (robotX + robotY + 24 + 19.8) / 2.0
+        yTarget = self.calcAutoLineY(xTarget)
+        return xTarget, yTarget
     
     def calcAutoLineY(self, x):
-        return x - (17.5 + 2.3)
+        return x - 19.8
 
     def driveToOrigin(self):
         self.xTarget = 0
@@ -262,6 +260,9 @@ class AutoFlywheel:
     def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
         self.wait = wait
+        self.velocityDict = {
+            
+        }
         pass
 
     # TODO: add any other helper methods
