@@ -116,6 +116,8 @@ class AutoDrive:
         RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
     """
 
+    stopAuto = False
+
     def __init__(self,
                  xTarget=0.0,
                  yTarget=0.0,
@@ -225,14 +227,15 @@ class AutoDrive:
         return x - 19.8
 
     def driveToOrigin(self):
-        self.xTarget = 0
+        self.xTarget = 24
         self.yTarget = 0
         self.ΘTarget = math.pi / 2
 
-        if self.wait:
-            self.run()
-        else:
-            Thread(self.run)
+        self.execute()
+
+    @staticmethod
+    def stop():
+        AutoDrive.stopAuto = True
 
     def execute(self):
         if self.wait:
@@ -244,6 +247,7 @@ class AutoDrive:
         self.atTarget = False
 
         while not self.atTarget:
+            if AutoDrive.stopAuto: return
             self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
                                          self.driveVel, self.turnVel)
 
@@ -260,24 +264,32 @@ class AutoAlignShoot(AutoDrive):
                  timeOut=15_000):
         self.wait = wait
         robotX, robotY, robotΘ = Robot.odometry.getPose()
-        super().__init__(xTarget, yTarget, ΘTarget, driveVel, turnVel, wait,
-                         timeOut)
+        super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
+                         driveVel, turnVel, wait, timeOut)
 
+    # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
         return math.atan2(Constants.HIGH_GOAL_Y - robotY,
                           Constants.HIGH_GOAL_X - robotX)
 
-    def execute(self):
-        autoFlywheel = AutoFlywheel(distance="sideAuto")
-        autoFlywheel.execute()
+    def stopAll(self):
+        super().stop()
+        self.autoFlywheel.stop()
 
+    def alignMaintainPos(self):
         super().execute()
         print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         super().maintainPos = True
         super().wait = False
         super().execute()
 
-        autoFlywheel.stop()
+    def execute(self):
+        self.autoFlywheel = AutoFlywheel(distance="sideAuto")
+        self.autoFlywheel.execute()
+
+        self.alignMaintainPos()
+
+        self.stopAll()
 
 
 class AutoFlywheel:
@@ -305,21 +317,21 @@ class AutoFlywheel:
         # for 84 : 36 max: 1_400 RPM
         self.velocityDict = {
             # need empirical data & verification
-            "centerAuto" : 4_200 / 2.0 + 4_200 / 8.0,
-            "sideAuto" : 4_200 * (2.0 / 3.0) + 4_200 / 8.0,
-            24  : 4_200 / 4.0,
-            48  : 4_200 / 3.0,
-            72  : 4_200 / 2.0,
-            96  : 4_200 * (2.0 / 3.0),
-            120 : 4_200 * (3.0 / 4.0),
-            144 : 4_200 * (4.0 / 4.0),
+            "centerAuto": 4_200 / 2.0 + 4_200 / 8.0,
+            "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,
+            24: 4_200 / 4.0,
+            48: 4_200 / 3.0,
+            72: 4_200 / 2.0,
+            96: 4_200 * (2.0 / 3.0),
+            120: 4_200 * (3.0 / 4.0),
+            144: 4_200 * (4.0 / 4.0),
         }
 
     # TODO: add any other helper methods
 
     def execute(self):
         Robot.flywheel.startSpin()
-    
+
     def stop(self):
         Robot.flywheel.stop()
 
@@ -455,12 +467,12 @@ class TestMode:
             AutoDrive(24, -1, math.pi / 2, 25, 25, wait=True, timeOut=1_000),
             AutoRoller(flipDegrees=90, wait=True),
             AutoAlignShoot(24,
-                               0,
-                               math.pi / 2,
-                               25,
-                               25,
-                               wait=True,
-                               timeOut=5_000),
+                           0,
+                           math.pi / 2,
+                           25,
+                           25,
+                           wait=True,
+                           timeOut=5_000),
         )
 
 
@@ -590,7 +602,7 @@ class Odometry:
             self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += dtheta
 
-            while brain.timer.time(MSEC) - start < 10:
+            while brain.timer.time(MSEC) - start < 7.5:
                 continue
 
     def stop(self):
@@ -655,6 +667,7 @@ class MyController:
 
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                    AutoDrive.stop()
                     RunCommands.stop()
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
@@ -874,7 +887,7 @@ class Flywheel:
 
     def __init__(self, *motors):
         self.motorGroup = MotorGroup(*[motors])
-        
+
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
@@ -884,7 +897,7 @@ class Flywheel:
 
     def startSpin(self):
         self.motorGroup.spin(FORWARD, self.motorVelocity, RPM)
-    
+
     def stop(self):
         self.motorGroup.stop()
 
