@@ -209,8 +209,8 @@ class AutoDrive:
         localDeltaX = dist * math.cos(localRelTheta)
         localDeltaY = dist * math.sin(localRelTheta)
 
-        # limit excessively long and small numbers
         localDeltaX = round(localDeltaX, 7)  # 10.0000000
+        # limit excessively long and small numbers
         localDeltaY = round(localDeltaY, 7)  # 10.0000000
 
         return localDeltaX, localDeltaY
@@ -287,7 +287,12 @@ class AutoAlignShoot(AutoDrive):
         self.autoFlywheel = AutoFlywheel(distance="sideAuto")
         self.autoFlywheel.execute()
 
+        print("ATTEMPTING ALIGNMENT ...\n")
+
         self.alignMaintainPos()
+
+        self.autoIndexer = AutoIndexer(3)
+        self.autoIndexer.execute()
 
         self.stopAll()
 
@@ -385,16 +390,18 @@ class AutoIndexer:
         RunCommands(AutoIndexer(...))
     """
 
-    def __init__(self, wait=True):
+    def __init__(self, numDisc=3):
         # TODO: add initialization code to run the first time object is created
-        self.wait = wait
-        pass
+        self.numDisc = numDisc
 
     # TODO: add any other helper methods
 
     def execute(self):
         # TODO: add code to run indexer when command is executed
-        pass
+        while self.numDisc > 0:
+            if Robot.flywheel.isAtSetVel():
+                Robot.indexer.push()
+                self.numDisc -= 1
 
 
 class AutoRoller:
@@ -910,6 +917,13 @@ class Flywheel:
             self.motorGroup.stop()
         else:
             self.motorGroup.spin(FORWARD)
+
+    def isAtSetVel(self):
+        currMotorVel = self.motorGroup.velocity(RPM)
+
+        if self.motorVelocity - 5 <= currMotorVel or currMotorVel <= self.motorVelocity + 5:
+            return True
+        return False
 
     def launchEndgame(self):
         # TODO: add code to reverse flywheel to specific angle to launch endgame
