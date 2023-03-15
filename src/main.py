@@ -71,6 +71,7 @@ class Constants:
     FLYWHEEL_KP = 1
     FLYWHEEL_KI = 0
     FLYWHEEL_KD = 0
+    FLYWHEEL_GEAR_RATIO = 84/12 # 600 RPM for motor, max: 4,200 RPM
 
     DRIVETRAIN_FORWARD_KP = 1
     DRIVETRAIN_FORWARD_KI = 0
@@ -100,7 +101,7 @@ class AutoDrive:
         ΘTarget : The global Θ target
         driveVel : The max drive velocity
         turnVel : The max turn velocity
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution wait
 
     #### Returns:
         A new AutoDrive command object
@@ -115,13 +116,13 @@ class AutoDrive:
                  ΘTarget=math.pi / 2,
                  driveVel=25.0,
                  turnVel=25.0,
-                 blocking=True):
+                 wait=True):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
-        self.blocking = blocking
+        self.wait = wait
 
         self.forwardPID = PID(Kp=1, Ki=0.0, Kd=0.0)
         self.strafePID = PID(Kp=1, Ki=0.0, Kd=0.0)
@@ -204,13 +205,13 @@ class AutoDrive:
         self.yTarget = 0
         self.ΘTarget = math.pi / 2
 
-        if self.blocking:
+        if self.wait:
             self.run()
         else:
             Thread(self.run)
 
     def execute(self):
-        if self.blocking:
+        if self.wait:
             self.run()
         else:
             Thread(self.run)
@@ -231,7 +232,7 @@ class AutoFlywheel:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution wait
 
     #### Returns:
         A new AutoFlywheel command object
@@ -240,9 +241,9 @@ class AutoFlywheel:
         RunCommands(AutoFlywheel(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -260,7 +261,7 @@ class AutoIntake:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution wait
 
     #### Returns:
         A new AutoIntake command object
@@ -269,9 +270,9 @@ class AutoIntake:
         RunCommands(AutoIntake(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -289,7 +290,7 @@ class AutoIndexer:
 
     #### Arguments:
         ...
-        blocking (True) : Determines code execution blocking
+        wait (True) : Determines code execution wait
 
     #### Returns:
         A new AutoIndexer command object
@@ -298,9 +299,9 @@ class AutoIndexer:
         RunCommands(AutoIndexer(...))
     """
 
-    def __init__(self, blocking=True):
+    def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
-        self.blocking = blocking
+        self.wait = wait
         pass
 
     # TODO: add any other helper methods
@@ -311,8 +312,16 @@ class AutoIndexer:
 
 
 class AutoRoller:
-    pass
 
+    # class constructor called "init"
+    def __init__(self, flipDegrees=90, wait=True): 
+        # TODO: add initialization code to run the first time object is created
+        self.flipDegrees = flipDegrees # store degrees to rotate rollers
+        self.wait = wait
+
+    def execute(self):
+        """Run the roller to spin how many degrees"""
+        Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
 
@@ -353,7 +362,10 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(10, 10, math.pi / 2, 25, 25, blocking=True))
+            AutoDrive(10, 10, math.pi / 2, 25, 25, wait=True),
+            AutoIndexer(wait=True),
+            AutoRoller(wait=True),
+        )
 
 
 # -------------------------------UTILITIES-------------------------------
@@ -756,13 +768,23 @@ class Flywheel:
 
     def __init__(self, *motors):
         self.motorGroup = MotorGroup(*[motors])
+
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
-        self.velocity = 50
-
-        self.motorGroup.set_velocity(50, PERCENT)
+        self.flywheelVel = 1_400 # Target Flywheel vel
+        self.motorVel = self.calcMotorVel(self.flywheelVel) # 200 RPM
 
     # TODO: add any other helper methods
+
+    def startSpin(self):
+        """get the flywheel motor to start & keep spinning"""
+        self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+    
+    def stop(self):
+        self.motorGroup.stop()
+
+    def calcMotorVel(self, flywheelVel):
+        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -778,11 +800,11 @@ class Flywheel:
 
     def changeSpeed(self):
         # TODO: add code to change motor speed low to high and low again
-        if self.velocity == 100:
-            self.velocity=50
+        if self.motorVel == 300: # 300 / 600 = 50%
+            self.motorVel = 150
         else:
-            self.velocity=100
-        self.motorGroup.set_velocity(self.velocity, PERCENT)
+            self.motorVel = 300
+        self.motorGroup.set_velocity(self.motorVel, RPM)
 
 
 class Indexer:
@@ -803,20 +825,22 @@ class Indexer:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.motor.set_stopping(HOLD)
+        self.motor.set_velocity(120, RPM)
+        self.isRunning = False # instance variable
+
+        self.degreesPerTeeth = 360 / 6
+
+        self.degreesPerCycle = 18 * self.degreesPerTeeth
 
     # TODO: add any other helper methods
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
-        pass
-
-    def reverseMotor(self):
-        # TODO: add code to reverse motor in case of jam when holding button
-        pass
-
-    def changeSpeed(self):
-        # TODO: (maybe) add code to change motor speed
-        pass
+        self.push()
+    
+    def push(self):
+        self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
 
 
 class Intake:
@@ -864,24 +888,15 @@ class Roller:
         intake1 = Intake(Constants.INTAKE_PORT)
     """
 
-    def __init__(self, motor):
+    def __init__(self, motor, wait=True):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-
-    # TODO: add any other helper methods
+        self.wait = wait
 
     def toggleMotor(self):
-        # TODO: add code to run/stop motor
-        pass
+        self.flip(FORWARD, 90)
 
-    def flip90(self, direction=FORWARD):
-        self.motor.spin_for(direction, 90, DEGREES, 50, PERCENT, False)
-
-    def flip180(self, direction=FORWARD):
-        self.motor.spin_for(direction, 180, DEGREES, 50, PERCENT, False)
-
-    def reverseMotor(self):
-        # TODO: add code to reverse motor in the event of jam
-        pass
+    def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
+        self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT, wait)
 
 
 # ---------------------------------ROBOT--------------------------------
