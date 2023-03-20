@@ -658,6 +658,8 @@ class MyController:
     def __init__(self):
         self.controllerEnabled = True
         self.controller = Controller(PRIMARY)
+        
+        self.manualIndexer = True
 
         self.registerEventHandlers()
         self.run()
@@ -706,6 +708,9 @@ class MyController:
             self.controller.screen.print("Global Y: ", robotY)
             self.controller.screen.next_row()
             self.controller.screen.print("Global Θ: ", math.degrees(robotΘ))
+            self.controller.screen.next_row()
+            
+            self.controller.screen.print("Manual Indexer:", self.manualIndexer)
             self.controller.screen.next_row()
 
             wait(100, MSEC)
@@ -760,8 +765,11 @@ class MyController:
         Robot.flywheel.toggleMotor()
 
     def R2_Pressed(self):
-        # Robot.indexer.autoPush()
-        Robot.indexer.push()
+        self.toggleManualIndexer()
+        if self.manualIndexer:
+            Robot.indexer.push()
+        else: 
+            Robot.indexer.autoPush()
 
     """
       X
@@ -820,6 +828,18 @@ class MyController:
             Robot.drivetrain.set_stopping(COAST)
         elif Robot.drivetrain.getMotorMode() == COAST:
             Robot.drivetrain.set_stopping(BRAKE)
+            
+    def toggleManualIndexer(self):
+        start = brain.timer.time(MSEC)
+        
+        while self.controller.buttonR2.isPressed():
+            if brain.timer.time(MSEC) - start > 1_000:
+                if self.manualIndexer:
+                    self.manualIndexer = False
+                else:
+                    self.manualIndexer = True
+                break
+            wait(10, MSEC)
 
 
 # -------------------------------SUBSYSTEMS------------------------------
