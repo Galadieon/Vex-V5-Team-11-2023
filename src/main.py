@@ -401,8 +401,9 @@ class AutoIndexer:
     def execute(self):
         # TODO: add code to run indexer when command is executed
         while self.numDisc > 0:
-            if Robot.flywheel.isAtSetVel():
-                Robot.indexer.push()
+            pushed = Robot.indexer.autoPush()
+
+            if pushed:
                 self.numDisc -= 1
 
 
@@ -759,7 +760,8 @@ class MyController:
         Robot.flywheel.toggleMotor()
 
     def R2_Pressed(self):
-        pass  # shoot disc one by one, when holding shoot multiple
+        # Robot.indexer.autoPush()
+        Robot.indexer.push()
 
     """
       X
@@ -1014,6 +1016,12 @@ class Indexer:
     def toggleMotor(self):
         # TODO: add code to run/stop motor
         self.push()
+    
+    def autoPush(self):
+        if Robot.flywheel.isAtSetVel():
+            self.push()
+            return True
+        return False
 
     def push(self):
         self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
