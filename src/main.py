@@ -689,7 +689,7 @@ class MyController:
 
             wait(10, MSEC)
 
-    def printToConktroller(self):
+    def printToController(self):
         while (True):
             # self.controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
             # self.controller.screen.next_row()
