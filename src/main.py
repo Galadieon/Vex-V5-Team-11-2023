@@ -143,9 +143,9 @@ class AutoDrive:
         self.thread = None
         self.maintainPos = False
 
-        self.forwardPID = PID(Kp=10, Ki=0.05, Kd=0.0)
-        self.strafePID = PID(Kp=10, Ki=0.05, Kd=0.0)
-        self.turnPID = PID(Kp=3, Ki=0.05, Kd=0.0)
+        self.forwardPID = PID(Kp=8, Ki=0.05, Kd=0.01)
+        self.strafePID = PID(Kp=8, Ki=0.05, Kd=0.01)
+        self.turnPID = PID(Kp=3, Ki=0.05, Kd=0.01)
 
     def driveTo(self, localXY, ΘTarget: float, driveVel: float,
                 turnVel: float):
@@ -478,12 +478,12 @@ class TestMode:
             AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
             # AutoDrive(24, 24, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
             # AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(48, 24, math.pi / 2, 100, 25, wait=True, timeOut=15000),
-            AutoDrive(24, 0, math.pi / 2, 100, 25, wait=True, timeOut=15000),
+            AutoDrive(48, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
 
-            AutoDrive(24, 48, 0, 100, 25, wait=True, timeOut=15000),
-            AutoDrive(72, 48, (3 * math.pi) / 2, 100, 25, wait=True, timeOut=15000),
-            AutoDrive(24, 0, math.pi / 2, 100, 25, wait=True, timeOut=15000),
+            AutoDrive(24, 48, 0, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(72, 48, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
 
             # AutoRoller(flipDegrees=90, wait=True),
             # AutoAlignShoot(24,
