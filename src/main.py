@@ -136,15 +136,16 @@ class AutoDrive:
         self.wait = wait
         self.timeOut = timeOut
 
-        self.thresholdXY = 0.5
-        self.thresholdTheta = math.radians(2.5)
+        self.thresholdXY = 0.25 # how close the robot needs to be to the target to be considered as at target
+        self.thresholdTheta = math.radians(1)
+
         self.atTarget = False
         self.thread = None
         self.maintainPos = False
 
-        self.forwardPID = PID(Kp=5, Ki=0.0, Kd=0.0)
-        self.strafePID = PID(Kp=5, Ki=0.0, Kd=0.0)
-        self.turnPID = PID(Kp=5, Ki=0.0, Kd=0.0)
+        self.forwardPID = PID(Kp=10, Ki=0.05, Kd=0.0)
+        self.strafePID = PID(Kp=10, Ki=0.05, Kd=0.0)
+        self.turnPID = PID(Kp=3, Ki=0.05, Kd=0.0)
 
     def driveTo(self, localXY, ΘTarget: float, driveVel: float,
                 turnVel: float):
@@ -196,10 +197,10 @@ class AutoDrive:
         deltaX = self.xTarget - robotX
         deltaY = self.yTarget - robotY
 
-        if self.notClearedAutoLine(robotX, robotY):
-            xT, yT = self.calcAutoLineClear(robotX, robotY)
-            deltaX = xT - robotX
-            deltaY = yT - robotY
+        # if self.notClearedAutoLine(robotX, robotY):
+        #     xT, yT = self.calcAutoLineClear(robotX, robotY)
+        #     deltaX = xT - robotX
+        #     deltaY = yT - robotY
 
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
@@ -474,15 +475,24 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(24, -1, math.pi / 2, 25, 25, wait=True, timeOut=1_000),
-            AutoRoller(flipDegrees=90, wait=True),
-            AutoAlignShoot(24,
-                           0,
-                           math.pi / 2,
-                           25,
-                           25,
-                           wait=True,
-                           timeOut=5_000),
+            AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(24, 24, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(48, 24, math.pi / 2, 100, 25, wait=True, timeOut=15000),
+            AutoDrive(24, 0, math.pi / 2, 100, 25, wait=True, timeOut=15000),
+
+            AutoDrive(24, 48, 0, 100, 25, wait=True, timeOut=15000),
+            AutoDrive(72, 48, (3 * math.pi) / 2, 100, 25, wait=True, timeOut=15000),
+            AutoDrive(24, 0, math.pi / 2, 100, 25, wait=True, timeOut=15000),
+
+            # AutoRoller(flipDegrees=90, wait=True),
+            # AutoAlignShoot(24,
+            #                0,
+            #                math.pi / 2,
+            #                25,
+            #                25,
+            #                wait=True,
+            #                timeOut=5_000),
         )
 
 
@@ -567,8 +577,6 @@ class Odometry:
         self.threadIsPaused = False
 
     def updatePose(self):
-        Robot.odometry.resetEncoders()
-
         inchsPerTick = Constants.INCHES_PER_TICK
         LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
         B_Distance = Constants.AUX_ODOMETRY_DISTANCE
@@ -584,6 +592,11 @@ class Odometry:
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
+            # anytime that x or y robot values are greater than 1,000 inches, reset encoders
+            if self.x > 1_000 or self.y > 1_000:
+                self.resetPose()
+                self.resetEncoders()
+
             if self.threadIsPaused:
                 wait(1, MSEC)
                 continue
@@ -619,7 +632,7 @@ class Odometry:
         self.threadIsRunning = False
 
     def resetPose(self):
-        self.setPose(0, 0, math.pi / 2)
+        self.setPose(24, 0, math.pi / 2)
 
     def setPose(self, newX, newY, newΘ):
         self.threadIsPaused = True
@@ -832,14 +845,14 @@ class MyController:
     def toggleManualIndexer(self):
         start = brain.timer.time(MSEC)
         
-        while self.controller.buttonR2.isPressed():
-            if brain.timer.time(MSEC) - start > 1_000:
-                if self.manualIndexer:
-                    self.manualIndexer = False
-                else:
-                    self.manualIndexer = True
-                break
-            wait(10, MSEC)
+        # while self.controller.buttonR2.isPressed():
+        #     if brain.timer.time(MSEC) - start > 1_000:
+        #         if self.manualIndexer:
+        #             self.manualIndexer = False
+        #         else:
+        #             self.manualIndexer = True
+        #         break
+        #     wait(10, MSEC)
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -868,7 +881,7 @@ class MecanumDriveTrain:
     """
 
     def __init__(self, FL, FR, BR, BL):
-        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
+        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, True)
         self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
         self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
@@ -876,9 +889,6 @@ class MecanumDriveTrain:
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
-
-        # Start odometry thread to run independetly of other threads
-        Thread(Robot.odometry.updatePose)
 
     def drive(self, forward, strafe, turn):
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
@@ -1196,6 +1206,10 @@ def Driver_Control():
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
+
+wait(100, MSEC)
+
+Thread(Robot.odometry.updatePose)
 
 myController = MyController()
 
