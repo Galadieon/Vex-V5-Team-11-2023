@@ -116,6 +116,8 @@ class AutoDrive:
         RunCommands(AutoDrive(0, 10, math.pi / 2, 25, 25), ...)
     """
 
+    isRunning = False
+
     stopAuto = False
 
     def __init__(self,
@@ -244,15 +246,20 @@ class AutoDrive:
             self.thread = Thread(self.run)
 
     def run(self):
+        AutoDrive.isRunning = True
         self.atTarget = False
 
         while not self.atTarget:
-            if AutoDrive.stopAuto: return
+            if AutoDrive.stopAuto: break
             self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
                                          self.driveVel, self.turnVel)
+        
+        AutoDrive.isRunning = False
 
 
 class AutoAlignShoot(AutoDrive):
+
+    isRunning = False
 
     def __init__(self,
                  xTarget=0.0,
@@ -314,30 +321,25 @@ class AutoFlywheel:
         RunCommands(AutoFlywheel(...))
     """
 
+    isRunning = False
+
     def __init__(self, distance="sideAuto"):
         # TODO: add initialization code to run the first time object is created
         self.distance = distance
 
-        # for 84 : 12 max: 4_200 RPM (Our robot's max)
-        # for 84 : 36 max: 1_400 RPM
-        self.velocityDict = {
-            # need empirical data & verification
-            "centerAuto": 4_200 / 2.0 + 4_200 / 8.0,
-            "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,
-            24: 4_200 / 4.0,
-            48: 4_200 / 3.0,
-            72: 4_200 / 2.0,
-            96: 4_200 * (2.0 / 3.0),
-            120: 4_200 * (3.0 / 4.0),
-            144: 4_200 * (4.0 / 4.0),
-        }
-
     # TODO: add any other helper methods
 
     def execute(self):
-        Robot.flywheel.startSpin()
+        AutoFlywheel.isRunning = True
+        Robot.flywheel.setVelAtDist(self.distance)
+        Robot.flywheel.toggleMotor()
+    
+    def setDistance(self, distance):
+        self.distance = distance
+        Robot.flywheel.setVelAtDist(self.distance)
 
     def stop(self):
+        AutoFlywheel.isRunning = False
         Robot.flywheel.stop()
 
     def run(self):
@@ -687,7 +689,7 @@ class MyController:
 
             wait(10, MSEC)
 
-    def printToController(self):
+    def printToConktroller(self):
         while (True):
             # self.controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
             # self.controller.screen.next_row()
@@ -742,6 +744,11 @@ class MyController:
     AutoDrive().driveToOrigin()
     """
 
+    """
+    L2 | R2
+    L1 | R1
+    """
+
     def L1_Pressed(self):
         pass
 
@@ -749,34 +756,46 @@ class MyController:
         pass
 
     def R1_Pressed(self):
-        pass
+        Robot.flywheel.toggleMotor()
 
     def R2_Pressed(self):
         pass  # shoot disc one by one, when holding shoot multiple
 
+    """
+      X
+    Y   A
+      B
+    """
+
     def X_Pressed(self):
-        Robot.odometry.resetPose()
+        pass
 
     def A_Pressed(self):
-        self.toggleAuto()
+        Robot.flywheel.incrVel()
 
     def B_Pressed(self):
-        self.toggleDriveTrainMode()
+        Robot.flywheel.decrVel()
 
     def Y_Pressed(self):
-        self.changeDriveTrainVel()
-
+        AutoDrive().driveToOrigin()
+    
+    """
+      ↑
+    ←   →
+      ↓
+    """
+    
     def Up_Pressed(self):
-        pass
+        self.toggleAuto()
 
     def Right_Pressed(self):
-        pass
+        self.changeDriveTrainVel()
 
     def Down_Pressed(self):
-        AutoDrive().driveToOrigin()
+        Robot.odometry.resetPose()
 
     def Left_Pressed(self):
-        pass
+        self.toggleDriveTrainMode()
 
     # ----------------------BUTTON HELPER METHODS------------------------
 
@@ -900,23 +919,30 @@ class Flywheel:
         self.flywheelVel = 1_400
         self.motorVelocity = self.calcMotorVel(self.flywheelVel)
 
-    # TODO: add any other helper methods
+        self.distance = 24
 
-    def startSpin(self):
-        self.motorGroup.spin(FORWARD, self.motorVelocity, RPM)
+        # for 84 : 12 max: 4_200 RPM (Our robot's max)
+        # for 84 : 36 max: 1_400 RPM
+        self.velocityDict = {
+            # need empirical data & verification
+            "centerAuto": 4_200 / 2.0 + 4_200 / 8.0,        # 2,625
+            "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
+            24: 4_200 / 4.0,                                # 1,050
+            48: 4_200 / 3.0,                                # 1,400
+            72: 4_200 / 2.0,                                # 2,100
+            96: 4_200 * (2.0 / 3.0),                        # 2,800
+            120: 4_200 * (3.0 / 4.0),                       # 3,150
+            144: 4_200 * (4.0 / 4.0),                       # 4,200
+        }
 
     def stop(self):
         self.motorGroup.stop()
 
-    def calcMotorVel(self, flywheelVel):
-        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO
-
     def toggleMotor(self):
-        # TODO: add code to run/stop motor
         if self.motorGroup.is_spinning:
             self.motorGroup.stop()
         else:
-            self.motorGroup.spin(FORWARD)
+            self.motorGroup.spin(FORWARD, self.motorVelocity, RPM)
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
@@ -924,19 +950,37 @@ class Flywheel:
         if self.motorVelocity - 5 <= currMotorVel or currMotorVel <= self.motorVelocity + 5:
             return True
         return False
+    
+    def incrVel(self):
+        if self.distance is "centerAuto" or self.distance is "sideAuto":
+            self.setVelAtDist(0)
+        
+        if self.distance < 144:
+            self.setVelAtDist(self.distance + 24)
+    
+    def decrVel(self):
+        if self.distance is "centerAuto" or self.distance is "sideAuto":
+            self.setVelAtDist(48)
+
+        if self.distance > 24:
+            self.setVelAtDist(self.distance - 24)
+    
+    def setVelAtDist(self, distance):
+        self.distance = distance
+        self.setVelocity(self.velocityDict[self.distance])
 
     def launchEndgame(self):
         # TODO: add code to reverse flywheel to specific angle to launch endgame
         # TODO: add time keeping code to prevent early launch
         pass
 
-    def changeSpeed(self):
-        # TODO: add code to change motor speed low to high and low again
-        if self.velocity == 100:
-            self.velocity = 50
-        else:
-            self.velocity = 100
-        self.motorGroup.set_velocity(self.velocity, PERCENT)
+    def setVelocity(self, flywheelVel):
+        self.flywheelVel = flywheelVel
+        self.motorVelocity = self.calcMotorVel(self.flywheelVel)
+        self.motorGroup.set_velocity(self.motorVelocity, RPM)
+
+    def calcMotorVel(self, flywheelVel):
+        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO
 
 
 class Indexer:
@@ -1117,6 +1161,7 @@ def vexcode_driver_function():
 
 def Driver_Control():
     Default_Motor_Speed()
+    Robot.flywheel.setVelAtDist(24)
 
 
 # ---------------------------REQUIRED CODE---------------------------
