@@ -530,9 +530,7 @@ class TestMode:
             AutoAlignShoot(24, 4, 0, "sideAuto", 100, 100, wait=True, timeOut=15_000),
             # intake on
             AutoDrive(72, 48, math.pi / 4, 100, 100, wait=True, timeOut=15_000),
-            # intake off
             AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, wait=True, timeOut=15_000),
-            # intake on
             AutoDrive(108, 84, math.pi / 4, 100, 100, wait=True, timeOut=15_000),
             AutoDrive(120, 96, math.pi, 100, 100, wait=True, timeOut=15_000),
             # intake off
