@@ -86,7 +86,7 @@ class Constants:
     FLYWHEEL_KP = 1
     FLYWHEEL_KI = 0
     FLYWHEEL_KD = 0
-    FLYWHEEL_GEAR_RATIO = 84 / 12
+    FLYWHEEL_GEAR_RATIO = 84 / 12 # max for motor: 600 RPM, max for flywheel: 4,200 RPM
 
     INDEXER_GEAR_TEETH = 6
     INDEXER_CHAIN_LINKS = 18
@@ -289,7 +289,7 @@ class AutoAlignShoot(AutoDrive):
 
     def execute(self):
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance="sideAuto")
-        AutoAlignShoot.autoFlywheel.execute()
+        AutoAlignShoot.autoFlywheel.execute
 
         print("ATTEMPTING ALIGNMENT ...\n")
 
@@ -470,6 +470,15 @@ class AutoRoller:
     def execute(self):
         Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
 
+    # class constructor called "init"
+    def __init__(self, flipDegrees=90, wait=True): 
+        # TODO: add initialization code to run the first time object is created
+        self.flipDegrees = flipDegrees # store degrees to rotate rollers
+        self.wait = wait
+
+    def execute(self):
+        """Run the roller to spin how many degrees"""
+        Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
 
@@ -1025,6 +1034,16 @@ class Flywheel:
     def stop(self):
         self.motorGroup.stop()
 
+    def startSpin(self):
+        """get the flywheel motor to start & keep spinning"""
+        self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+    
+    def stop(self):
+        self.motorGroup.stop()
+
+    def calcMotorVel(self, flywheelVel):
+        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO # 1,400 / 7 = 200 RPM
+
     def toggleMotor(self):
         if self.motorGroup.is_spinning:
             self.motorGroup.stop()
@@ -1162,10 +1181,9 @@ class Roller:
         intake1 = Intake(Constants.INTAKE_PORT)
     """
 
-    def __init__(self, motor):
+    def __init__(self, motor, wait=True):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-
-    # TODO: add any other helper methods
+        self.wait = wait
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -1174,9 +1192,8 @@ class Roller:
     def flip(self, direction=FORWARD, flipDegrees=90, wait=False):
         self.motor.spin_for(direction, flipDegrees, DEGREES, 50, PERCENT, wait)
 
-    def reverseMotor(self):
-        # TODO: add code to reverse motor in the event of jam
-        pass
+    def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
+        self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT, wait)
 
 
 # ---------------------------------ROBOT--------------------------------
