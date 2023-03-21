@@ -64,17 +64,17 @@ class Constants:
     DRIVETRAIN_BACK_RIGHT = Ports.PORT10
     DRIVETRAIN_BACK_LEFT = Ports.PORT9
 
-    DRIVETRAIN_FORWARD_KP = 1
-    DRIVETRAIN_FORWARD_KI = 0
-    DRIVETRAIN_FORWARD_KD = 0
+    DRIVETRAIN_FORWARD_KP = 8.0
+    DRIVETRAIN_FORWARD_KI = 0.05
+    DRIVETRAIN_FORWARD_KD = 0.01
 
-    DRIVETRAIN_STRAFE_KP = 1
-    DRIVETRAIN_STRAFE_KI = 0
-    DRIVETRAIN_STRAFE_KD = 0
+    DRIVETRAIN_STRAFE_KP = 8.0
+    DRIVETRAIN_STRAFE_KI = 0.05
+    DRIVETRAIN_STRAFE_KD = 0.01
 
-    DRIVETRAIN_TURN_KP = 1
-    DRIVETRAIN_TURN_KI = 0
-    DRIVETRAIN_TURN_KD = 0
+    DRIVETRAIN_TURN_KP = 3.0
+    DRIVETRAIN_TURN_KI = 0.05
+    DRIVETRAIN_TURN_KD = 0.01
 
     LEFT_RIGHT_ODOMETRY_DISTANCE = 13.5
     AUX_ODOMETRY_DISTANCE = 5.0
@@ -143,9 +143,15 @@ class AutoDrive:
         self.thread = None
         self.maintainPos = False
 
-        self.forwardPID = PID(Kp=8, Ki=0.05, Kd=0.01)
-        self.strafePID = PID(Kp=8, Ki=0.05, Kd=0.01)
-        self.turnPID = PID(Kp=3, Ki=0.05, Kd=0.01)
+        self.forwardPID = PID(Kp=Constants.DRIVETRAIN_FORWARD_KP,
+                              Ki=Constants.DRIVETRAIN_FORWARD_KI,
+                              Kd=Constants.DRIVETRAIN_FORWARD_KD)
+        self.strafePID = PID(Kp=Constants.DRIVETRAIN_STRAFE_KP,
+                             Ki=Constants.DRIVETRAIN_STRAFE_KI,
+                             Kd=Constants.DRIVETRAIN_STRAFE_KD)
+        self.turnPID = PID(Kp=Constants.DRIVETRAIN_TURN_KP,
+                           Ki=Constants.DRIVETRAIN_TURN_KI,
+                           Kd=Constants.DRIVETRAIN_TURN_KD)
 
         AutoDrive.isRunning = False
         AutoDrive.stopAuto = False
