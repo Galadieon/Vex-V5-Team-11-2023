@@ -468,15 +468,6 @@ class AutoRoller:
     # TODO: add any other helper methods
 
     def execute(self):
-        Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
-
-    # class constructor called "init"
-    def __init__(self, flipDegrees=90, wait=True): 
-        # TODO: add initialization code to run the first time object is created
-        self.flipDegrees = flipDegrees # store degrees to rotate rollers
-        self.wait = wait
-
-    def execute(self):
         """Run the roller to spin how many degrees"""
         Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
 
@@ -1013,7 +1004,7 @@ class Flywheel:
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
-        self.motorVelocity = self.calcMotorVel(self.flywheelVel)
+        self.motorVel = self.calcMotorVel(self.flywheelVel)
 
         self.distance = 24
 
@@ -1031,9 +1022,6 @@ class Flywheel:
             144: 4_200 * (4.0 / 4.0),                       # 4,200
         }
 
-    def stop(self):
-        self.motorGroup.stop()
-
     def startSpin(self):
         """get the flywheel motor to start & keep spinning"""
         self.motorGroup.spin(FORWARD, self.motorVel, RPM)
@@ -1048,12 +1036,12 @@ class Flywheel:
         if self.motorGroup.is_spinning:
             self.motorGroup.stop()
         else:
-            self.motorGroup.spin(FORWARD, self.motorVelocity, RPM)
+            self.motorGroup.spin(FORWARD, self.motorVel, RPM)
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
 
-        if self.motorVelocity - 5 <= currMotorVel or currMotorVel <= self.motorVelocity + 5:
+        if self.motorVel - 5 <= currMotorVel or currMotorVel <= self.motorVel + 5:
             return True
         return False
     
@@ -1082,11 +1070,8 @@ class Flywheel:
 
     def setVelocity(self, flywheelVel):
         self.flywheelVel = flywheelVel
-        self.motorVelocity = self.calcMotorVel(self.flywheelVel)
-        self.motorGroup.set_velocity(self.motorVelocity, RPM)
-
-    def calcMotorVel(self, flywheelVel):
-        return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO
+        self.motorVel = self.calcMotorVel(self.flywheelVel)
+        self.motorGroup.set_velocity(self.motorVel, RPM)
 
 
 class Indexer:
@@ -1188,9 +1173,6 @@ class Roller:
     def toggleMotor(self):
         # TODO: add code to run/stop motor
         pass
-
-    def flip(self, direction=FORWARD, flipDegrees=90, wait=False):
-        self.motor.spin_for(direction, flipDegrees, DEGREES, 50, PERCENT, wait)
 
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT, wait)
