@@ -272,6 +272,7 @@ class AutoAlignShoot(AutoDrive):
                  xTarget=0.0,
                  yTarget=0.0,
                  ΘTarget=math.pi / 2,
+                 distance="sideAuto",
                  driveVel=25.0,
                  turnVel=25.0,
                  wait=True,
@@ -280,6 +281,8 @@ class AutoAlignShoot(AutoDrive):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
                          driveVel, turnVel, wait, timeOut)
+        
+        self.distance = distance
                          
 
     # may need to fix this later
@@ -288,7 +291,7 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
-        self.autoFlywheel = AutoFlywheel(distance="sideAuto")
+        self.autoFlywheel = AutoFlywheel(distance=self.distance)
         self.autoFlywheel.execute()
 
         self.alignMaintainPos()
@@ -516,10 +519,20 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(24, -3, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(24, -3, math.pi / 2, 100, 100, wait=True, timeOut=15_000),
             AutoRoller(90, wait=True),
-            AutoAlignShoot(24, 4, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(72, 48, math.pi / 4, 100, 100, wait)
+            AutoAlignShoot(24, 4, 0, "sideAuto", 100, 100, wait=True, timeOut=15_000),
+            # intake on
+            AutoDrive(72, 48, math.pi / 4, 100, 100, wait=True, timeOut=15_000),
+            # intake off
+            AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, wait=True, timeOut=15_000),
+            # intake on
+            AutoDrive(108, 84, math.pi / 4, 100, 100, wait=True, timeOut=15_000),
+            AutoDrive(120, 96, math.pi, 100, 100, wait=True, timeOut=15_000),
+            # intake off
+            AutoDrive(123, 96, math.pi, 100, 100, wait=True, timeOut=15_000),
+            AutoRoller(90, wait=True),
+            AutoAlignShoot(116, 96, 0, "sideAuto", 100, 100, wait=True, timeOut=15_000),
         )
             # AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
             # AutoDrive(48, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
