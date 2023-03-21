@@ -1,7 +1,10 @@
 {
-  "python.analysis.stubPath": "c:\\Users\\ninhl\\AppData\\Roaming\\Code\\User\\globalStorage\\vexrobotics.vexcode\\sdk\\python\\V5\\V5_1_0_1_14\\vexv5\\stubs",
+  "python.analysis.stubPath": "c:\\Users\\ninhl\\AppData\\Roaming\\Code\\User\\globalStorage\\vexrobotics.vexcode\\sdk\\python\\V5\\V5_1_0_1_15\\vexv5\\stubs",
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.typeCheckingMode": "basic",
-  "python.formatting.provider": "yapf"
+  "python.formatting.provider": "yapf",
+  "githubPullRequests.ignoredPullRequestBranches": [
+    "Master-Branch"
+  ]
     
 }
