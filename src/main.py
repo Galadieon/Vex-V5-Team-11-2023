@@ -162,7 +162,15 @@ class AutoDrive:
 
         while not self.atTarget:
             if AutoDrive.stopAuto: break
-            self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
+
+            robotX, robotY, robotΘ = Robot.odometry.getPose()
+
+            if self.notClearedAutoLine(robotX, robotY):
+                self.xTarget, self.yTarget = self.calcAutoLineClear(robotX, robotY)
+                self.driveTo(self.calcLocalXY(), self.ΘTarget,
+                                         self.driveVel, self.turnVel)
+            else:
+                self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
                                          self.driveVel, self.turnVel)
         
         AutoDrive.isRunning = False
@@ -224,11 +232,6 @@ class AutoDrive:
         deltaX = self.xTarget - robotX
         deltaY = self.yTarget - robotY
 
-        # if self.notClearedAutoLine(robotX, robotY):
-        #     xT, yT = self.calcAutoLineClear(robotX, robotY)
-        #     deltaX = xT - robotX
-        #     deltaY = yT - robotY
-
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
 
@@ -249,8 +252,8 @@ class AutoDrive:
         return y > self.calcAutoLineY(x)
 
     def calcAutoLineClear(self, robotX, robotY):
-        xTarget = (robotX + robotY + 24 + 19.8) / 2.0
-        yTarget = self.calcAutoLineY(xTarget)
+        xTarget = ((robotX + robotY + 24 + 19.8) / 2.0) + 2
+        yTarget = self.calcAutoLineY(xTarget) - 2
         return xTarget, yTarget
 
     def calcAutoLineY(self, x):
