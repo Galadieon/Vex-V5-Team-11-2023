@@ -642,7 +642,7 @@ class Odometry:
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
-            # anytime that x or y robot values are greater than 1,000 inches, reset encoders
+            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
             if self.x > 1_000 or self.y > 1_000:
                 self.resetPose()
                 self.resetEncoders()
@@ -687,11 +687,6 @@ class Odometry:
     def stop(self):
         self.threadIsRunning = False
 
-    def setPose(self, newX, newY, newΘ):
-        self.x = newX
-        self.y = newY
-        self.Θ = newΘ
-
     def getPose(self):
         return self.x, self.y, self.Θ
 
@@ -701,11 +696,18 @@ class Odometry:
 
     def resetPose(self):
         self.setPose(24, 0, math.pi / 2)
+        self.resetOdomPose = False
+
+    def setPose(self, newX, newY, newΘ):
+        self.x = newX
+        self.y = newY
+        self.Θ = newΘ
 
     def resetEncoders(self):
         self.rightEncoder.set_position(0, DEGREES)
         self.leftEncoder.set_position(0, DEGREES)
         self.auxEncoder.set_position(0, DEGREES)
+        self.resetOdomEncoders = False
 
 
 class MyController:
