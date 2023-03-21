@@ -160,8 +160,14 @@ class AutoDrive:
         AutoDrive.isRunning = True
         self.atTarget = False
 
+        start = brain.timer.time(MSEC)
+
         while not self.atTarget:
             if AutoDrive.stopAuto: break
+
+            if brain.timer.time(MSEC) - start > self.timeOut:
+                RunCommands.stopAll()
+                continue
 
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
@@ -422,6 +428,7 @@ class AutoIndexer:
         # TODO: add code to run indexer when command is executed
         while self.numDisc > 0:
             if AutoIndexer.stopAuto is True:
+                Robot.indexer.stop()
                 break
             pushed = Robot.indexer.autoPush()
 
@@ -470,24 +477,27 @@ class AutoRoller:
 class RunCommands:
     stopAuto = False
     pauseAuto = False
-    autoIsRunning = False
+    isRunning = False
 
     def __init__(self, *commandList):
-        RunCommands.autoIsRunning = True
+        RunCommands.stopAuto = False
+        RunCommands.pauseAuto = False
+        RunCommands.isRunning = True
 
         for command in commandList:
             while RunCommands.pauseAuto:
-                pass
+                continue
             if RunCommands.stopAuto:
-                RunCommands.stopAuto = False
-                RunCommands.autoIsRunning = False
+                RunCommands.stopAuto = True
+                RunCommands.isRunning = False
                 return
+
             command.execute()
 
-        RunCommands.autoIsRunning = False
+        RunCommands.isRunning = False
 
     @staticmethod
-    def stop():
+    def stopAll():
         RunCommands.stopAuto = True
 
         AutoDrive.stopAuto = True
@@ -738,12 +748,12 @@ class MyController:
 
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
-                    RunCommands.stop()
+                    RunCommands.stopAll()
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
                         turn * (Robot.drivetrain.turnVel / 100))
-                elif RunCommands.autoIsRunning == True:
+                elif RunCommands.isRunning == True:
                     pass
                 else:
                     Robot.drivetrain.stop()
@@ -876,10 +886,10 @@ class MyController:
             Robot.drivetrain.set_drive_velocity(100)
 
     def toggleAuto(self):
-        if RunCommands.autoIsRunning == False:
+        if RunCommands.isRunning == False:
             TestMode()
         else:
-            RunCommands.stop()
+            RunCommands.stopAll()
 
     def toggleDriveTrainMode(self):
         if Robot.drivetrain.getMotorMode() == BRAKE:
@@ -1090,7 +1100,9 @@ class Indexer:
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
-        self.push()
+        if self.motor.is_spinning():
+            self.stop()
+        else: self.push()
     
     def autoPush(self):
         if Robot.flywheel.isAtSetVel():
@@ -1100,6 +1112,9 @@ class Indexer:
 
     def push(self):
         self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
+    
+    def stop(self):
+        self.motor.stop()
 
 
 class Intake:
