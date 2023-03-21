@@ -288,24 +288,23 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
-        AutoAlignShoot.autoFlywheel = AutoFlywheel(distance="sideAuto")
-        AutoAlignShoot.autoFlywheel.execute
-
-        print("ATTEMPTING ALIGNMENT ...\n")
+        self.autoFlywheel = AutoFlywheel(distance="sideAuto")
+        self.autoFlywheel.execute()
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(3)
-        AutoAlignShoot.autoIndexer.execute()
+        self.autoIndexer = AutoIndexer(3)
+        self.autoIndexer.execute()
 
         self.stopAll()
 
     @staticmethod
     def stopAll():
         AutoDrive.stopAuto = True
-        AutoAlignShoot.autoFlywheel.stop()
+        self.autoFlywheel.stop()
 
     def alignMaintainPos(self):
+        print("ATTEMPTING ALIGNMENT ...\n")
         super().execute()
         print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         super().maintainPos = True
@@ -458,14 +457,11 @@ class AutoRoller:
     stopAuto = False
 
     def __init__(self, degreesToTurn=90, wait=True):
-        # TODO: add initialization code to run the first time object is created\
         self.degreesToTurn = degreesToTurn
         self.wait = wait
 
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = False
-
-    # TODO: add any other helper methods
 
     def execute(self):
         """Run the roller to spin how many degrees"""
@@ -520,25 +516,18 @@ class TestMode:
 
     def __init__(self):
         commandRun = RunCommands(
-            AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            # AutoDrive(24, 24, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
-            # AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(48, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-
-            AutoDrive(24, 48, 0, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(72, 48, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-
-            # AutoRoller(degreesToTurn=90, wait=True),
-            # AutoAlignShoot(24,
-            #                0,
-            #                math.pi / 2,
-            #                25,
-            #                25,
-            #                wait=True,
-            #                timeOut=5_000),
+            AutoDrive(24, -3, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            AutoRoller(90, wait=True),
+            AutoAlignShoot(24, 4, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            AutoDrive(72, 48, math.pi / 4, 100, 100, wait)
         )
+            # AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(48, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
+
+            # AutoDrive(24, 48, 0, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(72, 48, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
+            # AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
 
 
 # -------------------------------UTILITIES-------------------------------
