@@ -443,7 +443,7 @@ class AutoRoller:
     This class is used to command the roller (...) .
 
     #### Arguments:
-        flipDegrees : Degrees to flip the rollers
+        degreesToTurn : Degrees to flip the rollers
         wait (True) : Determines code execution blocking
 
     #### Returns:
@@ -457,9 +457,9 @@ class AutoRoller:
 
     stopAuto = False
 
-    def __init__(self, flipDegrees=90, wait=True):
+    def __init__(self, degreesToTurn=90, wait=True):
         # TODO: add initialization code to run the first time object is created\
-        self.flipDegrees = flipDegrees
+        self.degreesToTurn = degreesToTurn
         self.wait = wait
 
         AutoRoller.isRunning = False
@@ -469,7 +469,7 @@ class AutoRoller:
 
     def execute(self):
         """Run the roller to spin how many degrees"""
-        Robot.roller.flip(FORWARD, self.flipDegrees, self.wait)
+        Robot.roller.flip(FORWARD, self.degreesToTurn, self.wait)
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
 
@@ -530,7 +530,7 @@ class TestMode:
             AutoDrive(72, 48, (3 * math.pi) / 2, 100, 100, wait=True, timeOut=15000),
             AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
 
-            # AutoRoller(flipDegrees=90, wait=True),
+            # AutoRoller(degreesToTurn=90, wait=True),
             # AutoAlignShoot(24,
             #                0,
             #                math.pi / 2,
@@ -623,6 +623,8 @@ class Odometry:
 
         self.resetOdomEncoders = False
         self.resetOdomPose = False
+
+        self.odomThread = Thread(Robot.odometry.updatePose)
 
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
@@ -732,8 +734,6 @@ class MyController:
         self.run()
 
     def run(self):
-        Thread(Robot.odometry.updatePose)
-
         Thread(self.printToController)
 
         Thread(self.controllerLoop)
