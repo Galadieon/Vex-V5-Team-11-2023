@@ -128,6 +128,7 @@ class AutoDrive:
                  ΘTarget=math.pi / 2,
                  driveVel=25.0,
                  turnVel=25.0,
+                 overrideAutoClear=False,
                  wait=True,
                  timeOut=15_000):
         self.xTarget = xTarget
@@ -137,6 +138,7 @@ class AutoDrive:
         self.turnVel = turnVel
         self.wait = wait
         self.timeOut = timeOut
+        self.overrideAutoClear = overrideAutoClear
 
         self.thresholdXY = 0.25  # how close the robot needs to be to the target to be considered as at target
         self.thresholdTheta = math.radians(1)
@@ -166,7 +168,7 @@ class AutoDrive:
     def run(self):
         AutoDrive.isRunning = True
         atTarget = False
-        clearedLine = True
+        clearedAutoLine = True
 
         start = brain.timer.time(MSEC)
 
@@ -180,9 +182,9 @@ class AutoDrive:
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
             if self.notClearedAutoLine(robotX,
-                                       robotY) or clearedLine is not True:
+                                       robotY) or clearedAutoLine is not True:
                 xT, yT = self.calcAutoLineClear(robotX, robotY)
-                clearedLine = self.driveTo(self.calcLocalXY(xT,
+                clearedAutoLine = self.driveTo(self.calcLocalXY(xT,
                                                             yT), self.ΘTarget,
                                            self.driveVel, self.turnVel)
             else:
@@ -266,7 +268,7 @@ class AutoDrive:
         return localDeltaX, localDeltaY
 
     def notClearedAutoLine(self, x, y):
-        return y > self.calcAutoLineY(x)
+        return False if self.overrideAutoClear is True else y > self.calcAutoLineY(x)
 
     def calcAutoLineClear(self, robotX, robotY):
         xTarget = ((robotX + robotY + 24 + 19.8) / 2.0) + 2
@@ -286,12 +288,13 @@ class AutoAlignShoot(AutoDrive):
                  distance="sideAuto",
                  driveVel=25.0,
                  turnVel=25.0,
+                 overrideAutoClear=False,
                  wait=True,
                  timeOut=15_000):
         self.wait = wait
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
-                         driveVel, turnVel, wait, timeOut)
+                         driveVel, turnVel, overrideAutoClear, wait, timeOut)
 
         self.distance = distance
 
@@ -520,39 +523,60 @@ class RunCommands:
 class TestMode:
 
     def __init__(self):
+        Robot.odometry.setPose(24, 0, math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(24, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(48, 24, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(24, 0, math.pi / 2, 100, 100, wait=True, timeOut=15000),
-            AutoDrive(24, 48, 0, 70, 100, wait=True, timeOut=15000),
-            AutoDrive(72, 48, math.pi / 2, 70, 100, wait=True, timeOut=15000),
-            AutoDrive(24,
-                      0, (3 * math.pi) / 2,
-                      70,
-                      100,
-                      wait=True,
-                      timeOut=15000),
+            AutoDrive(24, 24, math.pi / 2, 100, 100, True),
+            AutoDrive(48, 24, math.pi / 2, 100, 100, True),
+            AutoDrive(24, 0, math.pi / 2, 100, 100, True),
+
+            AutoDrive(24, 48, 0, 70, 100, True),
+            AutoDrive(72, 48, math.pi / 2, 70, 100, True),
+            AutoDrive(24, 0, (3 * math.pi) / 2, 70, 100, True),
         )
 
 
 class LeftAuto1:
 
     def __init__(self):
+        Robot.odometry.setPose(24, 0, math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(24, -3, math.pi / 2, 100, 100),
+            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100),
             AutoRoller(90),
-            AutoAlignShoot(24, 4, 0, "sideAuto", 100, 100),
+            AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100),
 
             # intake on
             AutoDrive(72, 48, math.pi / 4, 70, 100),
             AutoAlignShoot(72, 48, 0, "midAuto", 100, 100),
             AutoDrive(108, 84, math.pi / 4, 70, 100),
-            AutoDrive(120, 96, math.pi, 80, 100),
+            AutoDrive(120, 96, math.pi, 100, 100),
 
             # intake off
-            AutoDrive(123, 96, math.pi, 100, 100),
+            AutoDrive(120 + 3, 96, math.pi, 100, 100),
             AutoRoller(90),
-            AutoAlignShoot(116, 96, 0, "sideAuto", 100, 100),
+            AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100),
+        )
+
+
+class RightAuto1:
+
+    def __init__(self):
+        Robot.odometry.setPose(120, 72, math.pi)
+        commandRun = RunCommands(
+            AutoDrive(120, 96, math.pi, 100, 100),
+            AutoDrive(120 + 3, 96, math.pi, 100, 100),
+            AutoRoller(90),
+            AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100),
+
+            # intake on
+            AutoDrive(72, 48, (5 * math.pi) / 4, 70, 100),
+            AutoAlignShoot(72, 48, 0, "midAuto", 100, 100),
+            AutoDrive(48, 24, (5 * math.pi) / 4, 70, 100),
+            AutoDrive(24, 0, math.pi / 2, 100, 100),
+
+            # intake off
+            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100),
+            AutoRoller(90),
+            AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100),
         )
 
 
