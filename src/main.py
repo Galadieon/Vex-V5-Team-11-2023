@@ -297,20 +297,20 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
-        self.autoFlywheel = AutoFlywheel(distance=self.distance)
-        self.autoFlywheel.execute()
+        AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
+        AutoAlignShoot.autoFlywheel.execute()
 
         self.alignMaintainPos()
 
-        self.autoIndexer = AutoIndexer(3)
-        self.autoIndexer.execute()
+        AutoAlignShoot.autoIndexer = AutoIndexer(3)
+        AutoAlignShoot.autoIndexer.execute()
 
         self.stopAll()
 
     @staticmethod
     def stopAll():
         AutoDrive.stopAuto = True
-        self.autoFlywheel.stop()
+        AutoAlignShoot.autoFlywheel.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -1020,7 +1020,7 @@ class Flywheel:
         # for 84 : 36 max: 1_400 RPM
         self.velocityDict = {
             # need empirical data & verification
-            "centerAuto": 4_200 / 2.0 + 4_200 / 8.0,        # 2,625
+            "midAuto": 4_200 / 2.0 + 4_200 / 8.0,        # 2,625
             "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
             24: 4_200 / 4.0,                                # 1,050
             48: 4_200 / 3.0,                                # 1,400
@@ -1054,14 +1054,14 @@ class Flywheel:
         return False
     
     def incrVel(self):
-        if self.distance is "centerAuto" or self.distance is "sideAuto":
+        if self.distance is "midAuto" or self.distance is "sideAuto":
             self.setVelAtDist(0)
         
         if self.distance < 144:
             self.setVelAtDist(self.distance + 24)
     
     def decrVel(self):
-        if self.distance is "centerAuto" or self.distance is "sideAuto":
+        if self.distance is "midAuto" or self.distance is "sideAuto":
             self.setVelAtDist(48)
 
         if self.distance > 24:
