@@ -317,7 +317,7 @@ class AutoAlignShoot(AutoDrive):
     @staticmethod
     def stopAll():
         AutoDrive.stopAuto = True
-        AutoAlignShoot.autoFlywheel.stop()
+        # AutoAlignShoot.autoFlywheel.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -663,8 +663,6 @@ class Odometry:
         self.resetOdomEncoders = False
         self.resetOdomPose = False
 
-        self.odomThread = Thread(Robot.odometry.updatePose)
-
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
         LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
@@ -682,7 +680,7 @@ class Odometry:
 
         while (self.threadIsRunning):
             # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
-            if self.x > 1_000 or self.y > 1_000:
+            if abs(self.x) > 1_000 or abs(self.y) > 1_000:
                 self.resetPose()
                 self.resetEncoders()
 
@@ -772,9 +770,7 @@ class MyController:
         self.manualIndexer = True
 
         self.registerEventHandlers()
-        self.run()
 
-    def run(self):
         Thread(self.printToController)
 
         Thread(self.controllerLoop)
@@ -818,8 +814,7 @@ class MyController:
             # FC: False MI: False
             # FW D: 24 FW V: 1,400
 
-            self.controller.screen.print("X:", robotX, "Y:", robotY, "Θ:",
-                                         math.degrees(robotΘ))
+            self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
             self.controller.screen.next_row()
 
             self.controller.screen.print("FC:", fineControl, "MI:",
@@ -991,8 +986,8 @@ class MecanumDriveTrain:
     def __init__(self, FL, FR, BR, BL):
         self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, True)
         self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
-        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
-        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
+        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
+        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, True)
 
         self.driveVel = 100
         self.turnVel = 100
@@ -1336,6 +1331,8 @@ def Driver_Control():
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
+
+Thread(Robot.odometry.updatePose)
 
 myController = MyController()
 
