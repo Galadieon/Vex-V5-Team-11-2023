@@ -562,21 +562,21 @@ class RightAuto1:
     def __init__(self):
         Robot.odometry.setPose(120, 72, math.pi)
         commandRun = RunCommands(
-            AutoDrive(120, 96, math.pi, 100, 100),
-            AutoDrive(120 + 3, 96, math.pi, 100, 100),
-            AutoRoller(90),
-            AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100),
+            AutoDrive(120, 96, math.pi, 100, 100, True),
+            AutoDrive(120 + 3, 96, math.pi, 100, 100, True),
+            # AutoRoller(90),
+            # AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100, True),
 
             # intake on
             AutoDrive(72, 48, (5 * math.pi) / 4, 70, 100),
-            AutoAlignShoot(72, 48, 0, "midAuto", 100, 100),
+            # AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, True),
             AutoDrive(48, 24, (5 * math.pi) / 4, 70, 100),
-            AutoDrive(24, 0, math.pi / 2, 100, 100),
+            AutoDrive(24, 0, math.pi / 2, 100, 100, True),
 
             # intake off
-            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100),
-            AutoRoller(90),
-            AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100),
+            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100, True),
+            # AutoRoller(90),
+            # AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100, True),
         )
 
 
@@ -935,7 +935,7 @@ class MyController:
 
     def toggleAuto(self):
         if RunCommands.isRunning == False:
-            LeftAuto1()
+            RightAuto1()
         else:
             RunCommands.stopAll()
 
