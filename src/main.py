@@ -309,8 +309,8 @@ class AutoAlignShoot(AutoDrive):
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(3)
-        AutoAlignShoot.autoIndexer.execute()
+        # AutoAlignShoot.autoIndexer = AutoIndexer(3)
+        # AutoAlignShoot.autoIndexer.execute()
 
         self.stopAll()
 
@@ -323,8 +323,8 @@ class AutoAlignShoot(AutoDrive):
         print("ATTEMPTING ALIGNMENT ...\n")
         super().execute()
         print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
-        super().maintainPos = True
-        super().wait = False
+        # super().maintainPos = True
+        # super().wait = False
         super().execute()
 
 
@@ -540,20 +540,20 @@ class LeftAuto1:
     def __init__(self):
         Robot.odometry.setPose(24, 0, math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100),
-            AutoRoller(90),
-            AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100),
+            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100, True),
+            # AutoRoller(90),
+            # AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100, True, timeOut=500),
 
             # intake on
-            AutoDrive(72, 48, math.pi / 4, 70, 100),
-            AutoAlignShoot(72, 48, 0, "midAuto", 100, 100),
-            AutoDrive(108, 84, math.pi / 4, 70, 100),
-            AutoDrive(120, 96, math.pi, 100, 100),
+            AutoDrive(72, 48, math.pi / 4, 70, 100, True),
+            # AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, True),
+            AutoDrive(108, 84, math.pi / 4, 70, 100, True),
+            AutoDrive(120, 96, math.pi, 100, 100, True),
 
             # intake off
-            AutoDrive(120 + 3, 96, math.pi, 100, 100),
-            AutoRoller(90),
-            AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100),
+            AutoDrive(120 + 3, 96, math.pi, 100, 100, True),
+            # AutoRoller(90),
+            # AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100, True),
         )
 
 
@@ -935,7 +935,7 @@ class MyController:
 
     def toggleAuto(self):
         if RunCommands.isRunning == False:
-            TestMode()
+            LeftAuto1()
         else:
             RunCommands.stopAll()
 
