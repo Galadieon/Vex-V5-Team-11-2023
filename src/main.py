@@ -141,7 +141,6 @@ class AutoDrive:
         self.thresholdXY = 0.25  # how close the robot needs to be to the target to be considered as at target
         self.thresholdTheta = math.radians(1)
 
-        self.atTarget = False
         self.thread = None
         self.maintainPos = False
 
@@ -166,11 +165,12 @@ class AutoDrive:
 
     def run(self):
         AutoDrive.isRunning = True
-        self.atTarget = False
+        atTarget = False
+        clearedLine = True
 
         start = brain.timer.time(MSEC)
 
-        while not self.atTarget:
+        while not atTarget:
             if AutoDrive.stopAuto: break
 
             if brain.timer.time(MSEC) - start > self.timeOut:
@@ -179,14 +179,16 @@ class AutoDrive:
 
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-            if self.notClearedAutoLine(robotX, robotY):
-                self.xTarget, self.yTarget = self.calcAutoLineClear(
-                    robotX, robotY)
-                self.driveTo(self.calcLocalXY(), self.ΘTarget, self.driveVel,
-                             self.turnVel)
+            if self.notClearedAutoLine(robotX,
+                                       robotY) or clearedLine is not True:
+                xT, yT = self.calcAutoLineClear(robotX, robotY)
+                clearedLine = self.driveTo(self.calcLocalXY(xT,
+                                                            yT), self.ΘTarget,
+                                           self.driveVel, self.turnVel)
             else:
-                self.atTarget = self.driveTo(self.calcLocalXY(), self.ΘTarget,
-                                             self.driveVel, self.turnVel)
+                atTarget = self.driveTo(
+                    self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget,
+                    self.driveVel, self.turnVel)
 
         AutoDrive.isRunning = False
 
@@ -241,11 +243,11 @@ class AutoDrive:
 
         return forward, strafe, turn
 
-    def calcLocalXY(self):
+    def calcLocalXY(self, xTarget, yTarget):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-        deltaX = self.xTarget - robotX
-        deltaY = self.yTarget - robotY
+        deltaX = xTarget - robotX
+        deltaY = yTarget - robotY
 
         # dist = math.hypot(deltaY, deltaX)
         dist = pow(pow(deltaX, 2) + pow(deltaY, 2), 1 / 2)
@@ -542,14 +544,12 @@ class LeftAuto1:
             AutoAlignShoot(24, 4, 0, "sideAuto", 100, 100),
 
             # intake on
-
             AutoDrive(72, 48, math.pi / 4, 70, 100),
             AutoAlignShoot(72, 48, 0, "midAuto", 100, 100),
             AutoDrive(108, 84, math.pi / 4, 70, 100),
             AutoDrive(120, 96, math.pi, 80, 100),
 
             # intake off
-            
             AutoDrive(123, 96, math.pi, 100, 100),
             AutoRoller(90),
             AutoAlignShoot(116, 96, 0, "sideAuto", 100, 100),
