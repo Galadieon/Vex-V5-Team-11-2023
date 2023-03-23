@@ -291,7 +291,6 @@ class AutoAlignShoot(AutoDrive):
                  overrideAutoClear=False,
                  wait=True,
                  timeOut=15_000):
-        self.wait = wait
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
                          driveVel, turnVel, overrideAutoClear, wait, timeOut)
@@ -323,8 +322,8 @@ class AutoAlignShoot(AutoDrive):
         print("ATTEMPTING ALIGNMENT ...\n")
         super().execute()
         print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
-        # super().maintainPos = True
-        # super().wait = False
+#         self.maintainPos = True
+        self.wait = False
         super().execute()
 
 
