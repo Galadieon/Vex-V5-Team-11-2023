@@ -97,6 +97,155 @@ class Constants:
 # ---------------------------AUTONOMOUS COMMANDS----------------------------
 
 
+class AutoFlywheel:
+    """
+    ### AutoFlywheel class - creates an auto flywheel object
+
+    This class is used to command the flywheel (...) .
+
+    #### Arguments:
+        distance : The general distance to high goal
+        wait (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoFlywheel command object
+
+    #### Examples:
+        RunCommands(AutoFlywheel(...))
+    """
+
+    isRunning = False
+
+    stopAuto = False
+
+    def __init__(self, distance="sideAuto"):
+        self.distance = distance
+
+        AutoFlywheel.isRunning = False
+        AutoFlywheel.stopAuto = False
+
+    def execute(self):
+        AutoFlywheel.stopAuto = False
+        Robot.flywheel.setVelAtDist(self.distance)
+        Robot.flywheel.toggleMotor()
+
+    def setDistance(self, distance):
+        self.distance = distance
+        Robot.flywheel.setVelAtDist(self.distance)
+
+    def stop(self):
+        AutoFlywheel.stopAuto = True
+        Robot.flywheel.stop()
+
+    def run(self):
+        pass
+
+
+class AutoIntake:
+    """
+    ### AutoIntake class - creates an auto flywheel object
+
+    This class is used to command the flywheel (...) .
+
+    #### Arguments:
+        ...
+        wait (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoIntake command object
+
+    #### Examples:
+        RunCommands(AutoIntake(...))
+    """
+
+    isRunning = False
+
+    stopAuto = False
+
+    def __init__(self, wait=True):
+        # TODO: add initialization code to run the first time object is created
+        self.wait = wait
+        AutoIntake.isRunning = False
+        AutoIntake.stopAuto = False
+
+    # TODO: add any other helper methods
+
+    def execute(self):
+        # TODO: add code to run intake when command is executed
+        pass
+
+
+class AutoIndexer:
+    """
+    ### AutoIndexer class - creates an auto indexer object
+
+    This class is used to command the indexer (...) .
+
+    #### Arguments:
+        ...
+        wait (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoIndexer command object
+
+    #### Examples:
+        RunCommands(AutoIndexer(...))
+    """
+
+    isRunning = False
+
+    stopAuto = False
+
+    def __init__(self, numDisc=3):
+        self.numDisc = numDisc
+
+        AutoIndexer.isRunning = False
+        AutoIndexer.stopAuto = False
+
+    def execute(self):
+        while self.numDisc > 0:
+            if AutoIndexer.stopAuto is True:
+                Robot.indexer.stop()
+                break
+            pushed = Robot.indexer.autoPush()
+
+            if pushed:
+                self.numDisc -= 1
+
+
+class AutoRoller:
+    """
+    ### AutoRoller class - creates an auto roller object
+
+    This class is used to command the roller (...) .
+
+    #### Arguments:
+        degreesToTurn : Degrees to flip the rollers
+        wait (True) : Determines code execution blocking
+
+    #### Returns:
+        A new AutoRoller command object
+
+    #### Examples:
+        RunCommands(AutoRoller(...))
+    """
+
+    isRunning = False
+
+    stopAuto = False
+
+    def __init__(self, degreesToTurn=90, wait=True):
+        self.degreesToTurn = degreesToTurn
+        self.wait = wait
+
+        AutoRoller.isRunning = False
+        AutoRoller.stopAuto = False
+
+    def execute(self):
+        """Run the roller to spin how many degrees"""
+        Robot.roller.flip(FORWARD, self.degreesToTurn, self.wait)
+
+
 class AutoDrive:
     """
     ### AutoDrive class - creates an auto drive object
@@ -325,155 +474,6 @@ class AutoAlignShoot(AutoDrive):
         self.maintainPos = True
         self.wait = False
         super().execute()
-
-
-class AutoFlywheel:
-    """
-    ### AutoFlywheel class - creates an auto flywheel object
-
-    This class is used to command the flywheel (...) .
-
-    #### Arguments:
-        distance : The general distance to high goal
-        wait (True) : Determines code execution blocking
-
-    #### Returns:
-        A new AutoFlywheel command object
-
-    #### Examples:
-        RunCommands(AutoFlywheel(...))
-    """
-
-    isRunning = False
-
-    stopAuto = False
-
-    def __init__(self, distance="sideAuto"):
-        self.distance = distance
-
-        AutoFlywheel.isRunning = False
-        AutoFlywheel.stopAuto = False
-
-    def execute(self):
-        AutoFlywheel.stopAuto = False
-        Robot.flywheel.setVelAtDist(self.distance)
-        Robot.flywheel.toggleMotor()
-
-    def setDistance(self, distance):
-        self.distance = distance
-        Robot.flywheel.setVelAtDist(self.distance)
-
-    def stop(self):
-        AutoFlywheel.stopAuto = True
-        Robot.flywheel.stop()
-
-    def run(self):
-        pass
-
-
-class AutoIntake:
-    """
-    ### AutoIntake class - creates an auto flywheel object
-
-    This class is used to command the flywheel (...) .
-
-    #### Arguments:
-        ...
-        wait (True) : Determines code execution blocking
-
-    #### Returns:
-        A new AutoIntake command object
-
-    #### Examples:
-        RunCommands(AutoIntake(...))
-    """
-
-    isRunning = False
-
-    stopAuto = False
-
-    def __init__(self, wait=True):
-        # TODO: add initialization code to run the first time object is created
-        self.wait = wait
-        AutoIntake.isRunning = False
-        AutoIntake.stopAuto = False
-
-    # TODO: add any other helper methods
-
-    def execute(self):
-        # TODO: add code to run intake when command is executed
-        pass
-
-
-class AutoIndexer:
-    """
-    ### AutoIndexer class - creates an auto indexer object
-
-    This class is used to command the indexer (...) .
-
-    #### Arguments:
-        ...
-        wait (True) : Determines code execution blocking
-
-    #### Returns:
-        A new AutoIndexer command object
-
-    #### Examples:
-        RunCommands(AutoIndexer(...))
-    """
-
-    isRunning = False
-
-    stopAuto = False
-
-    def __init__(self, numDisc=3):
-        self.numDisc = numDisc
-
-        AutoIndexer.isRunning = False
-        AutoIndexer.stopAuto = False
-
-    def execute(self):
-        while self.numDisc > 0:
-            if AutoIndexer.stopAuto is True:
-                Robot.indexer.stop()
-                break
-            pushed = Robot.indexer.autoPush()
-
-            if pushed:
-                self.numDisc -= 1
-
-
-class AutoRoller:
-    """
-    ### AutoRoller class - creates an auto roller object
-
-    This class is used to command the roller (...) .
-
-    #### Arguments:
-        degreesToTurn : Degrees to flip the rollers
-        wait (True) : Determines code execution blocking
-
-    #### Returns:
-        A new AutoRoller command object
-
-    #### Examples:
-        RunCommands(AutoRoller(...))
-    """
-
-    isRunning = False
-
-    stopAuto = False
-
-    def __init__(self, degreesToTurn=90, wait=True):
-        self.degreesToTurn = degreesToTurn
-        self.wait = wait
-
-        AutoRoller.isRunning = False
-        AutoRoller.stopAuto = False
-
-    def execute(self):
-        """Run the roller to spin how many degrees"""
-        Robot.roller.flip(FORWARD, self.degreesToTurn, self.wait)
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
