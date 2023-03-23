@@ -322,7 +322,7 @@ class AutoAlignShoot(AutoDrive):
         print("ATTEMPTING ALIGNMENT ...\n")
         super().execute()
         print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
-#         self.maintainPos = True
+        self.maintainPos = True
         self.wait = False
         super().execute()
 
