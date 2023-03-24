@@ -920,6 +920,7 @@ class MyController:
 
     def R1_Pressed(self):
         Robot.flywheel.toggleMotor()
+        print("MOTOR TOGGLED")
 
     def R2_Pressed(self):
         if self.toggleManualIndexer() is False:
@@ -1095,12 +1096,15 @@ class Flywheel:
     """
 
     def __init__(self, *motors):
-        self.motorGroup = MotorGroup(*[motors])
+        # self.motorGroup = MotorGroup(*[motors])
+        self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, True)
 
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
+
+        self.isRunning = False
 
         self.distance = Constants.TILESIZE
 
@@ -1120,19 +1124,25 @@ class Flywheel:
 
     def startSpin(self):
         """get the flywheel motor to start & keep spinning"""
+        self.isRunning = True
         self.motorGroup.spin(FORWARD, self.motorVel, RPM)
 
     def stop(self):
+        self.isRunning = False
         self.motorGroup.stop()
 
     def calcMotorVel(self, flywheelVel):
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
-        if self.motorGroup.is_spinning:
+        if self.isRunning is True:
+            self.isRunning = False
+            print("MOTOR STOPPED")
             self.motorGroup.stop()
         else:
+            self.isRunning = True
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+            print("MOTOR SPINNING")
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
