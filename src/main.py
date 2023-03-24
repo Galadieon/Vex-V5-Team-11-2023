@@ -1125,21 +1125,21 @@ class Flywheel:
         return False
 
     def increaseDistance(self):
-        if self.distance is "midAuto" or self.distance is "sideAuto":
+        if self.distance == "midAuto" or self.distance == "sideAuto":
             self.setVelAtDist(0)
 
         if self.distance < 144:
             self.setVelAtDist(self.distance + 24)
 
     def decreaseDistance(self):
-        if self.distance is "midAuto" or self.distance is "sideAuto":
+        if self.distance == "midAuto" or self.distance == "sideAuto":
             self.setVelAtDist(48)
 
         if self.distance > 24:
             self.setVelAtDist(self.distance - 24)
 
     def increaseVelocity(self):
-        if self.distance is "midAuto" or self.distance is "sideAuto":
+        if self.distance == "midAuto" or self.distance == "sideAuto":
             self.setVelAtDist(24)
 
         if self.velocityDict[self.distance] + 50 <= 4_200:
@@ -1147,7 +1147,7 @@ class Flywheel:
             self.setVelAtDist(self.distance)
 
     def decreaseVelocity(self):
-        if self.distance is "midAuto" or self.distance is "sideAuto":
+        if self.distance == "midAuto" or self.distance == "sideAuto":
             self.setVelAtDist(24)
 
         if self.velocityDict[self.distance] - 50 <= 4_200:
