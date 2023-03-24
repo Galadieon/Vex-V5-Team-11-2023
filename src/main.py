@@ -302,6 +302,9 @@ class AutoDrive:
                  ΘTarget=math.pi / 2,
                  driveVel=25.0,
                  turnVel=25.0,
+                 thresholdX=0.25,
+                 thresholdY=0.25,
+                 thresholdΘ=math.radians(1),
                  overrideAutoClear=False,
                  timeOut=5_000,
                  wait=True):
@@ -310,12 +313,12 @@ class AutoDrive:
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
+        self.thresholdX = thresholdX
+        self.thresholdY = thresholdY
+        self.thresholdΘ = thresholdΘ
         self.overrideAutoClear = overrideAutoClear
         self.timeOut = timeOut
         self.wait = wait
-
-        self.thresholdXY = 0.25  # how close the robot needs to be to the target to be considered as at target
-        self.thresholdTheta = math.radians(1)
 
         self.thread = None
         self.maintainPos = False
@@ -385,16 +388,16 @@ class AutoDrive:
         self.turnVel = turnVel
 
         deltaX, deltaY = localXY
-        deltaTheta = ΘTarget - Robot.odometry.Θ
+        deltaΘ = ΘTarget - Robot.odometry.Θ
 
-        if abs(deltaX) <= self.thresholdXY and abs(
-                deltaY) <= self.thresholdXY and abs(
-                    deltaTheta
-                ) <= self.thresholdTheta and self.maintainPos == False:
+        if abs(deltaX) <= self.thresholdX and abs(
+                deltaY) <= self.thresholdY and abs(
+                    deltaΘ
+                ) <= self.thresholdΘ and self.maintainPos == False:
             return True
 
         forward, strafe, turn = self.updatePID(deltaX, deltaY,
-                                               math.degrees(deltaTheta))
+                                               math.degrees(deltaΘ))
 
         Robot.drivetrain.drive(forward, strafe, -turn)
 
@@ -402,10 +405,10 @@ class AutoDrive:
 
         return False
 
-    def updatePID(self, deltaX, deltaY, deltaTheta):
+    def updatePID(self, deltaX, deltaY, deltaΘ):
         forward = self.forwardPID.update(deltaY, 0.0)
         strafe = self.strafePID.update(deltaX, 0.0)
-        turn = self.turnPID.update(deltaTheta, 0.0)
+        turn = self.turnPID.update(deltaΘ, 0.0)
 
         # limits max speed, everything else same
         if abs(forward) > self.driveVel:
@@ -470,12 +473,15 @@ class AutoAlignShoot(AutoDrive):
                  distance="sideAuto",
                  driveVel=25.0,
                  turnVel=25.0,
+                 thresholdX=0.25,
+                 thresholdY=0.25,
+                 thresholdΘ=math.radians(1),
                  overrideAutoClear=False,
                  timeOut=5_000,
                  wait=True):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
-                         driveVel, turnVel, overrideAutoClear, timeOut, wait)
+                         driveVel, turnVel, thresholdX, thresholdY, thresholdΘ, overrideAutoClear, timeOut, wait)
 
         self.distance = distance
 
