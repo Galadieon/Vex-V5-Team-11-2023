@@ -125,15 +125,17 @@ class AutoFlywheel:
         AutoFlywheel.stopAuto = False
 
     def execute(self):
-        AutoFlywheel.stopAuto = False
+        AutoFlywheel.isRunning = True
         Robot.flywheel.setVelAtDist(self.distance)
         Robot.flywheel.toggleMotor()
+        AutoFlywheel.isRunning = False
 
     def setDistance(self, distance):
         self.distance = distance
         Robot.flywheel.setVelAtDist(self.distance)
 
     def stop(self):
+        AutoFlywheel.isRunning = False
         AutoFlywheel.stopAuto = True
         Robot.flywheel.stop()
 
@@ -171,8 +173,17 @@ class AutoIntake:
     # TODO: add any other helper methods
 
     def execute(self):
+        AutoIntake.isRunning = True
+
         # TODO: add code to run intake when command is executed
-        pass
+
+        AutoIntake.isRunning = False
+    
+    def stop(self):
+        AutoIntake.isRunning = False
+        AutoIntake.stopAuto = True
+
+        # TODO: add code to stop the physical flywheel
 
 
 class AutoIndexer:
@@ -203,6 +214,8 @@ class AutoIndexer:
         AutoIndexer.stopAuto = False
 
     def execute(self):
+        AutoIndexer.isRunning = True
+
         while self.numDisc > 0:
             if AutoIndexer.stopAuto is True:
                 Robot.indexer.stop()
@@ -211,6 +224,8 @@ class AutoIndexer:
 
             if pushed:
                 self.numDisc -= 1
+
+        AutoIndexer.isRunning = False
 
 
 class AutoRoller:
@@ -243,7 +258,12 @@ class AutoRoller:
 
     def execute(self):
         """Run the roller to spin how many degrees"""
+        AutoRoller.isRunning = True
+
         Robot.roller.flip(FORWARD, self.degreesToTurn, self.wait)
+
+        AutoRoller.isRunning = False
+        AutoRoller.stopAuto = True
 
 
 class AutoDrive:
@@ -430,6 +450,10 @@ class AutoDrive:
 
 class AutoAlignShoot(AutoDrive):
 
+    isRunning = False
+
+    stopAuto = False
+
     def __init__(self,
                  xTarget=0.0,
                  yTarget=0.0,
@@ -446,26 +470,33 @@ class AutoAlignShoot(AutoDrive):
 
         self.distance = distance
 
+        AutoAlignShoot.isRunning = False
+        AutoAlignShoot.stopAuto = False
+
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
         return math.atan2(Constants.HIGH_GOAL_Y - robotY,
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
+        AutoAlignShoot.isRunning = True
+
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
         AutoAlignShoot.autoFlywheel.execute()
 
         self.alignMaintainPos()
 
-        # AutoAlignShoot.autoIndexer = AutoIndexer(3)
-        # AutoAlignShoot.autoIndexer.execute()
+        AutoAlignShoot.autoIndexer = AutoIndexer(3)
+        AutoAlignShoot.autoIndexer.execute()
 
         self.stopAll()
 
     @staticmethod
     def stopAll():
+        AutoAlignShoot.isRunning = False
+        AutoAlignShoot.stopAuto = True
         AutoDrive.stopAuto = True
-        # AutoAlignShoot.autoFlywheel.stop()
+        AutoAlignShoot.autoFlywheel.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
