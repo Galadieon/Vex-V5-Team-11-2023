@@ -130,13 +130,9 @@ class AutoFlywheel:
 
     def execute(self):
         AutoFlywheel.isRunning = True
-        Robot.flywheel.setVelAtDist(self.distance)
+        Robot.flywheel.setDistance(self.distance)
         Robot.flywheel.toggleMotor()
         AutoFlywheel.isRunning = False
-
-    def setDistance(self, distance):
-        self.distance = distance
-        Robot.flywheel.setVelAtDist(self.distance)
 
     def stop(self):
         AutoFlywheel.isRunning = False
@@ -1144,37 +1140,58 @@ class Flywheel:
 
     def increaseDistance(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(0)
+            self.distance = Constants.TILESIZE
+            self.updateVel()
+        else:
+            self.distance += Constants.TILESIZE
 
-        if self.distance < Constants.TILESIZE * 6:
-            self.setVelAtDist(self.distance + Constants.TILESIZE)
+            if self.distance > Constants.TILESIZE * 6:
+                self.distannce = Constants.TILESIZE * 6
+
+            self.updateVel()
 
     def decreaseDistance(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(Constants.TILESIZE * 2)
+            self.distance = Constants.TILESIZE
+            self.updateVel()
+        else:
+            self.distance -= Constants.TILESIZE
 
-        if self.distance > Constants.TILESIZE:
-            self.setVelAtDist(self.distance - Constants.TILESIZE)
+            if self.distance < Constants.TILESIZE:
+                self.distannce = Constants.TILESIZE
+
+            self.updateVel()
 
     def increaseVelocity(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(Constants.TILESIZE)
-
-        if self.velocityDict[self.distance] + 50 <= 4_200:
+            self.distance = Constants.TILESIZE
+            self.updateVel()
+        else:
             self.velocityDict[self.distance] += 50
-            self.setVelAtDist(self.distance)
+
+            if self.velocityDict[self.distance] > 4_200:
+                self.velocityDict[self.distance] = 4_200.0
+
+            self.updateVel()
 
     def decreaseVelocity(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(Constants.TILESIZE)
-
-        if self.velocityDict[self.distance] - 50 <= 4_200:
+            self.distance = Constants.TILESIZE
+            self.updateVel()
+        else:
             self.velocityDict[self.distance] -= 50
-            self.setVelAtDist(self.distance)
 
-    def setVelAtDist(self, distance):
-        self.distance = distance
+            if self.velocityDict[self.distance] < 0:
+                self.velocityDict[self.distance] = 0.0
+
+            self.updateVel()
+
+    def updateVel(self):
         self.setVelocity(self.velocityDict[self.distance])
+    
+    def setDistance(self, distance):
+        self.distance = distance
+        self.updateVel()
 
     def launchEndgame(self):
         # TODO: add code to reverse flywheel to specific angle to launch endgame
@@ -1373,7 +1390,7 @@ def vexcode_driver_function():
 
 def Driver_Control():
     Default_Motor_Speed()
-    Robot.flywheel.setVelAtDist(Constants.TILESIZE)
+    Robot.flywheel.setDistance(Constants.TILESIZE)
 
 
 # ---------------------------REQUIRED CODE---------------------------
