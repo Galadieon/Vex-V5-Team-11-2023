@@ -227,6 +227,11 @@ class AutoIndexer:
                 self.numDisc -= 1
 
         AutoIndexer.isRunning = False
+    
+    def stop(self):
+        self.isRunning = False
+        self.stopAuto = True
+        Robot.indexer.stop()
 
 
 class AutoRoller:
@@ -455,6 +460,10 @@ class AutoAlignShoot(AutoDrive):
 
     stopAuto = False
 
+    autoFlywheel = None
+
+    autoIndexer = None
+
     def __init__(self,
                  xTarget=0.0,
                  yTarget=0.0,
@@ -473,6 +482,9 @@ class AutoAlignShoot(AutoDrive):
 
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = False
+
+        AutoAlignShoot.autoFlywheel = None
+        AutoAlignShoot.autoIndexer = None
 
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
@@ -497,7 +509,10 @@ class AutoAlignShoot(AutoDrive):
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = True
         AutoDrive.stopAuto = True
-        AutoAlignShoot.autoFlywheel.stop()
+        if AutoAlignShoot.autoFlywheel != None:
+            AutoAlignShoot.autoFlywheel.stop()
+        if AutoAlignShoot.autoIndexer != None:
+            AutoAlignShoot.autoIndexer.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
