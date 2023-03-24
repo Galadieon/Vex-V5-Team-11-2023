@@ -20,6 +20,7 @@ brain = Brain()
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
+
 # -----------------------------CLASS DECLARATION----------------------------
 
 
@@ -1358,6 +1359,7 @@ def Driver_Control():
 
 
 # ---------------------------REQUIRED CODE---------------------------
+
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
