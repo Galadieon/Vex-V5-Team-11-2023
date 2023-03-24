@@ -42,6 +42,8 @@ class Constants:
         Constants.WHEEL_TRAVEL
     """
 
+    TILESIZE = 23.5 # 141 / 6 = 23.5, OG: 24
+
     HIGH_GOAL_X = 24 * 0.25  # from center of 1st square
     HIGH_GOAL_Y = 24 * 4.61  # from center of 1st square
 
@@ -304,16 +306,16 @@ class AutoDrive:
                  driveVel=25.0,
                  turnVel=25.0,
                  overrideAutoClear=False,
-                 wait=True,
-                 timeOut=15_000):
+                 timeOut=5_000,
+                 wait=True):
         self.xTarget = xTarget
         self.yTarget = yTarget
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
-        self.wait = wait
-        self.timeOut = timeOut
         self.overrideAutoClear = overrideAutoClear
+        self.timeOut = timeOut
+        self.wait = wait
 
         self.thresholdXY = 0.25  # how close the robot needs to be to the target to be considered as at target
         self.thresholdTheta = math.radians(1)
@@ -472,11 +474,11 @@ class AutoAlignShoot(AutoDrive):
                  driveVel=25.0,
                  turnVel=25.0,
                  overrideAutoClear=False,
-                 wait=True,
-                 timeOut=15_000):
+                 timeOut=5_000,
+                 wait=True):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
-                         driveVel, turnVel, overrideAutoClear, wait, timeOut)
+                         driveVel, turnVel, overrideAutoClear, timeOut, wait)
 
         self.distance = distance
 
@@ -548,6 +550,7 @@ class RunCommands:
 
     @staticmethod
     def stopAll():
+        RunCommands.isRunning = False
         RunCommands.stopAuto = True
 
         AutoDrive.stopAuto = True
@@ -981,7 +984,7 @@ class MyController:
 
     def toggleAuto(self):
         if RunCommands.isRunning == False:
-            RightAuto1()
+            LeftAuto1()
         else:
             RunCommands.stopAll()
 
