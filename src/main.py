@@ -42,10 +42,11 @@ class Constants:
         Constants.WHEEL_TRAVEL
     """
 
-    TILESIZE = 23.5 # 141 / 6 = 23.5, OG: 24
+    FIELDSIZE = 141
+    TILESIZE = FIELDSIZE / 6 # 141 / 6 = 23.5, OG: Constants.TILESIZE
 
-    HIGH_GOAL_X = 24 * 0.25  # from center of 1st square
-    HIGH_GOAL_Y = 24 * 4.61  # from center of 1st square
+    HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
+    HIGH_GOAL_Y = TILESIZE * 4.61  # from center of 1st square
 
     WHEEL_TRAVEL = 4 * math.pi
     TRACK_WIDTH = 14.097242
@@ -372,7 +373,7 @@ class AutoDrive:
         AutoDrive.isRunning = False
 
     def driveToOrigin(self):
-        self.xTarget = 24
+        self.xTarget = Constants.TILESIZE
         self.yTarget = 0
         self.ΘTarget = math.pi / 2
 
@@ -448,7 +449,7 @@ class AutoDrive:
         return False if self.overrideAutoClear is True else y > self.calcAutoLineY(x)
 
     def calcAutoLineClear(self, robotX, robotY):
-        xTarget = ((robotX + robotY + 24 + 19.8) / 2.0) + 2
+        xTarget = ((robotX + robotY + Constants.TILESIZE + 19.8) / 2.0) + 2
         yTarget = self.calcAutoLineY(xTarget) - 2
         return xTarget, yTarget
 
@@ -572,60 +573,60 @@ class RunCommands:
 class TestMode:
 
     def __init__(self):
-        Robot.odometry.setPose(24, 0, math.pi / 2)
+        Robot.odometry.setPose(Constants.TILESIZE, 0, math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(24, 24, math.pi / 2, 100, 100, True),
-            AutoDrive(48, 24, math.pi / 2, 100, 100, True),
-            AutoDrive(24, 0, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE, Constants.TILESIZE, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 2, Constants.TILESIZE, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE, 0, math.pi / 2, 100, 100, True),
 
-            AutoDrive(24, 48, 0, 70, 100, True),
-            AutoDrive(72, 48, math.pi / 2, 70, 100, True),
-            AutoDrive(24, 0, (3 * math.pi) / 2, 70, 100, True),
+            AutoDrive(Constants.TILESIZE, Constants.TILESIZE * 2, 0, 70, 100, True),
+            AutoDrive(Constants.TILESIZE * 3, Constants.TILESIZE * 2, math.pi / 2, 70, 100, True),
+            AutoDrive(Constants.TILESIZE, 0, (3 * math.pi) / 2, 70, 100, True),
         )
 
 
 class LeftAuto1:
 
     def __init__(self):
-        Robot.odometry.setPose(24, 0, math.pi / 2)
+        Robot.odometry.setPose(Constants.TILESIZE, 0, math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE, 0 - 3, math.pi / 2, 100, 100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100, True, timeOut=500),
+            # AutoAlignShoot(Constants.TILESIZE, 0 + 4, 0, "sideAuto", 100, 100, True, timeOut=500),
 
             # intake on
-            AutoDrive(72, 48, math.pi / 4, 70, 100, True),
-            # AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, True),
-            AutoDrive(108, 84, math.pi / 4, 70, 100, True),
-            AutoDrive(120, 96, math.pi, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 3, Constants.TILESIZE * 2, math.pi / 4, 70, 100, True),
+            # AutoAlignShoot(Constants.TILESIZE * 3, Constants.TILESIZE * 2, 0, "midAuto", 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 4.5, 84, math.pi / 4, 70, 100, True),
+            AutoDrive(Constants.TILESIZE * 5, Constants.TILESIZE * 4, math.pi, 100, 100, True),
 
             # intake off
-            AutoDrive(120 + 3, 96, math.pi, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 5 + 3, Constants.TILESIZE * 4, math.pi, 100, 100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILESIZE * 5 - 4, Constants.TILESIZE * 4, 0, "sideAuto", 100, 100, True),
         )
 
 
 class RightAuto1:
 
     def __init__(self):
-        Robot.odometry.setPose(120, 72, math.pi)
+        Robot.odometry.setPose(Constants.TILESIZE * 5, Constants.TILESIZE * 3, math.pi)
         commandRun = RunCommands(
-            AutoDrive(120, 96, math.pi, 100, 100, True),
-            AutoDrive(120 + 3, 96, math.pi, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 5, Constants.TILESIZE * 4, math.pi, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 5 + 3, Constants.TILESIZE * 4, math.pi, 100, 100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(120 - 4, 96, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILESIZE * 5 - 4, Constants.TILESIZE * 4, 0, "sideAuto", 100, 100, True),
 
             # intake on
-            AutoDrive(72, 48, (5 * math.pi) / 4, 70, 100),
-            # AutoAlignShoot(72, 48, 0, "midAuto", 100, 100, True),
-            AutoDrive(48, 24, (5 * math.pi) / 4, 70, 100),
-            AutoDrive(24, 0, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 3, Constants.TILESIZE * 2, (5 * math.pi) / 4, 70, 100),
+            # AutoAlignShoot(Constants.TILESIZE * 3, Constants.TILESIZE * 2, 0, "midAuto", 100, 100, True),
+            AutoDrive(Constants.TILESIZE * 2, Constants.TILESIZE, (5 * math.pi) / 4, 70, 100),
+            AutoDrive(Constants.TILESIZE, 0, math.pi / 2, 100, 100, True),
 
             # intake off
-            AutoDrive(24, 0 - 3, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILESIZE, 0 - 3, math.pi / 2, 100, 100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(24, 0 + 4, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILESIZE, 0 + 4, 0, "sideAuto", 100, 100, True),
         )
 
 
@@ -698,7 +699,7 @@ class Odometry:
     """
 
     def __init__(self, rightEncoder, leftEncoder, auxEncoder):
-        self.x = 24
+        self.x = Constants.TILESIZE
         self.y = 0
         self.Θ = math.pi / 2
 
@@ -781,7 +782,7 @@ class Odometry:
         self.resetOdomEncoders = True
 
     def resetPose(self):
-        self.setPose(24, 0, math.pi / 2)
+        self.setPose(Constants.TILESIZE, 0, math.pi / 2)
         self.resetOdomPose = False
 
     def setPose(self, newX, newY, newΘ):
@@ -861,7 +862,7 @@ class MyController:
 
             # X: _ Y: _ Θ: _
             # FC: False MI: False
-            # FW D: 24 FW V: 1,400
+            # FW D: Constants.TILESIZE FW V: 1,400
 
             self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
             self.controller.screen.next_row()
@@ -910,26 +911,26 @@ class MyController:
     self.toggleDriveTrainMode()
     AutoDrive().driveToOrigin()
     """
-    """
-    L2 | R2
-    L1 | R1
-    """
+    #  /L2 | R2\
+    # / L1 | R1 \
+    # |---------|
+    # \_________/
 
     def L1_Pressed(self):
-        pass
+        Robot.flywheel.increaseVelocity()
 
     def L2_Pressed(self):
-        pass
+        Robot.flywheel.decreaseVelocity()
 
     def R1_Pressed(self):
         Robot.flywheel.toggleMotor()
 
     def R2_Pressed(self):
-        self.toggleManualIndexer()
-        if self.manualIndexer:
-            Robot.indexer.push()
-        else:
-            Robot.indexer.autoPush()
+        if self.toggleManualIndexer() is False:
+            if self.manualIndexer:
+                Robot.indexer.push()
+            else:
+                Robot.indexer.autoPush()
 
     """
       X
@@ -997,14 +998,13 @@ class MyController:
     def toggleManualIndexer(self):
         start = brain.timer.time(MSEC)
 
-        # while self.controller.buttonR2.isPressed():
-        #     if brain.timer.time(MSEC) - start > 1_000:
-        #         if self.manualIndexer:
-        #             self.manualIndexer = False
-        #         else:
-        #             self.manualIndexer = True
-        #         break
-        #     wait(10, MSEC)
+        while self.controller.buttonR2.pressing():
+            if brain.timer.time(MSEC) - start > 1_000:
+                self.manualIndexer = not self.manualIndexer
+                return True
+            wait(10, MSEC)
+        
+        return False
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -1103,7 +1103,7 @@ class Flywheel:
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
 
-        self.distance = 24
+        self.distance = Constants.TILESIZE
 
         # for 84 : 12 max: 4_200 RPM (Our robot's max)
         # for 84 : 36 max: 1_400 RPM
@@ -1111,12 +1111,12 @@ class Flywheel:
             # need empirical data & verification
             "midAuto": 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
             "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
-            24: 4_200 / 4.0,  # 1,050
-            48: 4_200 / 3.0,  # 1,400
-            72: 4_200 / 2.0,  # 2,100
-            96: 4_200 * (2.0 / 3.0),  # 2,800
-            120: 4_200 * (3.0 / 4.0),  # 3,150
-            144: 4_200 * (4.0 / 4.0),  # 4,200
+            Constants.TILESIZE: 4_200 / 4.0,  # 1,050
+            Constants.TILESIZE * 2: 4_200 / 3.0,  # 1,400
+            Constants.TILESIZE * 3: 4_200 / 2.0,  # 2,100
+            Constants.TILESIZE * 4: 4_200 * (2.0 / 3.0),  # 2,800
+            Constants.TILESIZE * 5: 4_200 * (3.0 / 4.0),  # 3,150
+            Constants.TILESIZE * 6: 4_200 * (4.0 / 4.0),  # 4,200
         }
 
     def startSpin(self):
@@ -1146,19 +1146,19 @@ class Flywheel:
         if self.distance == "midAuto" or self.distance == "sideAuto":
             self.setVelAtDist(0)
 
-        if self.distance < 144:
-            self.setVelAtDist(self.distance + 24)
+        if self.distance < Constants.TILESIZE * 6:
+            self.setVelAtDist(self.distance + Constants.TILESIZE)
 
     def decreaseDistance(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(48)
+            self.setVelAtDist(Constants.TILESIZE * 2)
 
-        if self.distance > 24:
-            self.setVelAtDist(self.distance - 24)
+        if self.distance > Constants.TILESIZE:
+            self.setVelAtDist(self.distance - Constants.TILESIZE)
 
     def increaseVelocity(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(24)
+            self.setVelAtDist(Constants.TILESIZE)
 
         if self.velocityDict[self.distance] + 50 <= 4_200:
             self.velocityDict[self.distance] += 50
@@ -1166,7 +1166,7 @@ class Flywheel:
 
     def decreaseVelocity(self):
         if self.distance == "midAuto" or self.distance == "sideAuto":
-            self.setVelAtDist(24)
+            self.setVelAtDist(Constants.TILESIZE)
 
         if self.velocityDict[self.distance] - 50 <= 4_200:
             self.velocityDict[self.distance] -= 50
@@ -1206,7 +1206,7 @@ class Indexer:
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
         self.motor.set_stopping(HOLD)
-        self.motor.set_velocity(120, RPM)
+        self.motor.set_velocity(Constants.TILESIZE * 5, RPM)
         self.isRunning = False
 
         # calculate the degrees the motor turns to move 1 chain forward
@@ -1373,7 +1373,7 @@ def vexcode_driver_function():
 
 def Driver_Control():
     Default_Motor_Speed()
-    Robot.flywheel.setVelAtDist(24)
+    Robot.flywheel.setVelAtDist(Constants.TILESIZE)
 
 
 # ---------------------------REQUIRED CODE---------------------------
