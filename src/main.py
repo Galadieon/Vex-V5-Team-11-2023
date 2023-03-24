@@ -302,10 +302,10 @@ class AutoDrive:
                  ΘTarget=math.pi / 2,
                  driveVel=25.0,
                  turnVel=25.0,
+                 overrideAutoClear=False,
                  thresholdX=0.25,
                  thresholdY=0.25,
                  thresholdΘ=math.radians(1),
-                 overrideAutoClear=False,
                  timeOut=5_000,
                  wait=True):
         self.xTarget = xTarget
@@ -313,10 +313,10 @@ class AutoDrive:
         self.ΘTarget = ΘTarget
         self.driveVel = driveVel
         self.turnVel = turnVel
+        self.overrideAutoClear = overrideAutoClear
         self.thresholdX = thresholdX
         self.thresholdY = thresholdY
         self.thresholdΘ = thresholdΘ
-        self.overrideAutoClear = overrideAutoClear
         self.timeOut = timeOut
         self.wait = wait
 
@@ -473,15 +473,15 @@ class AutoAlignShoot(AutoDrive):
                  distance="sideAuto",
                  driveVel=25.0,
                  turnVel=25.0,
+                 overrideAutoClear=False,
                  thresholdX=0.25,
                  thresholdY=0.25,
                  thresholdΘ=math.radians(1),
-                 overrideAutoClear=False,
                  timeOut=5_000,
                  wait=True):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
-                         driveVel, turnVel, thresholdX, thresholdY, thresholdΘ, overrideAutoClear, timeOut, wait)
+                         driveVel, turnVel, overrideAutoClear, thresholdX, thresholdY, thresholdΘ, timeOut, wait)
 
         self.distance = distance
 
