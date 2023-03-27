@@ -4,12 +4,12 @@
 		"json": 1
 	},
 	"project": {
-		"name": "DON'T USE Master Branch",
+		"name": "Master Branch",
 		"description": "",
 		"creationDate": "Fri, 20 Jan 2023 05:14:12 GMT",
 		"platform": "V5",
 		"language": "python",
-		"slot": 5,
+		"slot": 1,
 		"sdkVersion": "V5_1_0_1_15",
 		"python": {
 			"main": "src/main.py"

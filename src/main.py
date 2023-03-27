@@ -376,7 +376,10 @@ class AutoDrive:
         start = brain.timer.time(MSEC)
 
         while not atTarget:
-            if AutoDrive.stopAuto: break
+            if AutoDrive.stopAuto:
+                print("STOPPED DRIVE")
+                AutoDrive.isRunning = False
+                return
 
             if brain.timer.time(MSEC) - start > self.timeOut:
                 RunCommands.stopAll()
@@ -531,10 +534,10 @@ class AutoAlignShoot(AutoDrive):
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(3)
+        AutoAlignShoot.autoIndexer = AutoIndexer(1)
         AutoAlignShoot.autoIndexer.execute()
 
-        self.stopAll()
+        AutoAlignShoot.stopAll()
 
     @staticmethod
     def stopAll():
@@ -545,6 +548,8 @@ class AutoAlignShoot(AutoDrive):
             AutoAlignShoot.autoFlywheel.stop()
         if AutoAlignShoot.autoIndexer != None:
             AutoAlignShoot.autoIndexer.stop()
+        
+        print("#1")
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -629,7 +634,7 @@ class LeftAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
 
             # intake on
             AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
@@ -914,7 +919,7 @@ class MyController:
             self.controller.screen.next_row()
 
             self.controller.screen.print("FC:", fineControl, "MI:",
-                                         self.manualIndexer)
+                                         self.manualIndexer, "FW:", Robot.flywheel.flywheelVel)
             self.controller.screen.next_row()
 
             self.controller.screen.print("FW D:", Robot.flywheel.distance,
@@ -978,7 +983,8 @@ class MyController:
             if self.manualIndexer:
                 Robot.indexer.push()
             else:
-                Robot.indexer.autoPush()
+                # Robot.indexer.autoPush()
+                pass
 
     """
       X
@@ -1148,7 +1154,7 @@ class Flywheel:
 
     def __init__(self, *motors):
         # self.motorGroup = MotorGroup(*[motors])
-        self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, True)
+        self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, False)
 
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
@@ -1170,7 +1176,7 @@ class Flywheel:
             Constants.TILE___3: 4_200 / 2.0,  # 2,100
             Constants.TILE___4: 4_200 * (2.0 / 3.0),  # 2,800
             Constants.TILE___5: 4_200 * (3.0 / 4.0),  # 3,150
-            Constants.TILE___6: 4_200 * (4.0 / 4.0),  # 4,200
+            Constants.TILE___6: 4_200 * (4.0 / 4.0)  # 4,200
         }
 
     def startSpin(self):
@@ -1207,7 +1213,7 @@ class Flywheel:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
-            self.distance += Constants.TILE___1
+            self.distance += Constants.TILESIZE
 
             if self.distance > Constants.TILE___6:
                 self.distannce = Constants.TILE___6
@@ -1219,7 +1225,7 @@ class Flywheel:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
-            self.distance -= Constants.TILE___1
+            self.distance -= Constants.TILESIZE
 
             if self.distance < Constants.TILE___1:
                 self.distannce = Constants.TILE___1
@@ -1251,7 +1257,9 @@ class Flywheel:
             self.updateVel()
 
     def updateVel(self):
-        self.setVelocity(self.velocityDict[self.distance])
+        if self.distance in self.velocityDict.keys():
+            print(self.distance)
+            self.setVelocity(self.velocityDict[self.distance])
 
     def setDistance(self, distance):
         self.distance = distance
@@ -1310,7 +1318,8 @@ class Indexer:
         return False
 
     def push(self):
-        self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
+        if self.motor.is_spinning() == False:
+            self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
 
     def stop(self):
         self.motor.stop()
