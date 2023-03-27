@@ -70,7 +70,7 @@ class Constants:
     PL_L = 2.0 # 4 inch total
 
     HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
-    HIGH_GOAL_Y = TILESIZE * 4.61  # from center of 1st square
+    HIGH_GOAL_Y = TILESIZE * 4.72  # from center of 1st square
 
     WHEEL_TRAVEL = 4.0 * math.pi
     TRACK_WIDTH = 14.097242
