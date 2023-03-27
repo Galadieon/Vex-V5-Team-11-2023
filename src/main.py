@@ -243,7 +243,7 @@ class AutoIndexer:
         AutoIndexer.isRunning = True
 
         while self.numDisc > 0:
-            if AutoIndexer.stopAuto is True:
+            if AutoIndexer.stopAuto == True:
                 Robot.indexer.stop()
                 break
             pushed = Robot.indexer.autoPush()
@@ -470,7 +470,7 @@ class AutoDrive:
         return localDeltaX, localDeltaY
 
     def notClearedAutoLine(self, x, y):
-        return False if self.overrideAutoClear is True else y > self.calcAutoLineY(
+        return False if self.overrideAutoClear == True else y > self.calcAutoLineY(
             x)
 
     def calcAutoLineClear(self, robotX, robotY):
@@ -780,10 +780,10 @@ class Odometry:
                 self.resetPose()
                 self.resetEncoders()
 
-            if self.resetOdomPose is True:
+            if self.resetOdomPose == True:
                 self.resetPose()
 
-            if self.resetOdomEncoders is True:
+            if self.resetOdomEncoders == True:
                 self.resetEncoders()
 
             if self.threadIsPaused:
@@ -974,7 +974,7 @@ class MyController:
         print("MOTOR TOGGLED")
 
     def R2_Pressed(self):
-        if self.toggleManualIndexer() is False:
+        if self.toggleManualIndexer() == False:
             if self.manualIndexer:
                 Robot.indexer.push()
             else:
@@ -1186,7 +1186,7 @@ class Flywheel:
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
-        if self.isRunning is True:
+        if self.isRunning == True:
             self.isRunning = False
             print("MOTOR STOPPED")
             self.motorGroup.stop()
