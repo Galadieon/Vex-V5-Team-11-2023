@@ -41,30 +41,30 @@ class Constants:
         Constants.WHEEL_TRAVEL
     """
 
-    FIELDSIZE = 141
-    TILESIZE = FIELDSIZE / 6  # 141 / 6 = 23.5, OG: 24
-    TILE___0 = 0
+    FIELDSIZE = 141.0
+    TILESIZE = FIELDSIZE / 6.0  # 141 / 6 = 23.5, OG: 24
+    TILE___0 = 0.0
     TILE___1 = TILESIZE
-    TILE___2 = TILESIZE * 2
-    TILE___3 = TILESIZE * 3
+    TILE___2 = TILESIZE * 2.0
+    TILE___3 = TILESIZE * 3.0
     TILE_3_5 = TILESIZE * 3.5
-    TILE___4 = TILESIZE * 4
+    TILE___4 = TILESIZE * 4.0
     TILE_4_5 = TILESIZE * 4.5
-    TILE___5 = TILESIZE * 5
-    TILE___6 = TILESIZE * 6
+    TILE___5 = TILESIZE * 5.0
+    TILE___6 = TILESIZE * 6.0
 
-    ROLLER_OFFSET = 3
+    ROLLER_OFFSET = 3.0
     TILE_L_R = TILE___0 - ROLLER_OFFSET
     TILE_R_R = TILE___5 + ROLLER_OFFSET
 
-    SHOOT_OFFSET = 4
+    SHOOT_OFFSET = 4.0
     TILE_L_S = TILE___0 + SHOOT_OFFSET
     TILE_R_S = TILE___0 - SHOOT_OFFSET
 
     HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
     HIGH_GOAL_Y = TILESIZE * 4.61  # from center of 1st square
 
-    WHEEL_TRAVEL = 4 * math.pi
+    WHEEL_TRAVEL = 4.0 * math.pi
     TRACK_WIDTH = 14.097242
     WHEEL_BASE = 11.5
 
