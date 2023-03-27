@@ -53,10 +53,10 @@ class Constants:
     WHEEL_BASE = 11.5
 
     # subject to change
-    INDEXER_PORT = Ports.PORT11
-    FLYWHEEL_PORT1 = Ports.PORT15
-    FLYWHEEL_PORT2 = Ports.PORT16
-    INTAKE_PORT = Ports.PORT20
+    INDEXER_PORT = Ports.PORT2
+    FLYWHEEL_PORT1 = Ports.PORT9
+    FLYWHEEL_PORT2 = Ports.PORT15
+    INTAKE_PORT = Ports.PORT16
     ROLLER_PORT = INTAKE_PORT
 
     RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
@@ -64,9 +64,9 @@ class Constants:
     AUX_ENCODER = Encoder(brain.three_wire_port.c)
 
     DRIVETRAIN_FRONT_LEFT = Ports.PORT1
-    DRIVETRAIN_FRONT_RIGHT = Ports.PORT2
-    DRIVETRAIN_BACK_RIGHT = Ports.PORT10
-    DRIVETRAIN_BACK_LEFT = Ports.PORT9
+    DRIVETRAIN_FRONT_RIGHT = Ports.PORT10
+    DRIVETRAIN_BACK_RIGHT = Ports.PORT20
+    DRIVETRAIN_BACK_LEFT = Ports.PORT19
 
     DRIVETRAIN_FORWARD_KP = 8.0
     DRIVETRAIN_FORWARD_KI = 0.05
@@ -95,7 +95,7 @@ class Constants:
     FLYWHEEL_GEAR_RATIO = 84 / 12  # max for motor: 600 RPM, max for flywheel: 4,200 RPM
 
     INDEXER_GEAR_TEETH = 6
-    INDEXER_CHAIN_LINKS = 18
+    INDEXER_CHAIN_LINKS = 19
 
 
 # ---------------------------AUTONOMOUS COMMANDS----------------------------
@@ -760,8 +760,8 @@ class Odometry:
                                         (B_Distance / LR_Distance)))
 
             theta = self.Θ + (dtheta / 2.0)
-            self.x -= -dx * math.cos(-theta) + dy * math.sin(-theta)
-            self.y += -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += dtheta
 
             while brain.timer.time(MSEC) - start < 7.5:
@@ -920,6 +920,7 @@ class MyController:
 
     def R1_Pressed(self):
         Robot.flywheel.toggleMotor()
+        print("MOTOR TOGGLED")
 
     def R2_Pressed(self):
         if self.toggleManualIndexer() is False:
@@ -1029,16 +1030,19 @@ class MecanumDriveTrain:
     """
 
     def __init__(self, FL, FR, BR, BL):
-        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, True)
-        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, False)
-        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, False)
-        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, True)
+        self.motorFrontLeft = Motor(FL, GearSetting.RATIO_18_1, False)
+        self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, True)
+        self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
+        self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
 
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
 
     def drive(self, forward, strafe, turn):
+        forward = -forward
+        strafe = -strafe
+        turn = -turn
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
         self.motorBackRight.set_velocity(forward + strafe - turn, PERCENT)
@@ -1092,12 +1096,15 @@ class Flywheel:
     """
 
     def __init__(self, *motors):
-        self.motorGroup = MotorGroup(*[motors])
+        # self.motorGroup = MotorGroup(*[motors])
+        self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, True)
 
         self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
+
+        self.isRunning = False
 
         self.distance = Constants.TILESIZE
 
@@ -1117,19 +1124,25 @@ class Flywheel:
 
     def startSpin(self):
         """get the flywheel motor to start & keep spinning"""
+        self.isRunning = True
         self.motorGroup.spin(FORWARD, self.motorVel, RPM)
 
     def stop(self):
+        self.isRunning = False
         self.motorGroup.stop()
 
     def calcMotorVel(self, flywheelVel):
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
-        if self.motorGroup.is_spinning:
+        if self.isRunning is True:
+            self.isRunning = False
+            print("MOTOR STOPPED")
             self.motorGroup.stop()
         else:
+            self.isRunning = True
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+            print("MOTOR SPINNING")
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
@@ -1221,7 +1234,7 @@ class Indexer:
     """
 
     def __init__(self, motor):
-        self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.motor = Motor(motor, GearSetting.RATIO_18_1, True)
         self.motor.set_stopping(HOLD)
         self.motor.set_velocity(Constants.TILESIZE * 5, RPM)
         self.isRunning = False
