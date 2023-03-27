@@ -43,8 +43,11 @@ class Constants:
 
     FIELDSIZE = 141.0
     TILESIZE = FIELDSIZE / 6.0  # 141 / 6 = 23.5, OG: 24
-    TILE___0 = 0.0
-    TILE___1 = TILESIZE
+    
+    TILE___0 = TILESIZE * 0.0
+    TILE_0_5 = TILESIZE * 0.5
+    TILE___1 = TILESIZE * 1.0
+    TILE_1_5 = TILESIZE * 1.5
     TILE___2 = TILESIZE * 2.0
     TILE___3 = TILESIZE * 3.0
     TILE_3_5 = TILESIZE * 3.5
@@ -59,7 +62,12 @@ class Constants:
 
     SHOOT_OFFSET = 4.0
     TILE_L_S = TILE___0 + SHOOT_OFFSET
-    TILE_R_S = TILE___0 - SHOOT_OFFSET
+    TILE_R_S = TILE___5 - SHOOT_OFFSET
+
+    # AutoDrive precision level
+    PL_S = 1.0 # 2 inch total
+    PL_M = 1.5 # 3 inch total
+    PL_L = 2.0 # 4 inch total
 
     HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
     HIGH_GOAL_Y = TILESIZE * 4.61  # from center of 1st square
@@ -109,6 +117,8 @@ class Constants:
     FLYWHEEL_KI = 0
     FLYWHEEL_KD = 0
     FLYWHEEL_GEAR_RATIO = 84 / 12  # max for motor: 600 RPM, max for flywheel: 4,200 RPM
+    SIDE_SHOT = 0.0
+    MID_SHOT = 1.0
 
     INDEXER_GEAR_TEETH = 6
     INDEXER_CHAIN_LINKS = 19
@@ -138,7 +148,7 @@ class AutoFlywheel:
 
     stopAuto = False
 
-    def __init__(self, distance="sideAuto"):
+    def __init__(self, distance=Constants.SIDE_SHOT):
         self.distance = distance
 
         AutoFlywheel.isRunning = False
@@ -370,7 +380,7 @@ class AutoDrive:
 
             if brain.timer.time(MSEC) - start > self.timeOut:
                 RunCommands.stopAll()
-                continue
+                break
 
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
@@ -486,7 +496,7 @@ class AutoAlignShoot(AutoDrive):
                  xTarget=0.0,
                  yTarget=0.0,
                  ΘTarget=math.pi / 2,
-                 distance="sideAuto",
+                 distance=Constants.SIDE_SHOT,
                  driveVel=25.0,
                  turnVel=25.0,
                  overrideAutoClear=False,
@@ -619,13 +629,13 @@ class LeftAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, "sideAuto", 100, 100, True, timeOut=500),
+            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
 
             # intake on
-            AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 70,
+            AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
                       100, True),
-            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, "midAuto", 100, 100, True),
-            AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, math.pi / 4, 70,
+            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.MID_SHOT, 100, 100, True),
+            AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, (5 * math.pi) / 4, 70,
                       100, True),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
@@ -634,7 +644,7 @@ class LeftAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
         )
 
 
@@ -648,21 +658,21 @@ class RightAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
 
             # intake on
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
-                      (5 * math.pi) / 4, 70, 100),
-            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, "midAuto", 100, 100, True),
-            AutoDrive(Constants.TILE___2, Constants.TILE___1,
-                      (5 * math.pi) / 4, 70, 100),
-            AutoDrive(Constants.TILE___1, 0, math.pi / 2, 100, 100, True),
+                      math.pi / 4, 70, 100),
+            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.MID_SHOT, 100, 100, True),
+            AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5,
+                      math.pi / 4, 70, 100),
+            AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100, 100, True),
 
             # intake off
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, "sideAuto", 100, 100, True),
+            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
         )
 
 
@@ -1153,8 +1163,8 @@ class Flywheel:
         # for 84 : 36 max: 1_400 RPM
         self.velocityDict = {
             # need empirical data & verification
-            "midAuto": 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
-            "sideAuto": 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
+            Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
+            Constants.SIDE_SHOT: 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
             Constants.TILE___1: 4_200 / 4.0,  # 1,050
             Constants.TILE___2: 4_200 / 3.0,  # 1,400
             Constants.TILE___3: 4_200 / 2.0,  # 2,100
@@ -1193,7 +1203,7 @@ class Flywheel:
         return False
 
     def increaseDistance(self):
-        if self.distance == "midAuto" or self.distance == "sideAuto":
+        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
@@ -1205,7 +1215,7 @@ class Flywheel:
             self.updateVel()
 
     def decreaseDistance(self):
-        if self.distance == "midAuto" or self.distance == "sideAuto":
+        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
@@ -1217,7 +1227,7 @@ class Flywheel:
             self.updateVel()
 
     def increaseVelocity(self):
-        if self.distance == "midAuto" or self.distance == "sideAuto":
+        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
@@ -1229,7 +1239,7 @@ class Flywheel:
             self.updateVel()
 
     def decreaseVelocity(self):
-        if self.distance == "midAuto" or self.distance == "sideAuto":
+        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
             self.distance = Constants.TILE___1
             self.updateVel()
         else:
@@ -1294,7 +1304,7 @@ class Indexer:
             self.push()
 
     def autoPush(self):
-        if Robot.flywheel.isAtSetVel():
+        if Robot.flywheel.isAtSetVel() and self.motor.is_done():
             self.push()
             return True
         return False
