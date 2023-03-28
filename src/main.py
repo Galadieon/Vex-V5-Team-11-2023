@@ -1170,14 +1170,14 @@ class Flywheel:
 
         self.velocityDict = {
             # need empirical data & verification
-            Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
-            Constants.SIDE_SHOT: 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
-            Constants.TILE___1: 4_200 / 4.0,  # 1,050
-            Constants.TILE___2: 4_200 / 3.0,  # 1,400
-            Constants.TILE___3: 4_200 / 2.0,  # 2,100
-            Constants.TILE___4: 4_200 * (2.0 / 3.0),  # 2,800
-            Constants.TILE___5: 4_200 * (3.0 / 4.0),  # 3,150
-            Constants.TILE___6: 4_200 * (4.0 / 4.0)  # 4,200
+            Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,          # 2,625
+            Constants.SIDE_SHOT: 4_200 * (2.0 / 3.0) + 4_200 / 8.0, # 3,325
+            Constants.TILE___1: 4_200 / 4.0,                        # 1,050
+            Constants.TILE___2: 4_200 / 3.0,                        # 1,400
+            Constants.TILE___3: 4_200 / 2.0,                        # 2,100
+            Constants.TILE___4: 4_200 * (2.0 / 3.0),                # 2,800
+            Constants.TILE___5: 4_200 * (3.0 / 4.0),                # 3,150
+            Constants.TILE___6: 4_200 * (4.0 / 4.0)                 # 4,200
         }
 
     def startSpin(self):
