@@ -1090,6 +1090,11 @@ class MecanumDriveTrain:
         self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
 
+        self.motorFrontLeft.set_max_torque(100, PERCENT)
+        self.motorFrontRight.set_max_torque(100, PERCENT)
+        self.motorBackRight.set_max_torque(100, PERCENT)
+        self.motorBackLeft.set_max_torque(100, PERCENT)
+
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
