@@ -548,16 +548,14 @@ class AutoAlignShoot(AutoDrive):
             AutoAlignShoot.autoFlywheel.stop()
         if AutoAlignShoot.autoIndexer != None:
             AutoAlignShoot.autoIndexer.stop()
-        
-        print("#1")
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
         super().execute()
-        print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
-        self.maintainPos = True
-        self.wait = False
-        super().execute()
+        # print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
+        # self.maintainPos = True
+        # self.wait = False
+        # super().execute()
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
@@ -639,7 +637,7 @@ class LeftAuto1:
             # intake on
             AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
                       100, True),
-            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.MID_SHOT, 100, 100, True),
+            AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, (5 * math.pi) / 4, 70,
                       100, True),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
@@ -649,7 +647,7 @@ class LeftAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
         )
 
 
@@ -663,12 +661,12 @@ class RightAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
 
             # intake on
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
                       math.pi / 4, 70, 100),
-            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.MID_SHOT, 100, 100, True),
+            AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
             AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5,
                       math.pi / 4, 70, 100),
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100, 100, True),
@@ -677,7 +675,7 @@ class RightAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.SIDE_SHOT, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
         )
 
 
