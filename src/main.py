@@ -1037,7 +1037,7 @@ class MyController:
 
     def toggleAuto(self):
         if RunCommands.isRunning == False:
-            LeftAuto1()
+            RightAuto1()
         else:
             RunCommands.stopAll()
 
