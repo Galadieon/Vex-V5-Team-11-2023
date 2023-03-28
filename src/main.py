@@ -543,11 +543,11 @@ class AutoAlignShoot(AutoDrive):
     def stopAll():
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = True
-        AutoDrive.stopAuto = True
+        # AutoDrive.stopAuto = True
         if AutoAlignShoot.autoFlywheel != None:
             AutoAlignShoot.autoFlywheel.stop()
-        if AutoAlignShoot.autoIndexer != None:
-            AutoAlignShoot.autoIndexer.stop()
+        # if AutoAlignShoot.autoIndexer != None:
+        #     AutoAlignShoot.autoIndexer.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
