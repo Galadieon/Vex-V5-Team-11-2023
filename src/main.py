@@ -1167,6 +1167,7 @@ class Flywheel:
 
         # for 84 : 12 max: 4_200 RPM (Our robot's max)
         # for 84 : 36 max: 1_400 RPM
+
         self.velocityDict = {
             # need empirical data & verification
             Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
