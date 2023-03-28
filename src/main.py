@@ -919,7 +919,7 @@ class MyController:
             self.controller.screen.next_row()
 
             self.controller.screen.print("FC:", fineControl, "MI:",
-                                         self.manualIndexer, "FW:", Robot.flywheel.flywheelVel)
+                                         self.manualIndexer)
             self.controller.screen.next_row()
 
             self.controller.screen.print("FW D:", Robot.flywheel.distance,
