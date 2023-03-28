@@ -534,7 +534,7 @@ class AutoAlignShoot(AutoDrive):
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(1)
+        AutoAlignShoot.autoIndexer = AutoIndexer(3)
         AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
