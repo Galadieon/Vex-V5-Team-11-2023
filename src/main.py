@@ -534,7 +534,7 @@ class AutoAlignShoot(AutoDrive):
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(1)
+        AutoAlignShoot.autoIndexer = AutoIndexer(3)
         AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
@@ -543,11 +543,11 @@ class AutoAlignShoot(AutoDrive):
     def stopAll():
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = True
-        AutoDrive.stopAuto = True
+        # AutoDrive.stopAuto = True
         if AutoAlignShoot.autoFlywheel != None:
             AutoAlignShoot.autoFlywheel.stop()
-        if AutoAlignShoot.autoIndexer != None:
-            AutoAlignShoot.autoIndexer.stop()
+        # if AutoAlignShoot.autoIndexer != None:
+        #     AutoAlignShoot.autoIndexer.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -1089,6 +1089,11 @@ class MecanumDriveTrain:
         self.motorFrontRight = Motor(FR, GearSetting.RATIO_18_1, True)
         self.motorBackRight = Motor(BR, GearSetting.RATIO_18_1, True)
         self.motorBackLeft = Motor(BL, GearSetting.RATIO_18_1, False)
+
+        self.motorFrontLeft.set_max_torque(100, PERCENT)
+        self.motorFrontRight.set_max_torque(100, PERCENT)
+        self.motorBackRight.set_max_torque(100, PERCENT)
+        self.motorBackLeft.set_max_torque(100, PERCENT)
 
         self.driveVel = 100
         self.turnVel = 100
