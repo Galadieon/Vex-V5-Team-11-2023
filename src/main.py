@@ -764,6 +764,8 @@ class Odometry:
         self.resetOdomEncoders = False
         self.resetOdomPose = False
 
+        Thread(Robot.odometry.updatePose)
+
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
         LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
@@ -776,6 +778,9 @@ class Odometry:
         prevRightVal = 0  # previous encoder value for right wheel
         prevLeftVal = 0  # previous encoder value for left wheel
         prevAuxVal = 0  # previous encoder value for back whee
+
+        screenStartTime = brain.timer.time(MSEC)
+        screenUpdateInterval = 100
 
         self.threadIsRunning = True
 
@@ -818,6 +823,12 @@ class Odometry:
             self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
             self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
             self.Θ += dtheta
+
+            screenEndTime = brain.timer.time(MSEC)
+
+            if screenEndTime > screenStartTime + screenUpdateInterval:
+                screenStartTime = screenEndTime
+                myController.updateRow1()
 
             while brain.timer.time(MSEC) - start < 7.5:
                 continue
@@ -872,8 +883,6 @@ class MyController:
 
         self.registerEventHandlers()
 
-        Thread(self.screenLoop)
-
         Thread(self.controllerLoop)
 
     def controllerLoop(self):
@@ -897,19 +906,6 @@ class MyController:
                     Robot.drivetrain.stop()
 
             wait(10, MSEC)
-
-    def screenLoop(self):
-        while (True):
-            # self.controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
-            # self.controller.screen.next_row()
-            # self.controller.screen.print("Left Encoder: ", Robot.drivetrain.leftEncoder.value())
-            # self.controller.screen.next_row()
-            # self.controller.screen.print("Aux Encoder: ", Robot.drivetrain.auxEncoder.value())
-            # self.controller.screen.next_row()
-
-            self.updateRow1()
-
-            wait(100, MSEC)
 
     def updateRow1(self):
         # X: _ Y: _ Θ: _
@@ -1482,8 +1478,6 @@ def Driver_Control():
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
-
-Thread(Robot.odometry.updatePose)
 
 myController = MyController()
 
