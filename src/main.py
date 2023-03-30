@@ -764,7 +764,7 @@ class Odometry:
         self.resetOdomEncoders = False
         self.resetOdomPose = False
 
-        Thread(Robot.odometry.updatePose)
+        Thread(self.updatePose)
 
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
