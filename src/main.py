@@ -507,13 +507,15 @@ class AutoAlignShoot(AutoDrive):
                  thresholdY=0.25,
                  thresholdΘ=math.radians(1),
                  timeOut=5_000,
-                 wait=True):
+                 wait=True,
+                 discs=3):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
                          driveVel, turnVel, overrideAutoClear, thresholdX,
                          thresholdY, thresholdΘ, timeOut, wait)
 
         self.distance = distance
+        self.discs = discs
 
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = False
@@ -534,7 +536,7 @@ class AutoAlignShoot(AutoDrive):
 
         self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(3)
+        AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
         AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
