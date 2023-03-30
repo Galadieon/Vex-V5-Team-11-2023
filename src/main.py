@@ -872,7 +872,7 @@ class MyController:
 
         self.registerEventHandlers()
 
-        Thread(self.printToController)
+        Thread(self.screenLoop)
 
         Thread(self.controllerLoop)
 
@@ -898,7 +898,7 @@ class MyController:
 
             wait(10, MSEC)
 
-    def printToController(self):
+    def screenLoop(self):
         while (True):
             # self.controller.screen.print("Right Encoder: ", Robot.drivetrain.rightEncoder.value())
             # self.controller.screen.next_row()
@@ -907,29 +907,39 @@ class MyController:
             # self.controller.screen.print("Aux Encoder: ", Robot.drivetrain.auxEncoder.value())
             # self.controller.screen.next_row()
 
-            robotX, robotY, robotΘ = Robot.odometry.getPose()
-
-            fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
-
-            # X: _ Y: _ Θ: _
-            # FC: False MI: False
-            # FW D: Constants.TILE___1 FW V: 1,400
-
-            self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
-            self.controller.screen.next_row()
-
-            self.controller.screen.print("FC:", fineControl, "MI:",
-                                         self.manualIndexer)
-            self.controller.screen.next_row()
-
-            self.controller.screen.print("FW D:", Robot.flywheel.distance,
-                                         "FW V:", Robot.flywheel.flywheelVel)
-            self.controller.screen.next_row()
+            self.updateRow1()
 
             wait(100, MSEC)
 
-            self.controller.screen.clear_screen()
-            self.controller.screen.set_cursor(1, 1)
+    def updateRow1(self):
+        # X: _ Y: _ Θ: _
+        self.controller.screen.clear_row(1)
+        
+        self.controller.screen.set_cursor(1, 1)
+
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
+
+        self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
+
+    def updateRow2(self):
+        # D: 24 V: 4,200
+        self.controller.screen.clear_row(2)
+        
+        self.controller.screen.set_cursor(2, 1)
+
+        self.controller.screen.print("D:", Robot.flywheel.distance,
+                                     "V:", Robot.flywheel.flywheelVel)
+
+    def updateRow3(self):
+        # FC: False MI: False
+        self.controller.screen.clear_row(3)
+        
+        self.controller.screen.set_cursor(3, 1)
+
+        fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
+
+        self.controller.screen.print("FC:", fineControl,
+                                     "MI:", self.manualIndexer)
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
@@ -976,7 +986,6 @@ class MyController:
 
     def R1_Pressed(self):
         Robot.flywheel.toggleMotor()
-        print("MOTOR TOGGLED")
 
     def R2_Pressed(self):
         if self.toggleManualIndexer() == False:
@@ -1184,11 +1193,6 @@ class Flywheel:
             Constants.TILE___5: 4_200 * (3.0 / 4.0),                # 3,150
             Constants.TILE___6: 4_200 * (4.0 / 4.0)                 # 4,200
         }
-
-    def startSpin(self):
-        """get the flywheel motor to start & keep spinning"""
-        self.isRunning = True
-        self.motorGroup.spin(FORWARD, self.motorVel, RPM)
 
     def stop(self):
         self.isRunning = False
