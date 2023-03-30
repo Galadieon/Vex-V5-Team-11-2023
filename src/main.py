@@ -668,6 +668,7 @@ class RightAuto1:
             # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
 
             # intake on
+            AutoIntake(),
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
                       math.pi / 4, 70, 100),
             # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
@@ -676,6 +677,7 @@ class RightAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100, 100, True),
 
             # intake off
+            AutoIntake(),
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
