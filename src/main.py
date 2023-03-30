@@ -1268,7 +1268,7 @@ class Flywheel:
 
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
-            print(self.distance)
+            myController.updateRow2()
             self.setVelocity(self.velocityDict[self.distance])
 
     def setDistance(self, distance):
