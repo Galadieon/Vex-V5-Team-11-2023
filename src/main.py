@@ -190,7 +190,7 @@ class AutoIntake:
 
     stopAuto = False
 
-    def __init__(self, wait=True):
+    def __init__(self, wait=False):
         # TODO: add initialization code to run the first time object is created
         self.wait = wait
         AutoIntake.isRunning = False
@@ -200,7 +200,8 @@ class AutoIntake:
 
     def execute(self):
         AutoIntake.isRunning = True
-
+        Robot.intake.toggleMotor()
+        AutoIntake.isRunning = False
         # TODO: add code to run intake when command is executed
 
         AutoIntake.isRunning = False
@@ -208,7 +209,7 @@ class AutoIntake:
     def stop(self):
         AutoIntake.isRunning = False
         AutoIntake.stopAuto = True
-
+        # Robot.intake.stop()
         # TODO: add code to stop the physical flywheel
 
 
@@ -635,8 +636,10 @@ class LeftAuto1:
             AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
 
             # intake on
+            AutoIntake(),
             AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
                       100, True),
+
             AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, (5 * math.pi) / 4, 70,
                       100, True),
@@ -644,6 +647,7 @@ class LeftAuto1:
                       100, True),
 
             # intake off
+            AutoIntake(),
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
@@ -991,7 +995,8 @@ class MyController:
     """
 
     def X_Pressed(self):
-        self.printFWVelDict()
+        # self.printFWVelDict()
+        Robot.intake.reverseMotor()
 
     def A_Pressed(self):
         Robot.flywheel.increaseDistance()
@@ -1000,7 +1005,8 @@ class MyController:
         Robot.flywheel.decreaseDistance()
 
     def Y_Pressed(self):
-        AutoDrive().driveToOrigin()
+        # AutoDrive().driveToOrigin()
+        Robot.intake.toggleMotor()
 
     """
       ↑
@@ -1342,17 +1348,35 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.motor.set_max_torque(100, PERCENT)
+        self.isRunning = False
         # TODO: add initialization code
 
     # TODO: add any other helper methods
+    def startSpin(self):
+        self.isRunning = True
+        self.motor.spin(FORWARD)
+
+    def stopSpin(self):
+        self.isRunning = False
+        self.motor.stop()
 
     def toggleMotor(self, direction=FORWARD):
-        self.motor.spin(FORWARD)
+        if self.isRunning == True:
+            self.isRunning = False
+            self.motor.stop()
+        else:
+            self.isRunning = True
+            self.motor.spin(FORWARD)
         # TODO: add code to run/stop motor
-        pass
 
     def reverseMotor(self):
-        self.motor.spin(REVERSE)
+        if self.isRunning == True:
+            self.isRunning = False
+            self.motor.stop()
+        else:
+            self.isRunning = True
+            self.motor.spin(REVERSE)
         # TODO: add code to reverse motor in the event of jam
         pass
 
