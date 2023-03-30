@@ -927,8 +927,8 @@ class MyController:
         
         self.controller.screen.set_cursor(2, 1)
 
-        self.controller.screen.print("D:", Robot.flywheel.distance,
-                                     "V:", Robot.flywheel.flywheelVel)
+        self.controller.screen.print("FWD:", Robot.flywheel.distance,
+                                     "FWV:", Robot.flywheel.flywheelVel)
 
     def updateRow3(self):
         # FC: False MI: False
@@ -1045,6 +1045,7 @@ class MyController:
         elif Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL:
             Robot.drivetrain.set_turn_velocity(100)
             Robot.drivetrain.set_drive_velocity(100)
+        self.updateRow3()
 
     def toggleAuto(self):
         if RunCommands.isRunning == False:
@@ -1064,6 +1065,7 @@ class MyController:
         while self.controller.buttonR2.pressing():
             if brain.timer.time(MSEC) - start > 1_000:
                 self.manualIndexer = not self.manualIndexer
+                self.updateRow3()
                 return True
             wait(10, MSEC)
 
