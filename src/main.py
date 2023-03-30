@@ -729,136 +729,6 @@ class PID:
         return controlledValue
 
 
-class Odometry:
-    """
-    ### Odometry class - creates odometry object
-
-    This class is used to hold information about robot pose and quadrature encoders.
-
-    #### Arguments:
-        rightEncoder : The encoder on the right of robot
-        leftEncoder : The encoder on the left of robot
-        auxEncoder : The encoder on the auxillary ("back") side of robot
-
-    #### Returns:
-        A new Odometry object.
-
-    #### Examples:
-        odometry1 = Odometry(Constants.RIGHT_ENCODER,\\
-        Constants.LEFT_ENCODER,\\
-        Constants.AUX_ENCODER)
-    """
-
-    def __init__(self, rightEncoder, leftEncoder, auxEncoder):
-        self.x = Constants.TILE___1
-        self.y = 0
-        self.Θ = math.pi / 2
-
-        self.rightEncoder = rightEncoder
-        self.leftEncoder = leftEncoder
-        self.auxEncoder = auxEncoder
-
-        self.threadIsRunning = False
-        self.threadIsPaused = False
-
-        self.resetOdomEncoders = False
-        self.resetOdomPose = False
-
-        Thread(self.updatePose)
-
-    def updatePose(self):
-        inchsPerTick = Constants.INCHES_PER_TICK
-        LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
-        B_Distance = Constants.AUX_ODOMETRY_DISTANCE
-
-        currRightVal = 0  # current encoder value for right wheel
-        currLeftVal = 0  # current encoder value for left wheel
-        currAuxVal = 0  # current encoder value for back wheel
-
-        prevRightVal = 0  # previous encoder value for right wheel
-        prevLeftVal = 0  # previous encoder value for left wheel
-        prevAuxVal = 0  # previous encoder value for back whee
-
-        screenStartTime = brain.timer.time(MSEC)
-        screenUpdateInterval = 100
-
-        self.threadIsRunning = True
-
-        while (self.threadIsRunning):
-            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
-            if abs(self.x) > 1_000 or abs(self.y) > 1_000:
-                self.resetPose()
-                self.resetEncoders()
-
-            if self.resetOdomPose == True:
-                self.resetPose()
-
-            if self.resetOdomEncoders == True:
-                self.resetEncoders()
-
-            if self.threadIsPaused:
-                wait(1, MSEC)
-                continue
-
-            start = brain.timer.time(MSEC)
-
-            prevRightVal = currRightVal
-            prevLeftVal = currLeftVal
-            prevAuxVal = currAuxVal
-
-            currRightVal = self.rightEncoder.value()
-            currLeftVal = self.leftEncoder.value()
-            currAuxVal = self.auxEncoder.value()
-
-            dn2 = currRightVal - prevRightVal
-            dn1 = currLeftVal - prevLeftVal
-            dn3 = currAuxVal - prevAuxVal
-
-            dtheta = inchsPerTick * ((dn2 - dn1) / LR_Distance)
-            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
-            dy = inchsPerTick * (dn3 - ((dn2 - dn1) *
-                                        (B_Distance / LR_Distance)))
-
-            theta = self.Θ + (dtheta / 2.0)
-            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
-            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
-            self.Θ += dtheta
-
-            screenEndTime = brain.timer.time(MSEC)
-
-            if screenEndTime > screenStartTime + screenUpdateInterval:
-                screenStartTime = screenEndTime
-                myController.updateRow1()
-
-            while brain.timer.time(MSEC) - start < 7.5:
-                continue
-
-    def stop(self):
-        self.threadIsRunning = False
-
-    def getPose(self):
-        return self.x, self.y, self.Θ
-
-    def reset(self):
-        self.resetOdomPose = True
-        self.resetOdomEncoders = True
-
-    def resetPose(self):
-        self.setPose(Constants.TILE___1, 0, math.pi / 2)
-        self.resetOdomPose = False
-
-    def setPose(self, newX, newY, newΘ):
-        self.x = newX
-        self.y = newY
-        self.Θ = newΘ
-
-    def resetEncoders(self):
-        self.rightEncoder.set_position(0, DEGREES)
-        self.leftEncoder.set_position(0, DEGREES)
-        self.auxEncoder.set_position(0, DEGREES)
-        self.resetOdomEncoders = False
-
-
 class MyController:
     """
     ### MyController class - holds all controller features
@@ -1066,6 +936,136 @@ class MyController:
             wait(10, MSEC)
 
         return False
+
+
+class Odometry:
+    """
+    ### Odometry class - creates odometry object
+
+    This class is used to hold information about robot pose and quadrature encoders.
+
+    #### Arguments:
+        rightEncoder : The encoder on the right of robot
+        leftEncoder : The encoder on the left of robot
+        auxEncoder : The encoder on the auxillary ("back") side of robot
+
+    #### Returns:
+        A new Odometry object.
+
+    #### Examples:
+        odometry1 = Odometry(Constants.RIGHT_ENCODER,\\
+        Constants.LEFT_ENCODER,\\
+        Constants.AUX_ENCODER)
+    """
+
+    def __init__(self, rightEncoder, leftEncoder, auxEncoder):
+        self.x = Constants.TILE___1
+        self.y = 0
+        self.Θ = math.pi / 2
+
+        self.rightEncoder = rightEncoder
+        self.leftEncoder = leftEncoder
+        self.auxEncoder = auxEncoder
+
+        self.threadIsRunning = False
+        self.threadIsPaused = False
+
+        self.resetOdomEncoders = False
+        self.resetOdomPose = False
+
+        Thread(self.updatePose)
+
+    def updatePose(self):
+        inchsPerTick = Constants.INCHES_PER_TICK
+        LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
+        B_Distance = Constants.AUX_ODOMETRY_DISTANCE
+
+        currRightVal = 0  # current encoder value for right wheel
+        currLeftVal = 0  # current encoder value for left wheel
+        currAuxVal = 0  # current encoder value for back wheel
+
+        prevRightVal = 0  # previous encoder value for right wheel
+        prevLeftVal = 0  # previous encoder value for left wheel
+        prevAuxVal = 0  # previous encoder value for back whee
+
+        screenStartTime = brain.timer.time(MSEC)
+        screenUpdateInterval = 100
+
+        self.threadIsRunning = True
+
+        while (self.threadIsRunning):
+            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
+            if abs(self.x) > 1_000 or abs(self.y) > 1_000:
+                self.resetPose()
+                self.resetEncoders()
+
+            if self.resetOdomPose == True:
+                self.resetPose()
+
+            if self.resetOdomEncoders == True:
+                self.resetEncoders()
+
+            if self.threadIsPaused:
+                wait(1, MSEC)
+                continue
+
+            start = brain.timer.time(MSEC)
+
+            prevRightVal = currRightVal
+            prevLeftVal = currLeftVal
+            prevAuxVal = currAuxVal
+
+            currRightVal = self.rightEncoder.value()
+            currLeftVal = self.leftEncoder.value()
+            currAuxVal = self.auxEncoder.value()
+
+            dn2 = currRightVal - prevRightVal
+            dn1 = currLeftVal - prevLeftVal
+            dn3 = currAuxVal - prevAuxVal
+
+            dtheta = inchsPerTick * ((dn2 - dn1) / LR_Distance)
+            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = inchsPerTick * (dn3 - ((dn2 - dn1) *
+                                        (B_Distance / LR_Distance)))
+
+            theta = self.Θ + (dtheta / 2.0)
+            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.Θ += dtheta
+
+            screenEndTime = brain.timer.time(MSEC)
+
+            if screenEndTime > screenStartTime + screenUpdateInterval:
+                screenStartTime = screenEndTime
+                myController.updateRow1()
+
+            while brain.timer.time(MSEC) - start < 7.5:
+                continue
+
+    def stop(self):
+        self.threadIsRunning = False
+
+    def getPose(self):
+        return self.x, self.y, self.Θ
+
+    def reset(self):
+        self.resetOdomPose = True
+        self.resetOdomEncoders = True
+
+    def resetPose(self):
+        self.setPose(Constants.TILE___1, 0, math.pi / 2)
+        self.resetOdomPose = False
+
+    def setPose(self, newX, newY, newΘ):
+        self.x = newX
+        self.y = newY
+        self.Θ = newΘ
+
+    def resetEncoders(self):
+        self.rightEncoder.set_position(0, DEGREES)
+        self.leftEncoder.set_position(0, DEGREES)
+        self.auxEncoder.set_position(0, DEGREES)
+        self.resetOdomEncoders = False
 
 
 # -------------------------------SUBSYSTEMS------------------------------
