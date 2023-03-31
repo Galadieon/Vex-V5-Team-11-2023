@@ -113,9 +113,9 @@ class Constants:
     ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
     INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
-    FLYWHEEL_KP = 1
-    FLYWHEEL_KI = 0
-    FLYWHEEL_KD = 0
+    FLYWHEEL_KP = 1.0
+    FLYWHEEL_KI = 0.0
+    FLYWHEEL_KD = 0.0
     FLYWHEEL_GEAR_RATIO = 84 / 12  # max for motor: 600 RPM, max for flywheel: 4,200 RPM
     SIDE_SHOT = 0.0
     MID_SHOT = 1.0
@@ -1168,7 +1168,7 @@ class Flywheel:
         # self.motorGroup = MotorGroup(*[motors])
         self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, False)
 
-        self.flywheelPID = PID(Kp=1)
+        self.flywheelPID = PID(Constants.FLYWHEEL_KP, Constants.FLYWHEEL_KI, Constants.FLYWHEEL_KD)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
@@ -1208,6 +1208,11 @@ class Flywheel:
             self.isRunning = True
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
             print("MOTOR SPINNING")
+
+    def controlLoop(self):
+        while True:
+            self.motorGroup.spin(FORWARD, self.flywheelPID.update(self.flywheelVel, self.), VOLT)
+            wait(10, MSEC)
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
