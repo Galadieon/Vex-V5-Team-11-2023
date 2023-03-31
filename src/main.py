@@ -1197,8 +1197,11 @@ class Flywheel:
         }
 
     def stop(self):
-        self.isRunning = False
-        self.motorGroup.stop()
+        if self.isRunning:
+            self.isRunning = False
+            self.motorGroup.stop()
+        else:
+            print("Flywheel already stopped")
 
     def calcMotorVel(self, flywheelVel):
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
