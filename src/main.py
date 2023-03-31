@@ -434,9 +434,9 @@ class AutoDrive:
         return False
 
     def updatePID(self, deltaX, deltaY, deltaΘ):
-        forward = self.forwardPID.update(deltaY, 0.0)
-        strafe = self.strafePID.update(deltaX, 0.0)
-        turn = self.turnPID.update(deltaΘ, 0.0)
+        forward = self.forwardPID.update(deltaY, 0.0, PERCENT)
+        strafe = self.strafePID.update(deltaX, 0.0, PERCENT)
+        turn = self.turnPID.update(deltaΘ, 0.0, PERCENT)
 
         # limits max speed, everything else same
         if abs(forward) > self.driveVel:
@@ -711,7 +711,7 @@ class PID:
         self.previousError = 0.0
         self.integral = 0.0
 
-    def update(self, target, current):
+    def update(self, target, current, unit=PERCENT):
         error = target - current
 
         self.integral += error
@@ -723,8 +723,12 @@ class PID:
         controlledValue = (self.Kp * error) + (self.Ki * self.integral) + (
             self.Kd * derivative)
 
-        if controlledValue > 100: controlledValue = 100
-        if controlledValue < -100: controlledValue = -100
+        if unit == PERCENT:
+            if controlledValue > 100: controlledValue = 100
+            if controlledValue < -100: controlledValue = -100
+        if unit == VOLT:
+            if controlledValue > 12: controlledValue = 12
+            if controlledValue < -12: controlledValue = -12
 
         return controlledValue
 
@@ -1201,17 +1205,20 @@ class Flywheel:
 
     def toggleMotor(self):
         if self.isRunning == True:
-            self.isRunning = False
+            self.stop()
             print("MOTOR STOPPED")
-            self.motorGroup.stop()
         else:
-            self.isRunning = True
-            self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+            self.controlLoop()
             print("MOTOR SPINNING")
 
     def controlLoop(self):
+        self.isRunning = True
+        
         while True:
-            self.motorGroup.spin(FORWARD, self.flywheelPID.update(self.flywheelVel, self.), VOLT)
+            if not self.isRunning:
+                return
+            controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
+            self.motorGroup.spin(FORWARD, controlledValue, VOLT)
             wait(10, MSEC)
 
     def isAtSetVel(self):
@@ -1286,7 +1293,7 @@ class Flywheel:
     def setVelocity(self, flywheelVel):
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
-        self.motorGroup.set_velocity(self.motorVel, RPM)
+        self.controlLoop()
 
 
 class Indexer:
