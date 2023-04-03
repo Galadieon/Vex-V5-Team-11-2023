@@ -113,7 +113,7 @@ class Constants:
     ODOMETRY_CIRCUMFERENCE = math.pi * ODOMETRY_DIAMETER
     INCHES_PER_TICK = ODOMETRY_CIRCUMFERENCE / QUADRATURE_ENCODER_TICKS
 
-    FLYWHEEL_KP = 1.0
+    FLYWHEEL_KP = 0.05
     FLYWHEEL_KI = 0.0
     FLYWHEEL_KD = 0.0
     FLYWHEEL_GEAR_RATIO = 84 / 12  # max for motor: 600 RPM, max for flywheel: 4,200 RPM
@@ -684,72 +684,72 @@ class RightAuto1:
 # -------------------------------UTILITIES-------------------------------
 
 
-class Graph:
-    """
-    Converted to Python from C++:
-    https://www.vexforum.com/t/graphing-on-the-v5-screen/78221
-    """
+# class Graph:
+#     """
+#     Converted to Python from C++:
+#     https://www.vexforum.com/t/graphing-on-the-v5-screen/78221
+#     """
 
-    NUM_POINTS = 480 # pixel width of brain screen
+#     NUM_POINTS = 480 # pixel width of brain screen
 
-    def __init__(self, lines, originX, originY):
-        self.points = list()
-        self.originX = originX
-        self.originY = originY
+#     def __init__(self, lines, originX, originY):
+#         self.points = list()
+#         self.originX = originX
+#         self.originY = originY
 
-        class Points:
-            def __init__(self, screen):
-                self.points = list(range(Graph.NUM_POINTS))
-                self.screen = screen
-                self.color  = Color.WHITE
+#         class Points:
+#             def __init__(self, screen):
+#                 self.points = list(range(Graph.NUM_POINTS))
+#                 self.screen = screen
+#                 self.color  = Color.WHITE
             
-            def draw(self):
-                self.screen.set_pen_color(self.color)
-                for x in range(Graph.NUM_POINTS - 1):
-                    self.screen.draw_line(x, self.points[x], x + 1, self.points[x + 1])
-                    self.screen.draw_circle(x, self.points[x], 2, self.color)
+#             def draw(self):
+#                 self.screen.set_pen_color(self.color)
+#                 for x in range(Graph.NUM_POINTS - 1):
+#                     self.screen.draw_line(x, self.points[x], x + 1, self.points[x + 1])
+#                     self.screen.draw_circle(x, self.points[x], 2, self.color)
 
-            def addPoints(self, val):
-                for i in range(Graph.NUM_POINTS):
-                    self.points[i] = self.points[i + 1]
+#             def addPoints(self, val):
+#                 for i in range(Graph.NUM_POINTS):
+#                     self.points[i] = self.points[i + 1]
                 
-                self.points[Graph.NUM_POINTS - 1] = val
+#                 self.points[Graph.NUM_POINTS - 1] = val
             
-            def setColor(self, color):
-                self.color = color
+#             def setColor(self, color):
+#                 self.color = color
         
-        for i in range(lines):
-            self.points.append(Points(brain.screen))
+#         for i in range(lines):
+#             self.points.append(Points(brain.screen))
 
-            Thread(self.render)
+#             Thread(self.render)
     
-    def render(self):
-        while True:
-            self.draw()
+#     def render(self):
+#         while True:
+#             self.draw()
 
-    def drawAxis(self):
-        brain.screen.set_pen_color(Color.WHITE)
-        brain.screen.draw_line(self.originX, 0, self.originX, 240)
-        brain.screen.draw_line(0, self.originY, 480, self.originY)
+#     def drawAxis(self):
+#         brain.screen.set_pen_color(Color.WHITE)
+#         brain.screen.draw_line(self.originX, 0, self.originX, 240)
+#         brain.screen.draw_line(0, self.originY, 480, self.originY)
 
-        for x in range(480):
-            brain.screen.draw_line(x, self.originY + 5, x, self.originY - 5)
-        for y in range(240):
-            brain.screen.draw_line(self.originX + 5, y, self.originX - 5, y)
+#         for x in range(480):
+#             brain.screen.draw_line(x, self.originY + 5, x, self.originY - 5)
+#         for y in range(240):
+#             brain.screen.draw_line(self.originX + 5, y, self.originX - 5, y)
     
-    def draw(self):
-        brain.screen.clear_screen()
-        self.drawAxis()
-        for id in range(len(self.points)): self.points[id].draw()
-        brain.screen.render()
+#     def draw(self):
+#         brain.screen.clear_screen()
+#         self.drawAxis()
+#         for id in range(len(self.points)): self.points[id].draw()
+#         brain.screen.render()
     
-    def addPoint(self, id, val):
-        if id < len(self.points):
-            self.points[id].addPoint(val + self.originY)
+#     def addPoint(self, id, val):
+#         if id < len(self.points):
+#             self.points[id].addPoint(val + self.originY)
     
-    def setColor(self, id, color):
-        if id < len(self.points):
-            self.points[id].setColor(color)
+#     def setColor(self, id, color):
+#         if id < len(self.points):
+#             self.points[id].setColor(color)
 
 
 class PID:
@@ -851,15 +851,15 @@ class MyController:
 
             wait(10, MSEC)
 
-    def updateRow1(self):
-        # X: _ Y: _ Θ: _
-        self.controller.screen.clear_row(1)
+    # def updateRow1(self):
+    #     # X: _ Y: _ Θ: _
+    #     self.controller.screen.clear_row(1)
         
-        self.controller.screen.set_cursor(1, 1)
+    #     self.controller.screen.set_cursor(1, 1)
 
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
+    #     robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-        self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
+    #     self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
 
     def updateRow2(self):
         # D: 24 V: 4,200
@@ -1111,7 +1111,7 @@ class Odometry:
 
             if screenEndTime > screenStartTime + screenUpdateInterval:
                 screenStartTime = screenEndTime
-                myController.updateRow1()
+                # myController.updateRow1()
 
             while brain.timer.time(MSEC) - start < 7.5:
                 continue
@@ -1248,7 +1248,7 @@ class Flywheel:
         self.motorVel = self.calcMotorVel(self.flywheelVel)
 
         self.isRunning = False
-        self.stopRunning = False
+        self.stopRunning = True
 
         self.distance = Constants.TILE___1
 
@@ -1279,20 +1279,21 @@ class Flywheel:
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
-        if self.isRunning == True:
-            self.stop()
-            print("MOTOR STOPPED")
-        else:
+        if not self.isRunning and self.stopRunning:
+            self.isRunning = True
+            self.stopRunning = False
             Thread(self.controlLoop)
             print("MOTOR SPINNING")
+        else:
+            self.stop()
+            print("MOTOR STOPPED")
 
     def controlLoop(self):
-        self.isRunning = True
-        self.stopRunning = False
-        
         while True:
+            print("Flywheel Thread Running")
+
             if self.stopRunning:
-                return
+                break
             
             controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
             self.motorGroup.spin(FORWARD, controlledValue, VOLT)
@@ -1370,7 +1371,6 @@ class Flywheel:
     def setVelocity(self, flywheelVel):
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
-        self.controlLoop()
 
 
 class Indexer:
