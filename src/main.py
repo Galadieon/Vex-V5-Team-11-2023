@@ -1283,7 +1283,7 @@ class Flywheel:
             self.stop()
             print("MOTOR STOPPED")
         else:
-            self.controlLoop()
+            Thread(self.controlLoop)
             print("MOTOR SPINNING")
 
     def controlLoop(self):
