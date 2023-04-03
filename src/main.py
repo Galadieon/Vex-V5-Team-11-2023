@@ -633,14 +633,14 @@ class LeftAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            # AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
 
             # intake on
             AutoIntake(),
             AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
                       100, True),
 
-            AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            # AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, (5 * math.pi) / 4, 70,
                       100, True),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
@@ -651,7 +651,7 @@ class LeftAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            # AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
         )
 
 
@@ -1008,7 +1008,7 @@ class MyController:
 
     def Y_Pressed(self):
         # AutoDrive().driveToOrigin()
-        Robot.intake.toggleMotor()
+        self.toggleReverseIntake()
 
     """
       ↑
@@ -1016,8 +1016,18 @@ class MyController:
       ↓
     """
 
-    def Up_Pressed(self):
-        self.toggleAuto()
+#def Up_Pressed(self):
+     #self.toggleAuto()
+
+    def toggleMecanumDriveTrain(self):
+        Robot.drivetrain.changeDirection()
+        while self.controller.buttonUp.pressing():
+             brain.timer.time(MSEC) - start > 1_000:
+             return
+        if MecanumDriveTrain.drive.isrunning:
+            MecanumDriveTrain.drive.changeDirection()
+        else:
+            MecanumDriveTrain.drive.toggleMotor()
 
     def Right_Pressed(self):
         self.changeDriveTrainVel()
@@ -1066,6 +1076,19 @@ class MyController:
 
         return False
 
+    def toggleReverseIntake(self):
+        start = brain.timer.time(MSEC)
+
+        while self.controller.buttonY.pressing():
+            if brain.timer.time(MSEC) - start > 1_000:
+                Robot.intake.reverseMotor()
+                return
+            if Robot.intake.isRunning:
+                Robot.intake.stopSpin()
+            else:
+                Robot.intake.toggleMotor()
+            
+
 
 # -------------------------------SUBSYSTEMS------------------------------
 
@@ -1102,10 +1125,18 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
 
+        self.fwForward = True
+
     def drive(self, forward, strafe, turn):
-        forward = -forward
-        strafe = -strafe
-        turn = -turn
+        if self.changeDirection:
+            forward = -forward
+            strafe = -strafe
+            turn = -turn
+        else:
+            forward = forward
+            strafe = strafe
+            turn = turn
+
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
         self.motorBackRight.set_velocity(forward + strafe - turn, PERCENT)
@@ -1115,6 +1146,8 @@ class MecanumDriveTrain:
         self.motorFrontRight.spin(FORWARD)
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
+
+    def changeDirection(self):
 
     def set_drive_velocity(self, velocity):
         """ #### Assume Percent """
@@ -1380,7 +1413,7 @@ class Intake:
             self.isRunning = True
             self.motor.spin(REVERSE)
         # TODO: add code to reverse motor in the event of jam
-        pass
+    pass
 
 
 class Roller:
