@@ -684,6 +684,69 @@ class RightAuto1:
 # -------------------------------UTILITIES-------------------------------
 
 
+class Graph:
+    NUM_POINTS = 480 # pixel width of brain screen
+
+    def __init__(self, lines, originX, originY):
+        self.points = list()
+        self.originX = originX
+        self.originY = originY
+
+        class Points:
+            def __init__(self, screen):
+                self.points = list(range(Graph.NUM_POINTS))
+                self.screen = screen
+                self.color  = Color.WHITE
+            
+            def draw(self):
+                self.screen.set_pen_color(self.color)
+                for x in range(Graph.NUM_POINTS - 1):
+                    self.screen.draw_line(x, self.points[x], x + 1, self.points[x + 1])
+                    self.screen.draw_circle(x, self.points[x], 2, self.color)
+
+            def addPoints(self, val):
+                for i in range(Graph.NUM_POINTS):
+                    self.points[i] = self.points[i + 1]
+                
+                self.points[Graph.NUM_POINTS - 1] = val
+            
+            def setColor(self, color):
+                self.color = color
+        
+        for i in range(lines):
+            self.points.append(Points(brain.screen))
+
+            Thread(self.render)
+    
+    def render(self):
+        while True:
+            self.draw()
+
+    def drawAxis(self):
+        brain.screen.set_pen_color(Color.WHITE)
+        brain.screen.draw_line(self.originX, 0, self.originX, 240)
+        brain.screen.draw_line(0, self.originY, 480, self.originY)
+
+        for x in range(480):
+            brain.screen.draw_line(x, self.originY + 5, x, self.originY - 5)
+        for y in range(240):
+            brain.screen.draw_line(self.originX + 5, y, self.originX - 5, y)
+    
+    def draw(self):
+        brain.screen.clear_screen()
+        self.drawAxis()
+        for id in range(len(self.points)): self.points[id].draw()
+        brain.screen.render()
+    
+    def addPoint(self, id, val):
+        if id < len(self.points):
+            self.points[id].addPoint(val + self.originY)
+    
+    def setColor(self, id, color):
+        if id < len(self.points):
+            self.points[id].setColor(color)
+
+
 class PID:
     """
     ### PID class - create PID controller
@@ -711,9 +774,9 @@ class PID:
         self.previousError = 0.0
         self.integral = 0.0
 
-    def update(self, target, current, unit=PERCENT):
+    def update(self, target, current, unit):
         error = target - current
-
+        
         self.integral += error
         if abs(error) < 0.5 or abs(error) > 5.0: self.integral = 0.0
 
@@ -726,9 +789,11 @@ class PID:
         if unit == PERCENT:
             if controlledValue > 100: controlledValue = 100
             if controlledValue < -100: controlledValue = -100
-        if unit == VOLT:
+        elif unit == VOLT:
             if controlledValue > 12: controlledValue = 12
             if controlledValue < -12: controlledValue = -12
+        else:
+            print("WRONG UNITS")
 
         return controlledValue
 
@@ -1178,6 +1243,7 @@ class Flywheel:
         self.motorVel = self.calcMotorVel(self.flywheelVel)
 
         self.isRunning = False
+        self.stopRunning = False
 
         self.distance = Constants.TILE___1
 
@@ -1197,8 +1263,9 @@ class Flywheel:
         }
 
     def stop(self):
-        if self.isRunning:
+        if self.isRunning and not self.stopRunning:
             self.isRunning = False
+            self.stopRunning = True
             self.motorGroup.stop()
         else:
             print("Flywheel already stopped")
@@ -1216,10 +1283,12 @@ class Flywheel:
 
     def controlLoop(self):
         self.isRunning = True
+        self.stopRunning = False
         
         while True:
-            if not self.isRunning:
+            if self.stopRunning:
                 return
+            
             controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
             self.motorGroup.spin(FORWARD, controlledValue, VOLT)
             wait(10, MSEC)
