@@ -685,6 +685,11 @@ class RightAuto1:
 
 
 class Graph:
+    """
+    Converted to Python from C++:
+    https://www.vexforum.com/t/graphing-on-the-v5-screen/78221
+    """
+
     NUM_POINTS = 480 # pixel width of brain screen
 
     def __init__(self, lines, originX, originY):
