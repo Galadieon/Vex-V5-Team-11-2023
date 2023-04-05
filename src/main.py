@@ -153,7 +153,7 @@ class AutoFlywheel:
         AutoFlywheel.thread = Thread(self.run)
         AutoFlywheel.thread.stop()
 
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
         self.run()
@@ -199,7 +199,7 @@ class AutoIntake:
         AutoIntake.thread = Thread(self.run)
         AutoIntake.thread.stop()
 
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     # TODO: add any other helper methods
 
@@ -250,7 +250,7 @@ class AutoIndexer:
         AutoIndexer.thread = Thread(self.run)
         AutoIndexer.thread.stop()
 
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
         self.run()
@@ -302,7 +302,7 @@ class AutoRoller:
         AutoRoller.thread = Thread(self.run)
         AutoRoller.thread.stop()
 
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
         self.run()
@@ -386,7 +386,7 @@ class AutoDrive:
         AutoDrive.thread = Thread(self.run)
         AutoDrive.thread.stop()
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
         if self.wait:
@@ -553,7 +553,7 @@ class AutoAlignShoot(AutoDrive):
         AutoAlignShoot.autoFlywheel = None
         AutoAlignShoot.autoIndexer = None
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
@@ -635,7 +635,7 @@ class RunCommands:
 class TestMode:
 
     def __init__(self):
-        print(self.__class__.__name__, "Running")
+        printDB(self.__class__.__name__, "Running")
         
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
@@ -658,7 +658,7 @@ class TestMode:
 class LeftAuto1:
 
     def __init__(self):
-        print(self.__class__.__name__, "Running")
+        printDB(self.__class__.__name__, "Running")
         
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
@@ -688,7 +688,7 @@ class LeftAuto1:
 class RightAuto1:
 
     def __init__(self):
-        print(self.__class__.__name__, "Running")
+        printDB(self.__class__.__name__, "Running")
         
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
@@ -716,6 +716,10 @@ class RightAuto1:
 
 
 # -------------------------------UTILITIES-------------------------------
+
+
+def printDB(*arg):
+    print(*arg)
 
 
 # class Graph:
@@ -813,7 +817,7 @@ class PID:
         self.previousError = 0.0
         self.integral = 0.0
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def update(self, target, current, unit):
         error = target - current
@@ -865,7 +869,7 @@ class MyController:
 
         self.controllerThread = Thread(self.controllerLoop)
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def controllerLoop(self):
         deadZoneVal = self.axisCurve(0.1)
@@ -1081,10 +1085,10 @@ class Odometry:
 
         self.thread = Thread(self.updatePose)
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def updatePose(self):
-        print(self.__class__.__name__, "Running")
+        printDB(self.__class__.__name__, "Running")
         
         inchsPerTick = Constants.INCHES_PER_TICK
         LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
@@ -1142,7 +1146,7 @@ class Odometry:
     def stop(self):
         self.thread.stop()
         
-        print(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped")
 
     def getPose(self):
         return self.x, self.y, self.Θ
@@ -1204,7 +1208,7 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def drive(self, forward, strafe, turn):
         forward = -forward
@@ -1292,7 +1296,7 @@ class Flywheel:
             Constants.TILE___6: 4_200 * (4.0 / 4.0)                 # 4,200
         }
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def calcMotorVel(self, flywheelVel):
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
@@ -1301,7 +1305,7 @@ class Flywheel:
         if not self.isRunning:
             self.isRunning = True
             self.thread = Thread(self.run)
-            print(self.__class__.__name__, "Running")
+            printDB(self.__class__.__name__, "Running")
         else:
             self.stop()
 
@@ -1322,7 +1326,7 @@ class Flywheel:
         else:
             print("Flywheel already stopped")
         
-        print(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped")
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
@@ -1426,7 +1430,7 @@ class Indexer:
         # calculate the total degrees the motor turns to complete 1 cycle
         self.degreesPerCycle = Constants.INDEXER_CHAIN_LINKS * self.degreesPerTeeth
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -1448,7 +1452,7 @@ class Indexer:
     def stop(self):
         self.motor.stop()
         
-        print(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class Intake:
@@ -1471,7 +1475,7 @@ class Intake:
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
         # TODO: add initialization code
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     # TODO: add any other helper methods
 
@@ -1483,7 +1487,7 @@ class Intake:
     def stop(self):
         self.motor.stop()
         
-        print(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped")
 
     def reverseMotor(self):
         self.motor.spin(REVERSE)
@@ -1507,7 +1511,7 @@ class Roller:
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
         self.wait = wait
         
-        print(self.__class__.__name__, "Initialized")
+        printDB(self.__class__.__name__, "Initialized")
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
@@ -1520,7 +1524,7 @@ class Roller:
     def stop(self):
         self.motor.stop()
         
-        print(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped")
 
 
 # ---------------------------------ROBOT--------------------------------
