@@ -262,6 +262,7 @@ class AutoIndexer:
     def stop():
         if AutoIndexer.isRunning:
             AutoIndexer.thread.stop()
+            wait(50, MSEC)
             Robot.indexer.stop()
             AutoIndexer.isRunning = False
 
@@ -307,6 +308,7 @@ class AutoRoller:
     def stop():
         if AutoRoller.isRunning:
             AutoRoller.thread.stop()
+            wait(50, MSEC)
             Robot.roller.stop()
             AutoRoller.isRunning = False
 
@@ -411,6 +413,7 @@ class AutoDrive:
     def stop():
         if AutoDrive.isRunning:
             AutoDrive.thread.stop()
+            wait(50, MSEC)
             Robot.drivetrain.stop()
             AutoDrive.isRunning = False
 
@@ -565,6 +568,7 @@ class AutoAlignShoot(AutoDrive):
     def stop():
         if AutoAlignShoot.isRunning:
             super().stop()
+            wait(50, MSEC)
             if AutoAlignShoot.autoFlywheel != None:
                 AutoAlignShoot.autoFlywheel.stop()
             if AutoAlignShoot.autoIndexer != None:
@@ -1236,8 +1240,9 @@ class Flywheel:
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
+        
         self.isRunning = False
-        self.thread = Thread(self.controlLoop)
+        self.thread = Thread(self.run)
         self.thread.stop()
 
         self.distance = Constants.TILE___1
@@ -1257,34 +1262,34 @@ class Flywheel:
             Constants.TILE___6: 4_200 * (4.0 / 4.0)                 # 4,200
         }
 
-    def stop(self):
-        if self.isRunning:
-            self.isRunning = False
-            self.thread.stop()
-            wait(100, MSEC)
-            self.motorGroup.stop()
-        else:
-            print("Flywheel already stopped")
-
     def calcMotorVel(self, flywheelVel):
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
         if not self.isRunning:
             self.isRunning = True
-            self.thread = Thread(self.controlLoop)
+            self.thread = Thread(self.run)
             print("MOTOR SPINNING")
         else:
             self.stop()
             print("MOTOR STOPPED")
 
-    def controlLoop(self):
+    def run(self):
         while True:
             print("Flywheel Thread Running")
             
             controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
             self.motorGroup.spin(FORWARD, controlledValue, VOLT)
             wait(10, MSEC)
+
+    def stop(self):
+        if self.isRunning:
+            self.thread.stop()
+            wait(50, MSEC)
+            self.motorGroup.stop()
+            self.isRunning = False
+        else:
+            print("Flywheel already stopped")
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
