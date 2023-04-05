@@ -165,10 +165,10 @@ class AutoFlywheel:
     @staticmethod
     def stop():
         if AutoFlywheel.isRunning:
+            AutoFlywheel.isRunning = False
             AutoFlywheel.thread.stop()
             wait(50, MSEC)
             Robot.flywheel.stop()
-            AutoFlywheel.isRunning = False
 
 
 class AutoIntake:
@@ -212,10 +212,10 @@ class AutoIntake:
     @staticmethod
     def stop():
         if AutoIntake.isRunning:
+            AutoIntake.isRunning = False
             AutoIntake.thread.stop()
             wait(50, MSEC)
             Robot.intake.stop()
-            AutoIntake.isRunning = False
 
         # TODO: add code to stop the physical flywheel
 
@@ -263,10 +263,10 @@ class AutoIndexer:
     @staticmethod
     def stop():
         if AutoIndexer.isRunning:
+            AutoIndexer.isRunning = False
             AutoIndexer.thread.stop()
             wait(50, MSEC)
             Robot.indexer.stop()
-            AutoIndexer.isRunning = False
 
 
 class AutoRoller:
@@ -309,10 +309,10 @@ class AutoRoller:
     @staticmethod
     def stop():
         if AutoRoller.isRunning:
+            AutoRoller.isRunning = False
             AutoRoller.thread.stop()
             wait(50, MSEC)
             Robot.roller.stop()
-            AutoRoller.isRunning = False
 
 
 class AutoDrive:
@@ -414,10 +414,10 @@ class AutoDrive:
     @staticmethod
     def stop():
         if AutoDrive.isRunning:
+            AutoDrive.isRunning = False
             AutoDrive.thread.stop()
             wait(50, MSEC)
             Robot.drivetrain.stop()
-            AutoDrive.isRunning = False
 
     def driveToOrigin(self):
         self.xTarget = Constants.TILE___1
@@ -567,13 +567,13 @@ class AutoAlignShoot(AutoDrive):
     @staticmethod
     def stop():
         if AutoAlignShoot.isRunning:
+            AutoAlignShoot.isRunning = False
             super().stop()
             wait(50, MSEC)
             if AutoAlignShoot.autoFlywheel != None:
                 AutoAlignShoot.autoFlywheel.stop()
             if AutoAlignShoot.autoIndexer != None:
                 AutoAlignShoot.autoIndexer.stop()
-            AutoAlignShoot.isRunning = False
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -606,6 +606,7 @@ class RunCommands:
     @staticmethod
     def stopAll():
         if RunCommands.isRunning == True:
+            RunCommands.isRunning = False
             RunCommands.thread.stop()
             AutoDrive.stop()
             AutoAlignShoot.stop()
@@ -613,7 +614,6 @@ class RunCommands:
             AutoIndexer.stop()
             AutoIntake.stop()
             AutoRoller.stop()
-            RunCommands.isRunning = False
 
     @staticmethod
     def sleep_for(time, unit=MSEC):
@@ -1284,10 +1284,10 @@ class Flywheel:
 
     def stop(self):
         if self.isRunning:
+            self.isRunning = False
             self.thread.stop()
             wait(50, MSEC)
             self.motorGroup.stop()
-            self.isRunning = False
         else:
             print("Flywheel already stopped")
 
