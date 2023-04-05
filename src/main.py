@@ -146,27 +146,28 @@ class AutoFlywheel:
 
     isRunning = False
 
-    stopAuto = False
-
     def __init__(self, distance=Constants.SIDE_SHOT):
         self.distance = distance
 
         AutoFlywheel.isRunning = False
-        AutoFlywheel.stopAuto = False
+        AutoFlywheel.thread = Thread(AutoFlywheel.run)
+        AutoFlywheel.thread.stop()
 
     def execute(self):
+        self.run()
+
+    def run(self):
         AutoFlywheel.isRunning = True
         Robot.flywheel.setDistance(self.distance)
         Robot.flywheel.toggleMotor()
         AutoFlywheel.isRunning = False
 
-    def stop(self):
-        AutoFlywheel.isRunning = False
-        AutoFlywheel.stopAuto = True
-        Robot.flywheel.stop()
-
-    def run(self):
-        pass
+    @staticmethod
+    def stop():
+        if AutoFlywheel.isRunning:
+            AutoFlywheel.thread.stop()
+            Robot.flywheel.stop()
+            AutoFlywheel.isRunning = False
 
 
 class AutoIntake:
@@ -188,26 +189,31 @@ class AutoIntake:
 
     isRunning = False
 
-    stopAuto = False
-
     def __init__(self, wait=True):
         # TODO: add initialization code to run the first time object is created
         self.wait = wait
         AutoIntake.isRunning = False
-        AutoIntake.stopAuto = False
+        AutoIntake.thread = Thread(AutoIntake.run)
+        AutoIntake.thread.stop()
 
     # TODO: add any other helper methods
 
     def execute(self):
+        self.run()
+    
+    def run(self):
         AutoIntake.isRunning = True
 
         # TODO: add code to run intake when command is executed
 
         AutoIntake.isRunning = False
 
-    def stop(self):
-        AutoIntake.isRunning = False
-        AutoIntake.stopAuto = True
+    @staticmethod
+    def stop():
+        if AutoIntake.isRunning:
+            AutoIntake.thread.stop()
+            Robot.intake.stop()
+            AutoIntake.isRunning = False
 
         # TODO: add code to stop the physical flywheel
 
@@ -231,21 +237,20 @@ class AutoIndexer:
 
     isRunning = False
 
-    stopAuto = False
-
     def __init__(self, numDisc=3):
         self.numDisc = numDisc
 
         AutoIndexer.isRunning = False
-        AutoIndexer.stopAuto = False
+        AutoIndexer.thread = Thread(self.run)
+        AutoIndexer.thread.stop()
 
     def execute(self):
+        self.run()
+    
+    def run(self):
         AutoIndexer.isRunning = True
 
         while self.numDisc > 0:
-            if AutoIndexer.stopAuto == True:
-                Robot.indexer.stop()
-                break
             pushed = Robot.indexer.autoPush()
 
             if pushed:
@@ -253,10 +258,12 @@ class AutoIndexer:
 
         AutoIndexer.isRunning = False
 
-    def stop(self):
-        self.isRunning = False
-        self.stopAuto = True
-        Robot.indexer.stop()
+    @staticmethod
+    def stop():
+        if AutoIndexer.isRunning:
+            AutoIndexer.thread.stop()
+            Robot.indexer.stop()
+            AutoIndexer.isRunning = False
 
 
 class AutoRoller:
@@ -278,23 +285,30 @@ class AutoRoller:
 
     isRunning = False
 
-    stopAuto = False
-
     def __init__(self, degreesToTurn=90, wait=True):
         self.degreesToTurn = degreesToTurn
         self.wait = wait
 
         AutoRoller.isRunning = False
-        AutoRoller.stopAuto = False
+        AutoRoller.thread = Thread(AutoRoller.run)
+        AutoRoller.thread.stop()
 
     def execute(self):
-        """Run the roller to spin how many degrees"""
+        self.run()
+    
+    def run(self):
         AutoRoller.isRunning = True
 
         Robot.roller.flip(FORWARD, self.degreesToTurn, self.wait)
 
         AutoRoller.isRunning = False
-        AutoRoller.stopAuto = True
+    
+    @staticmethod
+    def stop():
+        if AutoRoller.isRunning:
+            AutoRoller.thread.stop()
+            Robot.roller.stop()
+            AutoRoller.isRunning = False
 
 
 class AutoDrive:
@@ -320,8 +334,6 @@ class AutoDrive:
 
     isRunning = False
 
-    stopAuto = False
-
     def __init__(self,
                  xTarget=0.0,
                  yTarget=0.0,
@@ -346,7 +358,6 @@ class AutoDrive:
         self.timeOut = timeOut
         self.wait = wait
 
-        self.thread = None
         self.maintainPos = False
 
         self.forwardPID = PID(Kp=Constants.DRIVETRAIN_FORWARD_KP,
@@ -360,13 +371,14 @@ class AutoDrive:
                            Kd=Constants.DRIVETRAIN_TURN_KD)
 
         AutoDrive.isRunning = False
-        AutoDrive.stopAuto = False
+        AutoDrive.thread = Thread(AutoDrive.run)
+        AutoDrive.thread.stop()
 
     def execute(self):
         if self.wait:
             self.run()
         else:
-            self.thread = Thread(self.run)
+            self.thread = Thread(AutoDrive.run)
 
     def run(self):
         AutoDrive.isRunning = True
@@ -376,11 +388,6 @@ class AutoDrive:
         start = brain.timer.time(MSEC)
 
         while not atTarget:
-            if AutoDrive.stopAuto:
-                print("STOPPED DRIVE")
-                AutoDrive.isRunning = False
-                return
-
             if brain.timer.time(MSEC) - start > self.timeOut:
                 RunCommands.stopAll()
                 break
@@ -399,6 +406,13 @@ class AutoDrive:
                     self.driveVel, self.turnVel)
 
         AutoDrive.isRunning = False
+    
+    @staticmethod
+    def stop():
+        if AutoDrive.isRunning:
+            AutoDrive.thread.stop()
+            Robot.drivetrain.stop()
+            AutoDrive.isRunning = False
 
     def driveToOrigin(self):
         self.xTarget = Constants.TILE___1
@@ -518,7 +532,6 @@ class AutoAlignShoot(AutoDrive):
         self.discs = discs
 
         AutoAlignShoot.isRunning = False
-        AutoAlignShoot.stopAuto = False
 
         AutoAlignShoot.autoFlywheel = None
         AutoAlignShoot.autoIndexer = None
@@ -543,13 +556,12 @@ class AutoAlignShoot(AutoDrive):
 
     @staticmethod
     def stop():
-        AutoAlignShoot.isRunning = False
-        AutoAlignShoot.stopAuto = True
+        super().stop()
         # AutoDrive.stopAuto = True
         if AutoAlignShoot.autoFlywheel != None:
             AutoAlignShoot.autoFlywheel.stop()
-        # if AutoAlignShoot.autoIndexer != None:
-        #     AutoAlignShoot.autoIndexer.stop()
+        if AutoAlignShoot.autoIndexer != None:
+            AutoAlignShoot.autoIndexer.stop()
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
@@ -1416,6 +1428,9 @@ class Intake:
         # TODO: add code to run/stop motor
         pass
 
+    def stop(self):
+        self.motor.stop()
+
     def reverseMotor(self):
         self.motor.spin(REVERSE)
         # TODO: add code to reverse motor in the event of jam
@@ -1445,6 +1460,9 @@ class Roller:
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT,
                             wait)
+    
+    def stop(self):
+        self.motor.stop()
 
 
 # ---------------------------------ROBOT--------------------------------
