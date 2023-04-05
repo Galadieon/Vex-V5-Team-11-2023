@@ -600,6 +600,7 @@ class RunCommands:
             AutoIndexer.stop()
             AutoIntake.stop()
             AutoRoller.stop()
+            RunCommands.isRunning = False
 
     @staticmethod
     def sleep_for(time, unit=MSEC):
