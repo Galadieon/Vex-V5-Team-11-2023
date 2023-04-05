@@ -1236,11 +1236,9 @@ class Flywheel:
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
-
+        self.isRunning = False
         self.thread = Thread(self.controlLoop)
         self.thread.stop()
-
-        self.isRunning = False
 
         self.distance = Constants.TILE___1
 
