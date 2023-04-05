@@ -827,7 +827,7 @@ class MyController:
 
         self.registerEventHandlers()
 
-        Thread(self.controllerLoop)
+        self.controllerThread = Thread(self.controllerLoop)
 
     def controllerLoop(self):
         deadZoneVal = self.axisCurve(0.1)
@@ -851,15 +851,15 @@ class MyController:
 
             wait(10, MSEC)
 
-    # def updateRow1(self):
-    #     # X: _ Y: _ Θ: _
-    #     self.controller.screen.clear_row(1)
+    def updateRow1(self):
+        # X: _ Y: _ Θ: _
+        self.controller.screen.clear_row(1)
         
-    #     self.controller.screen.set_cursor(1, 1)
+        self.controller.screen.set_cursor(1, 1)
 
-    #     robotX, robotY, robotΘ = Robot.odometry.getPose()
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-    #     self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
+        self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
 
     def updateRow2(self):
         # D: 24 V: 4,200
@@ -907,7 +907,7 @@ class MyController:
     #### Available button commands in use
     
     self.changeDriveTrainVel()
-    Robot.odometry.resetPose()
+    Robot.odometry.reset()
     self.toggleAuto()
     self.toggleDriveTrainMode()
     AutoDrive().driveToOrigin()
@@ -1041,13 +1041,7 @@ class Odometry:
         self.leftEncoder = leftEncoder
         self.auxEncoder = auxEncoder
 
-        self.threadIsRunning = False
-        self.threadIsPaused = False
-
-        self.resetOdomEncoders = False
-        self.resetOdomPose = False
-
-        Thread(self.updatePose)
+        self.thread = Thread(self.updatePose)
 
     def updatePose(self):
         inchsPerTick = Constants.INCHES_PER_TICK
@@ -1065,23 +1059,10 @@ class Odometry:
         screenStartTime = brain.timer.time(MSEC)
         screenUpdateInterval = 100
 
-        self.threadIsRunning = True
-
-        while (self.threadIsRunning):
+        while True:
             # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
             if abs(self.x) > 1_000 or abs(self.y) > 1_000:
-                self.resetPose()
-                self.resetEncoders()
-
-            if self.resetOdomPose == True:
-                self.resetPose()
-
-            if self.resetOdomEncoders == True:
-                self.resetEncoders()
-
-            if self.threadIsPaused:
-                wait(1, MSEC)
-                continue
+                self.reset()
 
             start = brain.timer.time(MSEC)
 
@@ -1111,35 +1092,32 @@ class Odometry:
 
             if screenEndTime > screenStartTime + screenUpdateInterval:
                 screenStartTime = screenEndTime
-                # myController.updateRow1()
+                myController.updateRow1()
 
             while brain.timer.time(MSEC) - start < 7.5:
                 continue
 
     def stop(self):
-        self.threadIsRunning = False
+        self.thread.stop()
 
     def getPose(self):
         return self.x, self.y, self.Θ
 
     def reset(self):
-        self.resetOdomPose = True
-        self.resetOdomEncoders = True
-
-    def resetPose(self):
         self.setPose(Constants.TILE___1, 0, math.pi / 2)
-        self.resetOdomPose = False
 
     def setPose(self, newX, newY, newΘ):
+        self.thread.sleep_for(100, MSEC)
+        wait(50, MSEC)
         self.x = newX
         self.y = newY
         self.Θ = newΘ
+        self.resetEncoders()
 
     def resetEncoders(self):
         self.rightEncoder.set_position(0, DEGREES)
         self.leftEncoder.set_position(0, DEGREES)
         self.auxEncoder.set_position(0, DEGREES)
-        self.resetOdomEncoders = False
 
 
 # -------------------------------SUBSYSTEMS------------------------------
@@ -1247,6 +1225,8 @@ class Flywheel:
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
 
+        self.thread = None
+
         self.isRunning = False
         self.stopRunning = True
 
@@ -1282,7 +1262,7 @@ class Flywheel:
         if not self.isRunning and self.stopRunning:
             self.isRunning = True
             self.stopRunning = False
-            Thread(self.controlLoop)
+            self.thread = Thread(self.controlLoop)
             print("MOTOR SPINNING")
         else:
             self.stop()
