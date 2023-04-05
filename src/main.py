@@ -532,6 +532,8 @@ class AutoAlignShoot(AutoDrive):
         self.discs = discs
 
         AutoAlignShoot.isRunning = False
+        AutoAlignShoot.thread = Thread(self.run)
+        AutoAlignShoot.thread.stop()
 
         AutoAlignShoot.autoFlywheel = None
         AutoAlignShoot.autoIndexer = None
@@ -542,26 +544,32 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
+        self.run()
+    
+    def run(self):
         AutoAlignShoot.isRunning = True
 
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
+
         AutoAlignShoot.autoFlywheel.execute()
 
         self.alignMaintainPos()
 
         AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
+
         AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stop()
 
     @staticmethod
     def stop():
-        super().stop()
-        # AutoDrive.stopAuto = True
-        if AutoAlignShoot.autoFlywheel != None:
-            AutoAlignShoot.autoFlywheel.stop()
-        if AutoAlignShoot.autoIndexer != None:
-            AutoAlignShoot.autoIndexer.stop()
+        if AutoAlignShoot.isRunning:
+            super().stop()
+            if AutoAlignShoot.autoFlywheel != None:
+                AutoAlignShoot.autoFlywheel.stop()
+            if AutoAlignShoot.autoIndexer != None:
+                AutoAlignShoot.autoIndexer.stop()
+            AutoAlignShoot.isRunning = False
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT ...\n")
