@@ -594,6 +594,7 @@ class RunCommands:
     @staticmethod
     def stopAll():
         if RunCommands.isRunning == True:
+            RunCommands.thread.stop()
             AutoDrive.stop()
             AutoAlignShoot.stop()
             AutoFlywheel.stop()
