@@ -166,6 +166,7 @@ class AutoFlywheel:
     def stop():
         if AutoFlywheel.isRunning:
             AutoFlywheel.thread.stop()
+            wait(50, MSEC)
             Robot.flywheel.stop()
             AutoFlywheel.isRunning = False
 
@@ -212,6 +213,7 @@ class AutoIntake:
     def stop():
         if AutoIntake.isRunning:
             AutoIntake.thread.stop()
+            wait(50, MSEC)
             Robot.intake.stop()
             AutoIntake.isRunning = False
 
@@ -553,13 +555,11 @@ class AutoAlignShoot(AutoDrive):
         AutoAlignShoot.isRunning = True
 
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
-
         AutoAlignShoot.autoFlywheel.execute()
 
         self.alignMaintainPos()
 
         AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
-
         AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stop()
