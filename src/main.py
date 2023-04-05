@@ -1524,7 +1524,7 @@ def vexcode_auton_function():
 
 def Autonomous_Control():
     brain.screen.print("Starting auto")
-    TestMode()
+    LeftAuto1()
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
