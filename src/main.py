@@ -539,10 +539,10 @@ class AutoAlignShoot(AutoDrive):
         AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
         AutoAlignShoot.autoIndexer.execute()
 
-        AutoAlignShoot.stopAll()
+        AutoAlignShoot.stop()
 
     @staticmethod
-    def stopAll():
+    def stop():
         AutoAlignShoot.isRunning = False
         AutoAlignShoot.stopAuto = True
         # AutoDrive.stopAuto = True
@@ -564,44 +564,34 @@ class AutoAlignShoot(AutoDrive):
 
 
 class RunCommands:
-    stopAuto = False
-    pauseAuto = False
     isRunning = False
 
     def __init__(self, *commandList):
-        RunCommands.stopAuto = False
-        RunCommands.pauseAuto = False
+        RunCommands.commandList = commandList
+        RunCommands.thread = Thread(RunCommands.run)
+    
+    @staticmethod
+    def run():
         RunCommands.isRunning = True
 
-        for command in commandList:
-            while RunCommands.pauseAuto:
-                continue
-            if RunCommands.stopAuto:
-                break
-
+        for command in RunCommands.commandList:
             command.execute()
 
         RunCommands.isRunning = False
 
     @staticmethod
     def stopAll():
-        RunCommands.isRunning = False
-        RunCommands.stopAuto = True
-
-        AutoDrive.stopAuto = True
-        AutoAlignShoot.stopAll()
-        AutoFlywheel.stopAuto = True
-        AutoIndexer.stopAuto = True
-        AutoIntake.stopAuto = True
-        AutoRoller.stopAuto = True
+        if RunCommands.isRunning == True:
+            AutoDrive.stop()
+            AutoAlignShoot.stop()
+            AutoFlywheel.stop()
+            AutoIndexer.stop()
+            AutoIntake.stop()
+            AutoRoller.stop()
 
     @staticmethod
-    def pause():
-        RunCommands.pauseAuto = True
-
-    @staticmethod
-    def unpause():
-        RunCommands.pauseAuto = False
+    def sleep_for(time, unit=MSEC):
+        RunCommands.thread.sleep_for(time, unit)
 
 
 class TestMode:
@@ -1225,10 +1215,10 @@ class Flywheel:
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
 
-        self.thread = None
+        self.thread = Thread(self.controlLoop)
+        self.thread.stop()
 
         self.isRunning = False
-        self.stopRunning = True
 
         self.distance = Constants.TILE___1
 
@@ -1248,9 +1238,10 @@ class Flywheel:
         }
 
     def stop(self):
-        if self.isRunning and not self.stopRunning:
+        if self.isRunning:
             self.isRunning = False
-            self.stopRunning = True
+            self.thread.stop()
+            wait(100, MSEC)
             self.motorGroup.stop()
         else:
             print("Flywheel already stopped")
@@ -1259,9 +1250,8 @@ class Flywheel:
         return flywheelVel / Constants.FLYWHEEL_GEAR_RATIO  # 1,400 / 7 = 200 RPM
 
     def toggleMotor(self):
-        if not self.isRunning and self.stopRunning:
+        if not self.isRunning:
             self.isRunning = True
-            self.stopRunning = False
             self.thread = Thread(self.controlLoop)
             print("MOTOR SPINNING")
         else:
@@ -1271,9 +1261,6 @@ class Flywheel:
     def controlLoop(self):
         while True:
             print("Flywheel Thread Running")
-
-            if self.stopRunning:
-                break
             
             controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
             self.motorGroup.spin(FORWARD, controlledValue, VOLT)
@@ -1334,23 +1321,23 @@ class Flywheel:
 
             self.updateVel()
 
+    def setDistance(self, distance):
+        self.distance = distance
+        self.updateVel()
+
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
             myController.updateRow2()
             self.setVelocity(self.velocityDict[self.distance])
 
-    def setDistance(self, distance):
-        self.distance = distance
-        self.updateVel()
+    def setVelocity(self, flywheelVel):
+        self.flywheelVel = flywheelVel
+        self.motorVel = self.calcMotorVel(self.flywheelVel)
 
     def launchEndgame(self):
         # TODO: add code to reverse flywheel to specific angle to launch endgame
         # TODO: add time keeping code to prevent early launch
         pass
-
-    def setVelocity(self, flywheelVel):
-        self.flywheelVel = flywheelVel
-        self.motorVel = self.calcMotorVel(self.flywheelVel)
 
 
 class Indexer:
