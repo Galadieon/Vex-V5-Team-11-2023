@@ -150,7 +150,7 @@ class AutoFlywheel:
         self.distance = distance
 
         AutoFlywheel.isRunning = False
-        AutoFlywheel.thread = Thread(AutoFlywheel.run)
+        AutoFlywheel.thread = Thread(self.run)
         AutoFlywheel.thread.stop()
 
     def execute(self):
@@ -193,7 +193,7 @@ class AutoIntake:
         # TODO: add initialization code to run the first time object is created
         self.wait = wait
         AutoIntake.isRunning = False
-        AutoIntake.thread = Thread(AutoIntake.run)
+        AutoIntake.thread = Thread(self.run)
         AutoIntake.thread.stop()
 
     # TODO: add any other helper methods
@@ -290,7 +290,7 @@ class AutoRoller:
         self.wait = wait
 
         AutoRoller.isRunning = False
-        AutoRoller.thread = Thread(AutoRoller.run)
+        AutoRoller.thread = Thread(self.run)
         AutoRoller.thread.stop()
 
     def execute(self):
@@ -371,14 +371,14 @@ class AutoDrive:
                            Kd=Constants.DRIVETRAIN_TURN_KD)
 
         AutoDrive.isRunning = False
-        AutoDrive.thread = Thread(AutoDrive.run)
+        AutoDrive.thread = Thread(self.run)
         AutoDrive.thread.stop()
 
     def execute(self):
         if self.wait:
             self.run()
         else:
-            self.thread = Thread(AutoDrive.run)
+            self.thread = Thread(self.run)
 
     def run(self):
         AutoDrive.isRunning = True
