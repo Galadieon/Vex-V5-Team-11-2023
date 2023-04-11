@@ -766,10 +766,12 @@ class MyController:
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
                     RunCommands.stopAll()
-                    Robot.drivetrain.drive(
+                    Robot.drivetrain.driveFieldCentric(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
-                        turn * (Robot.drivetrain.turnVel / 100))
+                        turn * (Robot.drivetrain.turnVel / 100),
+                        forward,
+                        strafe)
                 elif RunCommands.isRunning == True:
                     pass
                 else:
@@ -1107,6 +1109,29 @@ class MecanumDriveTrain:
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
+
+    def driveFieldCentric(self, forward, strafe, turn, trueForward, trueStrafe):
+        a, b, robotΘ = Robot.odometry.getPose()
+        forward, strafe = self.calcFieldCentricXY(trueForward, trueStrafe, robotΘ)
+        turn = self.calcFieldCentricTurn(trueForward, trueStrafe, robotΘ)
+        # forward, strafe = self.calcFieldCentricXY(forward, strafe, robotΘ)
+        # turn = self.calcFieldCentricTurn(forward, strafe, robotΘ)
+
+        self.drive(forward, strafe, turn)
+    
+    def calcFieldCentricXY(self, forward, strafe, robotΘ): 
+        # float temp = forwrd * cos(gyro_radians) + strafe * sin(gyro_radians);
+        # strafe = -forwrd * sin(gyro_radians) + strafe * cos(gyro_radians);
+        # fwd = temp;
+        temp = forward * math.cos(robotΘ) + strafe * math.sin(robotΘ)
+        strafe = -forward * math.sin(robotΘ) + strafe * math.cos(robotΘ)
+        forward = temp
+        return forward, strafe
+
+    def calcFieldCentricTurn(self, forward, strafe, robotΘ):
+        target = math.tan(forward / strafe)
+        deltaTurn = target - robotΘ
+        return deltaTurn
 
     def drive(self, forward, strafe, turn):
         forward = -forward
