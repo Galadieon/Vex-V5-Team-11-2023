@@ -592,7 +592,7 @@ class AutoAlignShoot(AutoDrive):
     def stop():
         if AutoAlignShoot.isRunning:
             AutoAlignShoot.isRunning = False
-            super().stop()
+            AutoDrive.stop()
             wait(50, MSEC)
             if AutoAlignShoot.autoFlywheel != None:
                 AutoAlignShoot.autoFlywheel.stop()
@@ -934,6 +934,14 @@ class MyController:
 
         self.controller.screen.print("FC:", fineControl,
                                      "MI:", self.manualIndexer)
+                                    
+    def flywheelThread(self):
+        while True:
+            if Robot.flywheel.isRunning:
+                Robot.flywheel.run()
+            else: Robot.flywheel.stop()
+
+            wait(10, MSEC)
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
@@ -1317,29 +1325,17 @@ class Flywheel:
     def toggleMotor(self):
         if not self.isRunning:
             self.isRunning = True
-            self.thread = Thread(self.run)
         else:
-            self.stop()
+            self.isRunning = False
 
     def run(self):
-        printDB(self.__class__.__name__, "Running")
-        while True:
-            print("Flywheel Thread Running")
-            
-            controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
-            self.motorGroup.spin(FORWARD, controlledValue, VOLT)
-            wait(10, MSEC)
+        self.isRunning = True
+        controlledValue = self.flywheelPID.update(self.motorVel, self.motorGroup.velocity(RPM), VOLT)
+        self.motorGroup.spin(FORWARD, controlledValue, VOLT)
 
     def stop(self):
-        if self.isRunning:
-            self.isRunning = False
-            self.thread.stop()
-            wait(50, MSEC)
-            self.motorGroup.stop()
-        else:
-            print("Flywheel already stopped")
-        
-        printDB(self.__class__.__name__, "Stopped")
+        self.motorGroup.stop()
+        self.isRunning = False
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
