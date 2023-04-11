@@ -156,7 +156,9 @@ class AutoFlywheel:
         printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
-        self.run()
+        AutoFlywheel.thread = Thread(self.run)
+        while AutoFlywheel.isRunning:
+            wait(5, MSEC)
 
     def run(self):
         AutoFlywheel.isRunning = True
@@ -204,7 +206,9 @@ class AutoIntake:
     # TODO: add any other helper methods
 
     def execute(self):
-        self.run()
+        AutoIntake.thread = Thread(self.run)
+        while AutoIntake.isRunning:
+            wait(5, MSEC)
     
     def run(self):
         AutoIntake.isRunning = True
@@ -253,7 +257,9 @@ class AutoIndexer:
         printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
-        self.run()
+        AutoIndexer.thread = Thread(self.run)
+        while AutoIndexer.isRunning:
+            wait(5, MSEC)
     
     def run(self):
         AutoIndexer.isRunning = True
@@ -305,7 +311,9 @@ class AutoRoller:
         printDB(self.__class__.__name__, "Initialized")
 
     def execute(self):
-        self.run()
+        AutoRoller.thread = Thread(self.run)
+        while AutoRoller.isRunning:
+            wait(5, MSEC)
     
     def run(self):
         AutoRoller.isRunning = True
@@ -390,7 +398,9 @@ class AutoDrive:
 
     def execute(self):
         if self.wait:
-            self.run()
+            AutoDrive.thread = Thread(self.run)
+            while AutoDrive.isRunning:
+                wait(5, MSEC)
         else:
             self.thread = Thread(self.run)
 
@@ -561,7 +571,9 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
-        self.run()
+        AutoAlignShoot.thread = Thread(self.run)
+        while AutoAlignShoot.isRunning:
+            wait(5, MSEC)
     
     def run(self):
         AutoAlignShoot.isRunning = True
@@ -1082,10 +1094,11 @@ class Odometry:
         self.rightEncoder = rightEncoder
         self.leftEncoder = leftEncoder
         self.auxEncoder = auxEncoder
-
-        self.thread = Thread(self.updatePose)
         
         printDB(self.__class__.__name__, "Initialized")
+
+    def start(self):
+        self.thread = Thread(self.updatePose)
 
     def updatePose(self):
         printDB(self.__class__.__name__, "Running")
@@ -1305,11 +1318,11 @@ class Flywheel:
         if not self.isRunning:
             self.isRunning = True
             self.thread = Thread(self.run)
-            printDB(self.__class__.__name__, "Running")
         else:
             self.stop()
 
     def run(self):
+        printDB(self.__class__.__name__, "Running")
         while True:
             print("Flywheel Thread Running")
             
@@ -1446,6 +1459,7 @@ class Indexer:
         return False
 
     def push(self):
+        printDB(self.__class__.__name__, "Running")
         if self.motor.is_spinning() == False:
             self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
 
@@ -1480,6 +1494,7 @@ class Intake:
     # TODO: add any other helper methods
 
     def toggleMotor(self, direction=FORWARD):
+        printDB(self.__class__.__name__, "Running")
         self.motor.spin(FORWARD)
         # TODO: add code to run/stop motor
         pass
@@ -1518,6 +1533,7 @@ class Roller:
         pass
 
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
+        printDB(self.__class__.__name__, "Running")
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT,
                             wait)
     
@@ -1616,6 +1632,8 @@ def Driver_Control():
 wait(30, MSEC)
 
 myController = MyController()
+
+Robot.odometry.start()
 
 competition = Competition(vexcode_driver_function, vexcode_auton_function)
 
