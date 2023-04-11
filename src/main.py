@@ -1126,7 +1126,7 @@ class MecanumDriveTrain:
         temp = forward * math.cos(robotΘ) + strafe * math.sin(robotΘ)
         strafe = -forward * math.sin(robotΘ) + strafe * math.cos(robotΘ)
         forward = temp
-        return forward, strafe
+        return forward, -strafe
 
     def calcFieldCentricTurn(self, forward, strafe, robotΘ):
         target = math.tan(forward / strafe)
