@@ -768,7 +768,8 @@ class MyController:
                 turnY = self.controller.axis2.position()
 
                 if abs(forward) > deadZoneVal or abs(
-                        strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                        strafe) > deadZoneVal or abs(
+                        turnX) > deadZoneVal or abs(turnY) > deadZoneVal:
                     RunCommands.stopAll()
                     Robot.drivetrain.driveFieldCentric(
                         forward * (Robot.drivetrain.driveVel / 100),
