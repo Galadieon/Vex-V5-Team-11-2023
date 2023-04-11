@@ -759,9 +759,13 @@ class MyController:
         deadZoneVal = self.axisCurve(0.1)
         while (True):
             if self.controllerEnabled:
-                forward = self.axisCurve(self.controller.axis3.position())
-                strafe = self.axisCurve(self.controller.axis4.position())
-                turn = self.axisCurve(self.controller.axis1.position())
+                # forward = self.axisCurve(self.controller.axis3.position())
+                # strafe = self.axisCurve(self.controller.axis4.position())
+
+                forward = self.controller.axis3.position()
+                strafe = self.controller.axis4.position()
+                turnX = self.controller.axis1.position()
+                turnY = self.controller.axis2.position()
 
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
@@ -769,9 +773,8 @@ class MyController:
                     Robot.drivetrain.driveFieldCentric(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
-                        turn * (Robot.drivetrain.turnVel / 100),
-                        forward,
-                        strafe)
+                        turnX,
+                        turnY)
                 elif RunCommands.isRunning == True:
                     pass
                 else:
@@ -1110,10 +1113,10 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
 
-    def driveFieldCentric(self, forward, strafe, turn, trueForward, trueStrafe):
+    def driveFieldCentric(self, forward, strafe, turnX, turnY):
         a, b, robotΘ = Robot.odometry.getPose()
-        forward, strafe = self.calcFieldCentricXY(trueForward, trueStrafe, robotΘ)
-        turn = self.calcFieldCentricTurn(trueForward, trueStrafe, robotΘ)
+        forward, strafe = self.calcFieldCentricXY(forward, strafe, robotΘ)
+        turn = self.calcFieldCentricTurn(turnX, turnY, robotΘ)
         # forward, strafe = self.calcFieldCentricXY(forward, strafe, robotΘ)
         # turn = self.calcFieldCentricTurn(forward, strafe, robotΘ)
 
@@ -1128,10 +1131,10 @@ class MecanumDriveTrain:
         forward = temp
         return forward, -strafe
 
-    def calcFieldCentricTurn(self, forward, strafe, robotΘ):
-        target = math.tan(forward / strafe)
+    def calcFieldCentricTurn(self, turnX, turnY, robotΘ):
+        target = math.tan(turnY / turnX)
         deltaTurn = target - robotΘ
-        return deltaTurn
+        return -deltaTurn
 
     def drive(self, forward, strafe, turn):
         forward = -forward
