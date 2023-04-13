@@ -1178,6 +1178,12 @@ class MecanumDriveTrain:
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
 
+    def stop(self):
+        self.motorFrontLeft.stop()
+        self.motorFrontRight.stop()
+        self.motorBackRight.stop()
+        self.motorBackLeft.stop()
+
     def set_drive_velocity(self, velocity):
         """ #### Assume Percent """
         self.driveVel = velocity
@@ -1195,12 +1201,9 @@ class MecanumDriveTrain:
 
     # def getMotorMode(self):
     #     return self.motorMode
-
-    def stop(self):
-        self.motorFrontLeft.stop()
-        self.motorFrontRight.stop()
-        self.motorBackRight.stop()
-        self.motorBackLeft.stop()
+    
+     def getFrontIsFlywheel(self):
+            return self.flywheelIsFront
 
 
 class Flywheel:
