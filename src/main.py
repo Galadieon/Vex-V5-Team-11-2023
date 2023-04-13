@@ -889,21 +889,30 @@ class MyController:
     # \_________/
 
     def L1_Pressed(self):
-        Robot.flywheel.toggleMotor()
+        if Robot.flywheel.getFrontIsFlywheel():
+            Robot.flywheel.toggleMotor()
+        else:
+            pass
 
     def L2_Pressed(self):
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
-        Robot.flywheel.toggleSpeed()
+        if Robot.flywheel.getFrontIsFlywheel():
+            Robot.flywheel.toggleSpeed()
+        else:
+            pass
 
     def R2_Pressed(self):
-        if self.toggleManualIndexer() == False:
-            if self.manualIndexer:
-                Robot.indexer.push()
-            else:
-                # Robot.indexer.autoPush()
-                pass
+        if Robot.flywheel.getFrontIsFlywheel():
+            if self.toggleManualIndexer() == False:
+                if self.manualIndexer:
+                    Robot.indexer.push()
+                else:
+                    # Robot.indexer.autoPush()
+                    pass
+        else:
+            pass
 
     """
       X
