@@ -890,7 +890,7 @@ class MyController:
         Robot.flywheel.toggleMotor()
 
     def L2_Pressed(self):
-        self.toggleRobotMode()
+        Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
         Robot.flywheel.toggleSpeed()
@@ -1158,9 +1158,11 @@ class MecanumDriveTrain:
         self.flywheelIsFront = not self.flywheelIsFront
 
     def drive(self, forward, strafe, turn):
-        forward = -forward
-        strafe = -strafe
-        turn = -turn
+        if self.flywheelIsFront:
+            forward = -forward
+            strafe = -strafe
+            turn = -turn
+            
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
         self.motorBackRight.set_velocity(forward + strafe - turn, PERCENT)
