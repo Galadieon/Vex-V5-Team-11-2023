@@ -1152,6 +1152,10 @@ class MecanumDriveTrain:
         self.driveVel = 100
         self.turnVel = 100
         self.motorMode = COAST
+        self.flywheelIsFront = True
+    
+    def changeFront(self):
+        self.flywheelIsFront = not self.flywheelIsFront
 
     def drive(self, forward, strafe, turn):
         forward = -forward
