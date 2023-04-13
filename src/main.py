@@ -56,6 +56,9 @@ class Constants:
     TILE___5 = TILESIZE * 5.0
     TILE___6 = TILESIZE * 6.0
 
+    LO_SPEED = 50
+    HI_SPEED = 100
+
     ROLLER_OFFSET = 3.0
     TILE_L_R = TILE___0 - ROLLER_OFFSET
     TILE_R_R = TILE___5 + ROLLER_OFFSET
@@ -845,13 +848,13 @@ class MyController:
     # \_________/
 
     def L1_Pressed(self):
-        Robot.flywheel.increaseVelocity()
+        Robot.flywheel.toggleMotor()
 
     def L2_Pressed(self):
-        Robot.flywheel.decreaseVelocity()
+        pass
 
     def R1_Pressed(self):
-        Robot.flywheel.toggleMotor()
+        Robot.flywheel.toggleSpeed()
 
     def R2_Pressed(self):
         if self.toggleManualIndexer() == False:
@@ -868,16 +871,17 @@ class MyController:
     """
 
     def X_Pressed(self):
-        self.printFWVelDict()
+        # self.printFWVelDict()
+        pass
 
     def A_Pressed(self):
-        Robot.flywheel.increaseDistance()
+        Robot.flywheel.increaseVelocity()
 
     def B_Pressed(self):
-        Robot.flywheel.decreaseDistance()
+        Robot.flywheel.decreaseVelocity()
 
     def Y_Pressed(self):
-        AutoDrive().driveToOrigin()
+        pass
 
     """
       ↑
@@ -886,7 +890,7 @@ class MyController:
     """
 
     def Up_Pressed(self):
-        self.toggleAuto()
+        pass
 
     def Right_Pressed(self):
         self.changeDriveTrainVel()
@@ -895,7 +899,8 @@ class MyController:
         Robot.odometry.reset()
 
     def Left_Pressed(self):
-        self.toggleDriveTrainMode()
+        # self.toggleDriveTrainMode()
+        pass
 
     # ----------------------BUTTON HELPER METHODS------------------------
 
@@ -913,17 +918,11 @@ class MyController:
             Robot.drivetrain.set_drive_velocity(100)
         self.updateRow3()
 
-    def toggleAuto(self):
-        if RunCommands.isRunning == False:
-            LeftAuto1()
-        else:
-            RunCommands.stopAll()
-
-    def toggleDriveTrainMode(self):
-        if Robot.drivetrain.getMotorMode() == BRAKE:
-            Robot.drivetrain.set_stopping(COAST)
-        elif Robot.drivetrain.getMotorMode() == COAST:
-            Robot.drivetrain.set_stopping(BRAKE)
+    # def toggleDriveTrainMode(self):
+    #     if Robot.drivetrain.getMotorMode() == BRAKE:
+    #         Robot.drivetrain.set_stopping(COAST)
+    #     elif Robot.drivetrain.getMotorMode() == COAST:
+    #         Robot.drivetrain.set_stopping(BRAKE)
 
     def toggleManualIndexer(self):
         start = brain.timer.time(MSEC)
@@ -1130,15 +1129,15 @@ class MecanumDriveTrain:
         """ #### Assume Percent """
         self.turnVel = velocity
 
-    def set_stopping(self, mode=BrakeType.COAST):
-        self.motorMode = mode
-        self.motorFrontLeft.set_stopping(mode)
-        self.motorFrontRight.set_stopping(mode)
-        self.motorBackRight.set_stopping(mode)
-        self.motorBackLeft.set_stopping(mode)
+    # def set_stopping(self, mode=BrakeType.COAST):
+    #     self.motorMode = mode
+    #     self.motorFrontLeft.set_stopping(mode)
+    #     self.motorFrontRight.set_stopping(mode)
+    #     self.motorBackRight.set_stopping(mode)
+    #     self.motorBackLeft.set_stopping(mode)
 
-    def getMotorMode(self):
-        return self.motorMode
+    # def getMotorMode(self):
+    #     return self.motorMode
 
     def stop(self):
         self.motorFrontLeft.stop()
@@ -1175,7 +1174,7 @@ class Flywheel:
 
         self.isRunning = False
 
-        self.distance = Constants.TILE___1
+        self.distance = Constants.LO_SPEED
 
         # for 84 : 12 max: 4_200 RPM (Our robot's max)
         # for 84 : 36 max: 1_400 RPM
@@ -1184,12 +1183,8 @@ class Flywheel:
             # need empirical data & verification
             Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,          # 2,625
             Constants.SIDE_SHOT: 4_200 * (2.0 / 3.0) + 4_200 / 8.0, # 3,325
-            Constants.TILE___1: 4_200 / 4.0,                        # 1,050
-            Constants.TILE___2: 4_200 / 3.0,                        # 1,400
-            Constants.TILE___3: 4_200 / 2.0,                        # 2,100
-            Constants.TILE___4: 4_200 * (2.0 / 3.0),                # 2,800
-            Constants.TILE___5: 4_200 * (3.0 / 4.0),                # 3,150
-            Constants.TILE___6: 4_200 * (4.0 / 4.0)                 # 4,200
+            Constants.LO_SPEED: 4_200 * (1.0 / 2.0),                # 2,100
+            Constants.HI_SPEED: 4_200 * (4.0 / 4.0)                 # 4,200
         }
 
     def stop(self):
@@ -1216,53 +1211,38 @@ class Flywheel:
             return True
         return False
 
-    def increaseDistance(self):
+    def toggleSpeed(self):
         if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.TILE___1
-            self.updateVel()
+            self.distance = Constants.LO_SPEED
         else:
-            self.distance += Constants.TILESIZE
+            if self.distance == Constants.LO_SPEED:
+                self.distannce = Constants.HI_SPEED
+            else:
+                self.distance = Constants.LO_SPEED
 
-            if self.distance > Constants.TILE___6:
-                self.distannce = Constants.TILE___6
-
-            self.updateVel()
-
-    def decreaseDistance(self):
-        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.TILE___1
-            self.updateVel()
-        else:
-            self.distance -= Constants.TILESIZE
-
-            if self.distance < Constants.TILE___1:
-                self.distannce = Constants.TILE___1
-
-            self.updateVel()
+        self.updateVel()
 
     def increaseVelocity(self):
         if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.TILE___1
-            self.updateVel()
+            self.distance = Constants.LO_SPEED
         else:
             self.velocityDict[self.distance] += 50
 
-            if self.velocityDict[self.distance] > 4_200:
+            if self.velocityDict[self.distance] > 4_200.0:
                 self.velocityDict[self.distance] = 4_200.0
 
-            self.updateVel()
+        self.updateVel()
 
     def decreaseVelocity(self):
         if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.TILE___1
-            self.updateVel()
+            self.distance = Constants.LO_SPEED
         else:
             self.velocityDict[self.distance] -= 50
 
-            if self.velocityDict[self.distance] < 0:
+            if self.velocityDict[self.distance] < 0.0:
                 self.velocityDict[self.distance] = 0.0
 
-            self.updateVel()
+        self.updateVel()
 
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
@@ -1282,6 +1262,8 @@ class Flywheel:
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
         self.motorGroup.set_velocity(self.motorVel, RPM)
+        if self.isRunning:
+            self.motorGroup.spin(FORWARD, self.motorVel, RPM)
 
 
 class Indexer:
@@ -1439,7 +1421,6 @@ def non_competition_start():
 def Default_Motor_Speed():
     Robot.drivetrain.set_drive_velocity(100)
     Robot.drivetrain.set_turn_velocity(100)
-    Robot.drivetrain.set_stopping(COAST)
 
 
 # AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS ------ AUTONOMOUS FUNCTIONS
@@ -1449,13 +1430,13 @@ def vexcode_auton_function():
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
         wait(10, MSEC)
-    Robot.drivetrain.stop()
     auton_task_0.stop()
+    # RunCommands.stopAll()
 
 
 def Autonomous_Control():
     brain.screen.print("Starting auto")
-    TestMode()
+    LeftAuto1()
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
