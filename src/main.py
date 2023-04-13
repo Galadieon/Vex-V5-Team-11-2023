@@ -1211,8 +1211,8 @@ class MecanumDriveTrain:
     # def getMotorMode(self):
     #     return self.motorMode
     
-     def getFrontIsFlywheel(self):
-            return self.flywheelIsFront
+    def getFrontIsFlywheel(self):
+        return self.flywheelIsFront
 
 
 class Flywheel:
