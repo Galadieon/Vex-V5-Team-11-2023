@@ -1187,6 +1187,8 @@ class Flywheel:
             Constants.HI_SPEED: 4_200 * (4.0 / 4.0)                 # 4,200
         }
 
+        self.motorGroup.set_max_torque(100, PERCENT)
+
     def stop(self):
         self.isRunning = False
         self.motorGroup.stop()
@@ -1294,6 +1296,8 @@ class Indexer:
         # calculate the total degrees the motor turns to complete 1 cycle
         self.degreesPerCycle = Constants.INDEXER_CHAIN_LINKS * self.degreesPerTeeth
 
+        self.motor.set_max_torque(25, PERCENT)
+
     def toggleMotor(self):
         # TODO: add code to run/stop motor
         if self.motor.is_spinning():
@@ -1363,6 +1367,8 @@ class Roller:
     def __init__(self, motor, wait=True):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
         self.wait = wait
+
+        self.motor.set_max_torque(25, PERCENT)
 
     def toggleMotor(self):
         # TODO: add code to run/stop motor
