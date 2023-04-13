@@ -1058,6 +1058,9 @@ class Odometry:
             if abs(self.x) > 1_000 or abs(self.y) > 1_000:
                 self.resetPose()
                 self.resetEncoders()
+            
+            if self.Θ >= 360.0: self.Θ = 0.0
+            if self.Θ < 0.0: self.Θ = 360.0
 
             if self.resetOdomPose == True:
                 self.resetPose()
@@ -1097,7 +1100,7 @@ class Odometry:
 
             if screenEndTime > screenStartTime + screenUpdateInterval:
                 screenStartTime = screenEndTime
-                myController.updateRow1()
+                # myController.updateRow1()
 
             while brain.timer.time(MSEC) - start < 7.5:
                 continue
@@ -1291,13 +1294,13 @@ class Flywheel:
         return False
 
     def toggleSpeed(self):
-        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.LO_SPEED
+        # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
+        #     self.distance = Constants.LO_SPEED
+        # else:
+        if self.distance == Constants.LO_SPEED:
+            self.distannce = Constants.HI_SPEED
         else:
-            if self.distance == Constants.LO_SPEED:
-                self.distannce = Constants.HI_SPEED
-            else:
-                self.distance = Constants.LO_SPEED
+            self.distance = Constants.LO_SPEED
 
         self.updateVel()
 
