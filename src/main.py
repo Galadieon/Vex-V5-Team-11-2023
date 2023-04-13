@@ -364,6 +364,8 @@ class AutoDrive:
 
         AutoDrive.isRunning = False
         AutoDrive.stopAuto = False
+        
+        Robot.drivetrain.flywheelAsFront(True)
 
     def execute(self):
         if self.wait:
@@ -1156,6 +1158,9 @@ class MecanumDriveTrain:
     
     def changeFront(self):
         self.flywheelIsFront = not self.flywheelIsFront
+    
+    def flywheelAsFront(self, bool):
+        self.flywheelIsFront = bool
 
     def drive(self, forward, strafe, turn):
         if self.flywheelIsFront:
