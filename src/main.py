@@ -759,7 +759,7 @@ class MyController:
         Thread(self.controllerLoop)
 
     def controllerLoop(self):
-        deadZoneVal = self.axisCurve(0.1)
+        deadZoneVal = 5 # PERCENT
         while (True):
             if self.controllerEnabled:
                 forward = self.axisCurve(self.controller.axis3.position())
@@ -768,17 +768,18 @@ class MyController:
 
                 if abs(forward) > deadZoneVal or abs(
                         strafe) > deadZoneVal or abs(turn) > deadZoneVal:
-                    RunCommands.stopAll()
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
                         turn * (Robot.drivetrain.turnVel / 100))
-                elif RunCommands.isRunning == True:
-                    pass
                 else:
                     Robot.drivetrain.stop()
 
             wait(10, MSEC)
+
+    def axisCurve(self, x):
+        # return (pow(x, 3)) / 10_000
+        return x
 
     def updateRow1(self):
         # X: _ Y: _ Θ: _
@@ -825,11 +826,6 @@ class MyController:
         self.controller.buttonDown.pressed(self.Down_Pressed)
         self.controller.buttonLeft.pressed(self.Left_Pressed)
         self.controller.buttonRight.pressed(self.Right_Pressed)
-
-    def axisCurve(self, x):
-        return (pow(x, 3)) / 10_000
-        # if x > 0: return (x ** 2) / 100
-        # return (x ** 2) / -100
 
     # ---------------------------BUTTON FUNCTIONS---------------------------
     """
@@ -1437,7 +1433,6 @@ def vexcode_auton_function():
     while (competition.is_autonomous() and competition.is_enabled()):
         wait(10, MSEC)
     auton_task_0.stop()
-    # RunCommands.stopAll()
 
 
 def Autonomous_Control():
