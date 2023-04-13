@@ -578,6 +578,8 @@ class RunCommands:
         RunCommands.pauseAuto = False
         RunCommands.isRunning = True
 
+        Robot.drivetrain.set_stopping(HOLD)
+
         for command in commandList:
             while RunCommands.pauseAuto:
                 continue
@@ -585,6 +587,8 @@ class RunCommands:
                 break
 
             command.execute()
+
+        Robot.drivetrain.set_stopping(COAST)
 
         RunCommands.isRunning = False
 
@@ -1201,15 +1205,15 @@ class MecanumDriveTrain:
         """ #### Assume Percent """
         self.turnVel = velocity
 
-    # def set_stopping(self, mode=BrakeType.COAST):
-    #     self.motorMode = mode
-    #     self.motorFrontLeft.set_stopping(mode)
-    #     self.motorFrontRight.set_stopping(mode)
-    #     self.motorBackRight.set_stopping(mode)
-    #     self.motorBackLeft.set_stopping(mode)
+    def set_stopping(self, mode=BrakeType.COAST):
+        self.motorMode = mode
+        self.motorFrontLeft.set_stopping(mode)
+        self.motorFrontRight.set_stopping(mode)
+        self.motorBackRight.set_stopping(mode)
+        self.motorBackLeft.set_stopping(mode)
 
-    # def getMotorMode(self):
-    #     return self.motorMode
+    def getMotorMode(self):
+        return self.motorMode
     
     def getFrontIsFlywheel(self):
         return self.flywheelIsFront
