@@ -43,7 +43,7 @@ class Constants:
 
     FIELDSIZE = 141.0
     TILESIZE = FIELDSIZE / 6.0  # 141 / 6 = 23.5, OG: 24
-    
+
     TILE___0 = TILESIZE * 0.0
     TILE_0_5 = TILESIZE * 0.5
     TILE___1 = TILESIZE * 1.0
@@ -68,9 +68,9 @@ class Constants:
     TILE_R_S = TILE___5 - SHOOT_OFFSET
 
     # AutoDrive precision level
-    PL_S = 1.0 # 2 inch total
-    PL_M = 1.5 # 3 inch total
-    PL_L = 2.0 # 4 inch total
+    PL_S = 1.0  # 2 inch total
+    PL_M = 1.5  # 3 inch total
+    PL_L = 2.0  # 4 inch total
 
     HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
     HIGH_GOAL_Y = TILESIZE * 4.72  # from center of 1st square
@@ -637,14 +637,28 @@ class LeftAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE___1,
+                           Constants.TILE_L_S,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
 
             # intake on
-            AutoDrive(Constants.TILE___3, Constants.TILE___2, (5 * math.pi) / 4, 70,
-                      100, True),
-            AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
-            AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5, (5 * math.pi) / 4, 70,
-                      100, True),
+            AutoDrive(Constants.TILE___3, Constants.TILE___2,
+                      (5 * math.pi) / 4, 70, 100, True),
+            AutoAlignShoot(Constants.TILE___3,
+                           Constants.TILE___2,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
+            AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5,
+                      (5 * math.pi) / 4, 70, 100, True),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
 
@@ -652,7 +666,14 @@ class LeftAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE_R_S,
+                           Constants.TILE___4,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
         )
 
 
@@ -666,21 +687,43 @@ class RightAuto1:
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE_R_S, Constants.TILE___4, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE_R_S,
+                           Constants.TILE___4,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
 
             # intake on
-            AutoDrive(Constants.TILE___3, Constants.TILE___2,
-                      math.pi / 4, 70, 100),
-            AutoAlignShoot(Constants.TILE___3, Constants.TILE___2, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
-            AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5,
-                      math.pi / 4, 70, 100),
-            AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100, 100, True),
+            AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 70,
+                      100),
+            AutoAlignShoot(Constants.TILE___3,
+                           Constants.TILE___2,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
+            AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5, math.pi / 4, 70,
+                      100),
+            AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100,
+                      100, True),
 
             # intake off
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
-            AutoAlignShoot(Constants.TILE___1, Constants.TILE_L_S, 0, Constants.TILE___6, 100, 100, True, timeOut=3_000),
+            AutoAlignShoot(Constants.TILE___1,
+                           Constants.TILE_L_S,
+                           0,
+                           Constants.TILE___6,
+                           100,
+                           100,
+                           True,
+                           timeOut=3_000),
         )
 
 
@@ -759,7 +802,7 @@ class MyController:
         Thread(self.controllerLoop)
 
     def controllerLoop(self):
-        deadZoneVal = 5 # PERCENT
+        deadZoneVal = 5  # PERCENT
         while (True):
             if self.controllerEnabled:
                 forward = self.axisCurve(self.controller.axis3.position())
@@ -784,7 +827,7 @@ class MyController:
     def updateRow1(self):
         # X: _ Y: _ Θ: _
         self.controller.screen.clear_row(1)
-        
+
         self.controller.screen.set_cursor(1, 1)
 
         robotX, robotY, robotΘ = Robot.odometry.getPose()
@@ -794,22 +837,22 @@ class MyController:
     def updateRow2(self):
         # D: 24 V: 4,200
         self.controller.screen.clear_row(2)
-        
+
         self.controller.screen.set_cursor(2, 1)
 
-        self.controller.screen.print("FWD:", Robot.flywheel.distance,
-                                     "FWV:", Robot.flywheel.flywheelVel)
+        self.controller.screen.print("FWD:", Robot.flywheel.distance, "FWV:",
+                                     Robot.flywheel.flywheelVel)
 
     def updateRow3(self):
         # FC: False MI: False
         self.controller.screen.clear_row(3)
-        
+
         self.controller.screen.set_cursor(3, 1)
 
         fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
 
-        self.controller.screen.print("FC:", fineControl,
-                                     "MI:", self.manualIndexer)
+        self.controller.screen.print("FC:", fineControl, "MI:",
+                                     self.manualIndexer)
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
@@ -847,7 +890,7 @@ class MyController:
         Robot.flywheel.toggleMotor()
 
     def L2_Pressed(self):
-        pass
+        self.toggleRobotMode()
 
     def R1_Pressed(self):
         Robot.flywheel.toggleSpeed()
@@ -892,13 +935,20 @@ class MyController:
         self.changeDriveTrainVel()
 
     def Down_Pressed(self):
-        Robot.odometry.reset()
+        # Robot.odometry.reset()
+        pass
 
     def Left_Pressed(self):
         # self.toggleDriveTrainMode()
         pass
 
     # ----------------------BUTTON HELPER METHODS------------------------
+
+    def toggleRobotMode(self):
+        if self.mode == 0:
+            self.mode = 1
+        else:
+            self.mode = 0
 
     def printFWVelDict(self):
         print(Robot.flywheel.velocityDict)
@@ -1177,10 +1227,14 @@ class Flywheel:
 
         self.velocityDict = {
             # need empirical data & verification
-            Constants.MID_SHOT: 4_200 / 2.0 + 4_200 / 8.0,          # 2,625
-            Constants.SIDE_SHOT: 4_200 * (2.0 / 3.0) + 4_200 / 8.0, # 3,325
-            Constants.LO_SPEED: 4_200 * (1.0 / 2.0),                # 2,100
-            Constants.HI_SPEED: 4_200 * (4.0 / 4.0)                 # 4,200
+            Constants.MID_SHOT:
+            4_200 / 2.0 + 4_200 / 8.0,  # 2,625
+            Constants.SIDE_SHOT:
+            4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
+            Constants.LO_SPEED:
+            4_200 * (1.0 / 2.0),  # 2,100
+            Constants.HI_SPEED:
+            4_200 * (4.0 / 4.0)  # 4,200
         }
 
         self.motorGroup.set_max_torque(100, PERCENT)
@@ -1309,7 +1363,10 @@ class Indexer:
 
     def push(self):
         if self.motor.is_spinning() == False:
-            self.motor.spin_for(FORWARD, self.degreesPerCycle, DEGREES, wait=True)
+            self.motor.spin_for(FORWARD,
+                                self.degreesPerCycle,
+                                DEGREES,
+                                wait=True)
 
     def stop(self):
         self.motor.stop()
