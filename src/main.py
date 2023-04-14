@@ -1054,13 +1054,13 @@ class Odometry:
         self.threadIsRunning = True
 
         while (self.threadIsRunning):
-            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
-            if abs(self.x) > 1_000 or abs(self.y) > 1_000:
-                self.resetPose()
-                self.resetEncoders()
-            
             if self.Θ >= 360.0: self.Θ = 0.0
             if self.Θ < 0.0: self.Θ = 360.0
+            
+            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
+            if abs(self.x) > 1_000 or abs(self.y) > 1_000 or abs(self.Θ) > 1_000:
+                self.resetPose()
+                self.resetEncoders()
 
             if self.resetOdomPose == True:
                 self.resetPose()
