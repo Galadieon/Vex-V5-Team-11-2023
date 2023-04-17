@@ -194,26 +194,16 @@ class AutoIntake:
     stopAuto = False
 
     def __init__(self, wait=True):
-        # TODO: add initialization code to run the first time object is created
         self.wait = wait
         AutoIntake.isRunning = False
         AutoIntake.stopAuto = False
 
-    # TODO: add any other helper methods
-
     def execute(self):
         AutoIntake.isRunning = True
-
-        # TODO: add code to run intake when command is executed
+        
+        Robot.intake.toggleMotor()
 
         AutoIntake.isRunning = False
-
-    def stop(self):
-        AutoIntake.isRunning = False
-        AutoIntake.stopAuto = True
-
-        # TODO: add code to stop the physical flywheel
-
 
 class AutoIndexer:
     """
@@ -701,8 +691,8 @@ class RightAuto1:
                            100,
                            True,
                            timeOut=3_000),
-
-            # intake on
+            
+            AutoIntake(),
             AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 70,
                       100),
             AutoAlignShoot(Constants.TILE___3,
@@ -1420,19 +1410,19 @@ class Intake:
 
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
-        # TODO: add initialization code
-
-    # TODO: add any other helper methods
+        self.motor.set_max_torque(100, PERCENT)
+        self.isRunning = False
 
     def toggleMotor(self, direction=FORWARD):
-        self.motor.spin(FORWARD)
-        # TODO: add code to run/stop motor
-        pass
+        if self.motor.is_spinning or self.isRunning:
+            self.motor.stop()
+            self.isRunning = False
+        else:
+            self.motor.spin(FORWARD, 100, PERCENT)
+            self.isRunning = True
 
     def reverseMotor(self):
-        self.motor.spin(REVERSE)
-        # TODO: add code to reverse motor in the event of jam
-        pass
+        self.motor.spin_for(REVERSE, 360 * 2, DEGREES, 100, PERCENT)
 
 
 class Roller:
