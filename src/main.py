@@ -193,15 +193,17 @@ class AutoIntake:
 
     stopAuto = False
 
-    def __init__(self, wait=True):
+    def __init__(self, status=0, wait=True):
         self.wait = wait
+        self.status = status
         AutoIntake.isRunning = False
         AutoIntake.stopAuto = False
 
     def execute(self):
         AutoIntake.isRunning = True
         
-        Robot.intake.toggleMotor()
+        if self.status == 1 : Robot.intake.toggleMotor()
+        elif self.status == 0: Robot.intake.stop()
 
         AutoIntake.isRunning = False
 
@@ -692,7 +694,7 @@ class RightAuto1:
                            True,
                            timeOut=3_000),
             
-            AutoIntake(),
+            AutoIntake(status=1),
             AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 70,
                       100),
             AutoAlignShoot(Constants.TILE___3,
@@ -708,7 +710,7 @@ class RightAuto1:
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100,
                       100, True),
 
-            # intake off
+            AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
             # AutoRoller(90),
@@ -1414,15 +1416,22 @@ class Intake:
         self.isRunning = False
 
     def toggleMotor(self, direction=FORWARD):
-        if self.motor.is_spinning or self.isRunning:
-            self.motor.stop()
-            self.isRunning = False
+        if self.motor.is_spinning() or self.isRunning:
+            self.stop()
         else:
-            self.motor.spin(FORWARD, 100, PERCENT)
-            self.isRunning = True
+            self.run()
+
+    def run(self):
+        self.motor.spin(FORWARD, 100, PERCENT)
+        self.isRunning = True
+    
+    def stop(self):
+        self.motor.stop()
+        self.isRunning = False
 
     def reverseMotor(self):
         self.motor.spin_for(REVERSE, 360 * 2, DEGREES, 100, PERCENT)
+        self.isRunning = False
 
 
 class Roller:
