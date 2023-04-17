@@ -151,7 +151,7 @@ class AutoFlywheel:
 
     stopAuto = False
 
-    def __init__(self, distance=Constants.SIDE_SHOT):
+    def __init__(self, distance=Constants.HI_SPEED):
         self.distance = distance
 
         AutoFlywheel.isRunning = False
@@ -496,7 +496,7 @@ class AutoAlignShoot(AutoDrive):
                  xTarget=0.0,
                  yTarget=0.0,
                  ΘTarget=math.pi / 2,
-                 distance=Constants.SIDE_SHOT,
+                 distance=Constants.HI_SPEED,
                  driveVel=25.0,
                  turnVel=25.0,
                  overrideAutoClear=False,
@@ -638,7 +638,7 @@ class LeftAuto1:
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -650,7 +650,7 @@ class LeftAuto1:
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -667,7 +667,7 @@ class LeftAuto1:
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -688,7 +688,7 @@ class RightAuto1:
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -700,7 +700,7 @@ class RightAuto1:
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -717,7 +717,7 @@ class RightAuto1:
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            0,
-                           Constants.TILE___6,
+                           Constants.HI_SPEED,
                            100,
                            100,
                            True,
@@ -1235,7 +1235,7 @@ class Flywheel:
         # self.motorGroup = MotorGroup(*[motors])
         self.motorGroup = Motor(motors[0], GearSetting.RATIO_6_1, False)
 
-        self.flywheelPID = PID(Kp=1)
+        # self.flywheelPID = PID(Kp=1)
         self.endgameLaunched = False
         self.flywheelVel = 1_400
         self.motorVel = self.calcMotorVel(self.flywheelVel)
@@ -1249,10 +1249,12 @@ class Flywheel:
 
         self.velocityDict = {
             # need empirical data & verification
-            Constants.MID_SHOT:
-            4_200 / 2.0 + 4_200 / 8.0,  # 2,625
-            Constants.SIDE_SHOT:
-            4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
+
+            # Constants.MID_SHOT:
+            # 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
+            # Constants.SIDE_SHOT:
+            # 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
+
             Constants.LO_SPEED:
             4_200 * (1.0 / 2.0),  # 2,100
             Constants.HI_SPEED:
@@ -1322,16 +1324,12 @@ class Flywheel:
         if self.distance in self.velocityDict.keys():
             myController.updateRow2()
             self.setVelocity(self.velocityDict[self.distance])
+            print(self.__class__.__name__, self.velocityDict[self.distance])
 
     def setDistance(self, distance):
         self.distance = distance
         self.updateVel()
-
-    def launchEndgame(self):
-        # TODO: add code to reverse flywheel to specific angle to launch endgame
-        # TODO: add time keeping code to prevent early launch
-        pass
-
+    
     def setVelocity(self, flywheelVel):
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
