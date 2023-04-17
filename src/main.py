@@ -1357,7 +1357,7 @@ class Indexer:
     def __init__(self, motor):
         self.motor = Motor(motor, GearSetting.RATIO_18_1, True)
         self.motor.set_stopping(HOLD)
-        self.motor.set_velocity(Constants.TILE___5, RPM)
+        self.motor.set_velocity(100, PERCENT)
         self.isRunning = False
 
         # calculate the degrees the motor turns to move 1 chain forward
@@ -1382,7 +1382,7 @@ class Indexer:
         return False
 
     def push(self):
-        if self.motor.is_spinning() == False:
+        if not self.motor.is_spinning() and Robot.flywheel.isRunning:
             self.motor.spin_for(FORWARD,
                                 self.degreesPerCycle,
                                 DEGREES,
