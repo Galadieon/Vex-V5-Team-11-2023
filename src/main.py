@@ -1126,43 +1126,44 @@ class Odometry:
         screenStartTime = brain.timer.time(MSEC)
         screenUpdateInterval = 100
 
-        while True:
-            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
-            if abs(self.x) > 1_000 or abs(self.y) > 1_000:
-                self.reset()
+        # while True:
+        wait(10, MSEC)
+        # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
+        if abs(self.x) > 1_000 or abs(self.y) > 1_000:
+            self.reset()
 
-            start = brain.timer.time(MSEC)
+        # start = brain.timer.time(MSEC)
 
-            prevRightVal = currRightVal
-            prevLeftVal = currLeftVal
-            prevAuxVal = currAuxVal
+        prevRightVal = currRightVal
+        prevLeftVal = currLeftVal
+        prevAuxVal = currAuxVal
 
-            currRightVal = self.rightEncoder.value()
-            currLeftVal = self.leftEncoder.value()
-            currAuxVal = self.auxEncoder.value()
+        currRightVal = self.rightEncoder.value()
+        currLeftVal = self.leftEncoder.value()
+        currAuxVal = self.auxEncoder.value()
 
-            dn2 = currRightVal - prevRightVal
-            dn1 = currLeftVal - prevLeftVal
-            dn3 = currAuxVal - prevAuxVal
+        dn2 = currRightVal - prevRightVal
+        dn1 = currLeftVal - prevLeftVal
+        dn3 = currAuxVal - prevAuxVal
 
-            dtheta = inchsPerTick * ((dn2 - dn1) / LR_Distance)
-            dx = inchsPerTick * ((dn1 + dn2) / 2.0)
-            dy = inchsPerTick * (dn3 - ((dn2 - dn1) *
-                                        (B_Distance / LR_Distance)))
+        dtheta = inchsPerTick * ((dn2 - dn1) / LR_Distance)
+        dx = inchsPerTick * ((dn1 + dn2) / 2.0)
+        dy = inchsPerTick * (dn3 - ((dn2 - dn1) *
+                                    (B_Distance / LR_Distance)))
 
-            theta = self.Θ + (dtheta / 2.0)
-            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
-            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
-            self.Θ += dtheta
+        theta = self.Θ + (dtheta / 2.0)
+        self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
+        self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
+        self.Θ += dtheta
 
-            screenEndTime = brain.timer.time(MSEC)
+        screenEndTime = brain.timer.time(MSEC)
 
-            if screenEndTime > screenStartTime + screenUpdateInterval:
-                screenStartTime = screenEndTime
-                myController.updateRow1()
+        if screenEndTime > screenStartTime + screenUpdateInterval:
+            screenStartTime = screenEndTime
+            myController.updateRow1()
 
-            while brain.timer.time(MSEC) - start < 7.5:
-                continue
+        # while brain.timer.time(MSEC) - start < 7.5:
+        #     continue
 
     def stop(self):
         self.thread.stop()
