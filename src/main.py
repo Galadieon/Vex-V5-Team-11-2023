@@ -83,7 +83,7 @@ class Constants:
     INDEXER_PORT = Ports.PORT2
     FLYWHEEL_PORT1 = Ports.PORT9
     FLYWHEEL_PORT2 = Ports.PORT15
-    INTAKE_PORT = Ports.PORT16
+    INTAKE_PORT = Ports.PORT8
     ROLLER_PORT = INTAKE_PORT
 
     RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
@@ -241,10 +241,10 @@ class AutoIndexer:
             if AutoIndexer.stopAuto == True:
                 Robot.indexer.stop()
                 break
-            pushed = Robot.indexer.autoPush()
+            # pushed = Robot.indexer.autoPush()
 
-            if pushed:
-                self.numDisc -= 1
+            # if pushed:
+            #     self.numDisc -= 1
 
         AutoIndexer.isRunning = False
 
@@ -1175,7 +1175,7 @@ class MecanumDriveTrain:
         if self.flywheelIsFront:
             forward = -forward
             strafe = -strafe
-            turn = -turn
+        turn = -turn
             
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
@@ -1281,12 +1281,12 @@ class Flywheel:
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
             print("MOTOR SPINNING")
 
-    def isAtSetVel(self):
-        currMotorVel = self.motorGroup.velocity(RPM)
+    # def isAtSetVel(self):
+    #     currMotorVel = self.motorGroup.velocity(RPM)
 
-        if self.motorVel - 5 <= currMotorVel or currMotorVel <= self.motorVel + 5:
-            return True
-        return False
+    #     if self.motorVel - 5 <= currMotorVel or currMotorVel <= self.motorVel + 5:
+    #         return True
+    #     return False
 
     def toggleSpeed(self):
         # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
@@ -1376,11 +1376,11 @@ class Indexer:
         else:
             self.push()
 
-    def autoPush(self):
-        if Robot.flywheel.isAtSetVel() and self.motor.is_done():
-            self.push()
-            return True
-        return False
+    # def autoPush(self):
+    #     if Robot.flywheel.isAtSetVel() and self.motor.is_done():
+    #         self.push()
+    #         return True
+    #     return False
 
     def push(self):
         if not self.motor.is_spinning() and Robot.flywheel.isRunning:
