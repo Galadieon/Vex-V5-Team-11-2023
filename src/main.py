@@ -936,12 +936,13 @@ class MyController:
                                      "MI:", self.manualIndexer)
                                     
     def flywheelThread(self):
-        while True:
-            if Robot.flywheel.isRunning:
-                Robot.flywheel.run()
-            else: Robot.flywheel.stop()
+        # while True:
+        #     if Robot.flywheel.isRunning:
+        #         Robot.flywheel.run()
+        #     else: Robot.flywheel.stop()
 
-            wait(10, MSEC)
+        #     wait(10, MSEC)
+        pass
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
