@@ -1094,8 +1094,9 @@ class Odometry:
             screenStartTime = screenEndTime
             # myController.updateRow1()
 
-        while brain.timer.time(MSEC) - start < 7.5:
+        while brain.timer.time(MSEC) - start < 10:
             continue
+            wait(2.5, MSEC)
 
     def stop(self):
         self.threadIsRunning = False
