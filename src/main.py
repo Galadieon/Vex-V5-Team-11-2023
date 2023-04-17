@@ -888,7 +888,7 @@ class MyController:
         if Robot.drivetrain.getFrontIsFlywheel():
             Robot.flywheel.toggleMotor()
         else:
-            pass
+            Robot.intake.reverseMotor()
 
     def L2_Pressed(self):
         Robot.drivetrain.changeFront()
@@ -897,7 +897,7 @@ class MyController:
         if Robot.drivetrain.getFrontIsFlywheel():
             Robot.flywheel.toggleSpeed()
         else:
-            pass
+            Robot.roller.flip()
 
     def R2_Pressed(self):
         if Robot.drivetrain.getFrontIsFlywheel():
@@ -908,7 +908,7 @@ class MyController:
                     # Robot.indexer.autoPush()
                     pass
         else:
-            pass
+            Robot.intake.toggleMotor()
 
     """
       X
