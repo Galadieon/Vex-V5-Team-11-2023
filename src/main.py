@@ -1,6 +1,6 @@
 # ------------------------------------------
 #
-# 	Project:      Mecanum Robot Program
+# 	Project:      Spin Up Robot Program
 #	Author:       Lam Ninh & Kaily Do
 #	Created:      11/1/2022
 #	Description:  VEXcode V5 Python Team 11
@@ -820,26 +820,24 @@ class MyController:
 
     def axisCurve(self, x):
         # return (pow(x, 3)) / 10_000
-        return x
+        result = pow(x, 2) / 100.0
+        return result if x >= 0 else -result
 
-    def updateRow1(self):
+    def updateRow1(self, *data):
         # X: _ Y: _ Θ: _
         self.controller.screen.clear_row(1)
 
         self.controller.screen.set_cursor(1, 1)
 
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
+        self.controller.screen.print(data[0], data[1], math.degrees(data[2]))
 
-        self.controller.screen.print(robotX, robotY, math.degrees(robotΘ))
-
-    def updateRow2(self):
+    def updateRow2(self, *data):
         # D: 24 V: 4,200
         self.controller.screen.clear_row(2)
 
         self.controller.screen.set_cursor(2, 1)
 
-        self.controller.screen.print("FWD:", Robot.flywheel.distance, "FWV:",
-                                     Robot.flywheel.flywheelVel)
+        self.controller.screen.print("FWD:", data[0], "FWV:", data[1])
 
     def updateRow3(self):
         # FC: False MI: False
@@ -1025,8 +1023,6 @@ class Odometry:
         self.resetOdomEncoders = False
         self.resetOdomPose = False
 
-        # Thread(self.updatePose)
-
         self.inchsPerTick = Constants.INCHES_PER_TICK
         self.LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
         self.B_Distance = Constants.AUX_ODOMETRY_DISTANCE
@@ -1038,11 +1034,13 @@ class Odometry:
         self.prevRightVal = 0  # previous encoder value for right wheel
         self.prevLeftVal = 0  # previous encoder value for left wheel
         self.prevAuxVal = 0  # previous encoder value for back whee
+        
+        self.screenStartTime = brain.timer.time(MSEC)
+        self.screenUpdateInterval = 100
+
+        # Thread(self.updatePose)
 
     def updatePose(self):
-        screenStartTime = brain.timer.time(MSEC)
-        screenUpdateInterval = 100
-
         self.threadIsRunning = True
 
         # while (self.threadIsRunning):
@@ -1090,13 +1088,13 @@ class Odometry:
 
         screenEndTime = brain.timer.time(MSEC)
 
-        if screenEndTime > screenStartTime + screenUpdateInterval:
-            screenStartTime = screenEndTime
-            # myController.updateRow1()
+        if screenEndTime > self.screenStartTime + self.screenUpdateInterval:
+            self.screenStartTime = screenEndTime
+            myController.updateRow1(self.x, self.y, self.Θ)
 
-        while brain.timer.time(MSEC) - start < 10:
-            continue
-            wait(2.5, MSEC)
+        # while brain.timer.time(MSEC) - start < 10:
+        #     continue
+        #     wait(2.5, MSEC)
 
     def stop(self):
         self.threadIsRunning = False
@@ -1323,9 +1321,10 @@ class Flywheel:
 
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
-            myController.updateRow2()
-            self.setVelocity(self.velocityDict[self.distance])
-            print(self.__class__.__name__, self.velocityDict[self.distance])
+            velocity = self.velocityDict[self.distance]
+            myController.updateRow2(self.distance, velocity)
+            self.setVelocity(velocity)
+            print(self.__class__.__name__, velocity)
 
     def setDistance(self, distance):
         self.distance = distance
@@ -1514,10 +1513,12 @@ def Default_Motor_Speed():
 
 
 def vexcode_auton_function():
+    printDB("AUTO PERIOD BEGIN")
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
         Robot.odometry.updatePose()
         wait(10, MSEC)
+    printDB("AUTO PERIOD STOPPED")
     auton_task_0.stop()
 
 
@@ -1530,9 +1531,11 @@ def Autonomous_Control():
 
 
 def vexcode_driver_function():
+    printDB("DRIVER PERIOD BEGIN")
     driver_control_task_0 = Thread(Driver_Control)
     while (competition.is_driver_control() and competition.is_enabled()):
         wait(10, MSEC)
+    printDB("DRIVER PERIOD STOPPED")
     Robot.drivetrain.stop()
     driver_control_task_0.stop()
 
