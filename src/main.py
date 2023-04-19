@@ -201,11 +201,12 @@ class AutoIntake:
 
     def execute(self):
         AutoIntake.isRunning = True
-        
-        if self.status == 1 : Robot.intake.toggleMotor()
+
+        if self.status == 1: Robot.intake.toggleMotor()
         elif self.status == 0: Robot.intake.stop()
 
         AutoIntake.isRunning = False
+
 
 class AutoIndexer:
     """
@@ -356,14 +357,14 @@ class AutoDrive:
 
         AutoDrive.isRunning = False
         AutoDrive.stopAuto = False
-        
+
         Robot.drivetrain.flywheelAsFront(True)
 
     def execute(self):
         if self.wait:
             self.run()
         else:
-        #     self.thread = Thread(self.run)
+            #     self.thread = Thread(self.run)
             printDB("Tried to make new thread (bad)")
 
     def run(self):
@@ -668,7 +669,7 @@ class LeftAuto1:
                            100,
                            True,
                            timeOut=5_000),
-            
+                           
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
                       (5 * math.pi) / 4, 100, 100, True),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5,
@@ -676,8 +677,13 @@ class LeftAuto1:
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
-            AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
-                      100, True, timeOut=rollerTimeOut),
+            AutoDrive(Constants.TILE_R_R,
+                      Constants.TILE___4,
+                      math.pi,
+                      100,
+                      100,
+                      True,
+                      timeOut=rollerTimeOut),
             AutoRoller(),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
@@ -699,8 +705,13 @@ class RightAuto1:
         commandRun = RunCommands(
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
-            AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
-                      100, True, timeOut=rollerTimeOut),
+            AutoDrive(Constants.TILE_R_R,
+                      Constants.TILE___4,
+                      math.pi,
+                      100,
+                      100,
+                      True,
+                      timeOut=rollerTimeOut),
             AutoRoller(),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
@@ -710,7 +721,7 @@ class RightAuto1:
                            100,
                            True,
                            timeOut=5_000),
-            
+
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi / 4, 100,
                       100, True),
             AutoIntake(status=1),
@@ -732,8 +743,13 @@ class RightAuto1:
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100,
                       100, True),
-            AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
-                      100, True, timeOut=rollerTimeOut),
+            AutoDrive(Constants.TILE___1,
+                      Constants.TILE_L_R,
+                      math.pi / 2,
+                      100,
+                      100,
+                      True,
+                      timeOut=rollerTimeOut),
             AutoRoller(),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
@@ -1051,15 +1067,15 @@ class Odometry:
         self.inchsPerTick = Constants.INCHES_PER_TICK
         self.LR_Distance = Constants.LEFT_RIGHT_ODOMETRY_DISTANCE
         self.B_Distance = Constants.AUX_ODOMETRY_DISTANCE
-        
+
         self.currRightVal = 0  # current encoder value for right wheel
         self.currLeftVal = 0  # current encoder value for left wheel
         self.currAuxVal = 0  # current encoder value for back wheel
-        
+
         self.prevRightVal = 0  # previous encoder value for right wheel
         self.prevLeftVal = 0  # previous encoder value for left wheel
         self.prevAuxVal = 0  # previous encoder value for back whee
-        
+
         self.screenStartTime = brain.timer.time(MSEC)
         self.screenUpdateInterval = 100
 
@@ -1071,7 +1087,7 @@ class Odometry:
         # while (self.threadIsRunning):
         if self.Θ >= 360.0: self.Θ = 0.0
         if self.Θ < 0.0: self.Θ = 360.0
-        
+
         # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
         if abs(self.x) > 1_000 or abs(self.y) > 1_000 or abs(self.Θ) > 1_000:
             self.resetPose()
@@ -1104,7 +1120,7 @@ class Odometry:
         dtheta = self.inchsPerTick * ((dn2 - dn1) / self.LR_Distance)
         dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
         dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) *
-                                    (self.B_Distance / self.LR_Distance)))
+                                         (self.B_Distance / self.LR_Distance)))
 
         theta = self.Θ + (dtheta / 2.0)
         self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
@@ -1187,10 +1203,10 @@ class MecanumDriveTrain:
         self.turnVel = 100
         self.motorMode = COAST
         self.flywheelIsFront = True
-    
+
     def changeFront(self):
         self.flywheelIsFront = not self.flywheelIsFront
-    
+
     def flywheelAsFront(self, bool):
         self.flywheelIsFront = bool
 
@@ -1199,7 +1215,7 @@ class MecanumDriveTrain:
             forward = -forward
             strafe = -strafe
         turn = -turn
-            
+
         self.motorFrontLeft.set_velocity(forward + strafe + turn, PERCENT)
         self.motorFrontRight.set_velocity(forward - strafe - turn, PERCENT)
         self.motorBackRight.set_velocity(forward + strafe - turn, PERCENT)
@@ -1233,7 +1249,7 @@ class MecanumDriveTrain:
 
     def getMotorMode(self):
         return self.motorMode
-    
+
     def getFrontIsFlywheel(self):
         return self.flywheelIsFront
 
@@ -1278,7 +1294,6 @@ class Flywheel:
             # 4_200 / 2.0 + 4_200 / 8.0,  # 2,625
             # Constants.SIDE_SHOT:
             # 4_200 * (2.0 / 3.0) + 4_200 / 8.0,  # 3,325
-
             Constants.LO_SPEED:
             4_200 * (1.0 / 2.0),  # 2,100
             Constants.HI_SPEED:
@@ -1354,7 +1369,7 @@ class Flywheel:
     def setDistance(self, distance):
         self.distance = distance
         self.updateVel()
-    
+
     def setVelocity(self, flywheelVel):
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
@@ -1447,7 +1462,7 @@ class Intake:
     def run(self):
         self.motor.spin(FORWARD, 100, PERCENT)
         self.isRunning = True
-    
+
     def stop(self):
         self.motor.stop()
         self.isRunning = False
