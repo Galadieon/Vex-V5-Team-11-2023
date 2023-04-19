@@ -901,9 +901,11 @@ class MyController:
     #### Available button commands in use
     
     self.changeDriveTrainVel()
-    Robot.odometry.resetPose()
+    self.printFWVelDict()
     self.toggleAuto()
     self.toggleDriveTrainMode()
+
+    Robot.odometry.resetPose()
     AutoDrive().driveToOrigin()
     """
 
@@ -933,7 +935,7 @@ class MyController:
                 if self.manualIndexer:
                     Robot.indexer.push()
                 else:
-                    # Robot.indexer.autoPush()
+                    Robot.indexer.autoPush()
                     pass
         else:
             Robot.intake.toggleMotor()
@@ -945,7 +947,6 @@ class MyController:
     """
 
     def X_Pressed(self):
-        # self.printFWVelDict()
         pass
 
     def A_Pressed(self):
