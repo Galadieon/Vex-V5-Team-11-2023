@@ -926,8 +926,6 @@ class MyController:
 
         if Robot.drivetrain.getFrontIsFlywheel():
             Robot.flywheel.toggleMotor()
-        else:
-            Robot.intake.reverseMotor()
 
     def L2_Pressed(self):
         """
@@ -935,7 +933,7 @@ class MyController:
 
         Default: Flywheel is front
         """
-        
+
         wait(10, MSEC)
         Robot.drivetrain.changeFront()
 
@@ -977,10 +975,10 @@ class MyController:
     """
 
     def X_Pressed(self):
-        pass
+        Robot.flywheel.increaseVelocity()
 
     def A_Pressed(self):
-        Robot.flywheel.increaseVelocity()
+        pass
 
     def B_Pressed(self):
         Robot.flywheel.decreaseVelocity()
@@ -998,14 +996,12 @@ class MyController:
         pass
 
     def Right_Pressed(self):
-        self.changeDriveTrainVel()
+        Robot.intake.reverseMotor()
 
     def Down_Pressed(self):
-        # Robot.odometry.reset()
-        pass
+        self.changeDriveTrainVel()
 
     def Left_Pressed(self):
-        # self.toggleDriveTrainMode()
         pass
 
     # ----------------------BUTTON HELPER METHODS------------------------
