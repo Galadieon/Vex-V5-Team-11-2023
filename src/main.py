@@ -41,6 +41,8 @@ class Constants:
         Constants.WHEEL_TRAVEL
     """
 
+    GAME_TIME_SEC = 2 * 60
+
     FIELDSIZE = 141.0
     TILESIZE = FIELDSIZE / 6.0  # 141 / 6 = 23.5, OG: 24
 
@@ -85,6 +87,7 @@ class Constants:
     FLYWHEEL_PORT2 = Ports.PORT15
     INTAKE_PORT = Ports.PORT8
     ROLLER_PORT = INTAKE_PORT
+    VORTEX_PORT = Ports.PORT11  # potentially bad, maybe do 13?
 
     RIGHT_ENCODER = Encoder(brain.three_wire_port.e)
     LEFT_ENCODER = Encoder(brain.three_wire_port.a)
@@ -655,7 +658,6 @@ class LeftAuto1:
                            100,
                            True,
                            timeOut=5_000),
-
             AutoDrive(Constants.TILE___1, Constants.TILE___0,
                       (5 * math.pi) / 4, 100, 100, True),
             AutoIntake(status=1),
@@ -669,7 +671,6 @@ class LeftAuto1:
                            100,
                            True,
                            timeOut=5_000),
-                           
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
                       (5 * math.pi) / 4, 100, 100, True),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5,
@@ -721,7 +722,6 @@ class RightAuto1:
                            100,
                            True,
                            timeOut=5_000),
-
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi / 4, 100,
                       100, True),
             AutoIntake(status=1),
@@ -735,7 +735,6 @@ class RightAuto1:
                            100,
                            True,
                            timeOut=5_000),
-
             AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 100,
                       100, True),
             AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5, math.pi / 4, 100,
@@ -966,7 +965,7 @@ class MyController:
         Robot.flywheel.decreaseVelocity()
 
     def Y_Pressed(self):
-        pass
+        Robot.vortex.toggleMotor()
 
     """
       ↑
@@ -1499,6 +1498,24 @@ class Roller:
                             wait)
 
 
+class EndgameVortex:
+
+    def __init__(self, port):
+        self.motor = Motor(port, GearSetting.RATIO_18_1, False)
+        self.motor.set_velocity(100, PERCENT)
+        self.motor.set_max_torque(50, PERCENT)
+        self.motor.set_stopping(COAST)
+
+        self.hasRun = False
+        
+        self.endgameTime = Constants.GAME_TIME_SEC - 10
+
+    def toggleMotor(self):
+        if brain.timer.time(SECONDS) >= self.endgameTime and not self.hasRun:
+            self.motor.spin_for(FORWARD, 1_000, MSEC)
+            self.hasRun = True
+
+
 # ---------------------------------ROBOT--------------------------------
 
 
@@ -1535,6 +1552,8 @@ class Robot:
     intake = Intake(Constants.INTAKE_PORT)
 
     roller = Roller(Constants.ROLLER_PORT)
+
+    vortex = EndgameVortex(Constants.VORTEX_PORT)
 
 
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
