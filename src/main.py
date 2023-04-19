@@ -935,7 +935,8 @@ class MyController:
 
         Default: Flywheel is front
         """
-
+        
+        wait(10, MSEC)
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
