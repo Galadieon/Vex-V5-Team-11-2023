@@ -241,10 +241,10 @@ class AutoIndexer:
             if AutoIndexer.stopAuto == True:
                 Robot.indexer.stop()
                 break
-            # pushed = Robot.indexer.autoPush()
+            pushed = Robot.indexer.autoPush()
 
-            # if pushed:
-            #     self.numDisc -= 1
+            if pushed:
+                self.numDisc -= 1
 
         AutoIndexer.isRunning = False
 
@@ -363,7 +363,8 @@ class AutoDrive:
         if self.wait:
             self.run()
         else:
-            self.thread = Thread(self.run)
+        #     self.thread = Thread(self.run)
+            printDB("Tried to make new thread (bad)")
 
     def run(self):
         AutoDrive.isRunning = True
@@ -379,7 +380,7 @@ class AutoDrive:
                 return
 
             if brain.timer.time(MSEC) - start > self.timeOut:
-                RunCommands.stopAll()
+                # RunCommands.stopAll()
                 break
 
             robotX, robotY, robotΘ = Robot.odometry.getPose()
@@ -528,13 +529,18 @@ class AutoAlignShoot(AutoDrive):
     def execute(self):
         AutoAlignShoot.isRunning = True
 
+        start = brain.timer.time(MSEC)
+
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
         AutoAlignShoot.autoFlywheel.execute()
 
-        self.alignMaintainPos()
+        for _ in range(self.discs):
+            if brain.timer.time(MSEC) > start + self.timeOut:
+                break
+            self.alignMaintainPos()
 
-        AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
-        AutoAlignShoot.autoIndexer.execute()
+            AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
+            AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
 
@@ -549,7 +555,10 @@ class AutoAlignShoot(AutoDrive):
         #     AutoAlignShoot.autoIndexer.stop()
 
     def alignMaintainPos(self):
-        print("ATTEMPTING ALIGNMENT ...\n")
+        print("ATTEMPTING ALIGNMENT 1 ...\n")
+        super().execute()
+        wait(100, MSEC)
+        print("ATTEMPTING ALIGNMENT 2 ...\n")
         super().execute()
         # print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         # self.maintainPos = True
@@ -573,10 +582,10 @@ class RunCommands:
         Robot.drivetrain.set_stopping(HOLD)
 
         for command in commandList:
-            while RunCommands.pauseAuto:
-                continue
-            if RunCommands.stopAuto:
-                break
+            # while RunCommands.pauseAuto:
+            #     continue
+            # if RunCommands.stopAuto:
+            #     break
 
             command.execute()
 
@@ -584,25 +593,25 @@ class RunCommands:
 
         RunCommands.isRunning = False
 
-    @staticmethod
-    def stopAll():
-        RunCommands.isRunning = False
-        RunCommands.stopAuto = True
+    # @staticmethod
+    # def stopAll():
+    #     RunCommands.isRunning = False
+    #     RunCommands.stopAuto = True
 
-        AutoDrive.stopAuto = True
-        AutoAlignShoot.stopAll()
-        AutoFlywheel.stopAuto = True
-        AutoIndexer.stopAuto = True
-        AutoIntake.stopAuto = True
-        AutoRoller.stopAuto = True
+    #     AutoDrive.stopAuto = True
+    #     AutoAlignShoot.stopAll()
+    #     AutoFlywheel.stopAuto = True
+    #     AutoIndexer.stopAuto = True
+    #     AutoIntake.stopAuto = True
+    #     AutoRoller.stopAuto = True
 
-    @staticmethod
-    def pause():
-        RunCommands.pauseAuto = True
+    # @staticmethod
+    # def pause():
+    #     RunCommands.pauseAuto = True
 
-    @staticmethod
-    def unpause():
-        RunCommands.pauseAuto = False
+    # @staticmethod
+    # def unpause():
+    #     RunCommands.pauseAuto = False
 
 
 class TestMode:
@@ -629,12 +638,14 @@ class TestMode:
 class LeftAuto1:
 
     def __init__(self):
+        rollerTimeOut = 750
+
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
         commandRun = RunCommands(
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
                       100, True),
-            # AutoRoller(90),
+            AutoRoller(),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            0,
@@ -642,11 +653,13 @@ class LeftAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
+                           timeOut=5_000),
 
-            # intake on
+            AutoDrive(Constants.TILE___1, Constants.TILE___0,
+                      (5 * math.pi) / 4, 100, 100, True),
+            AutoIntake(status=1),
             AutoDrive(Constants.TILE___3, Constants.TILE___2,
-                      (5 * math.pi) / 4, 70, 100, True),
+                      (5 * math.pi) / 4, 100, 100, True),
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
                            0,
@@ -654,16 +667,18 @@ class LeftAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
+                           timeOut=5_000),
+            
+            AutoDrive(Constants.TILE___3, Constants.TILE___2,
+                      (5 * math.pi) / 4, 100, 100, True),
             AutoDrive(Constants.TILE_4_5, Constants.TILE_3_5,
-                      (5 * math.pi) / 4, 70, 100, True),
+                      (5 * math.pi) / 4, 100, 100, True),
+            AutoIntake(status=0),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
-
-            # intake off
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
-                      100, True),
-            # AutoRoller(90),
+                      100, True, timeOut=rollerTimeOut),
+            AutoRoller(),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            0,
@@ -671,20 +686,22 @@ class LeftAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
+                           timeOut=5_000),
         )
 
 
 class RightAuto1:
 
     def __init__(self):
+        rollerTimeOut = 750
+
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, 100,
                       100, True),
             AutoDrive(Constants.TILE_R_R, Constants.TILE___4, math.pi, 100,
-                      100, True),
-            # AutoRoller(90),
+                      100, True, timeOut=rollerTimeOut),
+            AutoRoller(),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            0,
@@ -692,10 +709,12 @@ class RightAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
+                           timeOut=5_000),
             
+            AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi / 4, 100,
+                      100, True),
             AutoIntake(status=1),
-            AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 70,
+            AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 100,
                       100),
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
@@ -704,16 +723,18 @@ class RightAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
-            AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5, math.pi / 4, 70,
+                           timeOut=5_000),
+
+            AutoDrive(Constants.TILE___3, Constants.TILE___2, math.pi / 4, 100,
+                      100, True),
+            AutoDrive(Constants.TILE_1_5, Constants.TILE_0_5, math.pi / 4, 100,
                       100),
+            AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2, 100,
                       100, True),
-
-            AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2, 100,
-                      100, True),
-            # AutoRoller(90),
+                      100, True, timeOut=rollerTimeOut),
+            AutoRoller(),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            0,
@@ -721,11 +742,15 @@ class RightAuto1:
                            100,
                            100,
                            True,
-                           timeOut=3_000),
+                           timeOut=5_000),
         )
 
 
 # -------------------------------UTILITIES-------------------------------
+
+
+def printDB(*arg):
+    print(*arg)
 
 
 class PID:
@@ -1279,12 +1304,12 @@ class Flywheel:
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
             print("MOTOR SPINNING")
 
-    # def isAtSetVel(self):
-    #     currMotorVel = self.motorGroup.velocity(RPM)
+    def isAtSetVel(self):
+        currMotorVel = self.motorGroup.velocity(RPM)
 
-    #     if self.motorVel - 5 <= currMotorVel or currMotorVel <= self.motorVel + 5:
-    #         return True
-    #     return False
+        if self.motorVel - 5 <= currMotorVel or currMotorVel <= self.motorVel + 5:
+            return True
+        return False
 
     def toggleSpeed(self):
         # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
@@ -1375,11 +1400,11 @@ class Indexer:
         else:
             self.push()
 
-    # def autoPush(self):
-    #     if Robot.flywheel.isAtSetVel() and self.motor.is_done():
-    #         self.push()
-    #         return True
-    #     return False
+    def autoPush(self):
+        if Robot.flywheel.isAtSetVel() and self.motor.is_done():
+            self.push()
+            return True
+        return False
 
     def push(self):
         if not self.motor.is_spinning() and Robot.flywheel.isRunning:
