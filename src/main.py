@@ -123,8 +123,8 @@ class Constants:
     FLYWHEEL_KI = 0
     FLYWHEEL_KD = 0
     FLYWHEEL_GEAR_RATIO = 84 / 12  # max for motor: 600 RPM, max for flywheel: 4,200 RPM
-    SIDE_SHOT = 0.0
-    MID_SHOT = 1.0
+    # SIDE_SHOT = 0.0
+    # MID_SHOT = 1.0
 
     INDEXER_GEAR_TEETH = 6
     INDEXER_CHAIN_LINKS = 19
@@ -847,8 +847,10 @@ class MyController:
                 strafe = self.axisCurve(self.controller.axis4.position())
                 turn = self.axisCurve(self.controller.axis1.position())
 
-                if abs(forward) > deadZoneVal or abs(
-                        strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                if not self.controller.buttonL2.pressing and (
+                        abs(forward) > deadZoneVal or
+                        abs(strafe) > deadZoneVal or
+                        abs(turn) > deadZoneVal):
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
@@ -874,7 +876,7 @@ class MyController:
     def updateRow3(self, *msgs):
         # FC: False MI: False
         self.controllerPrint(3, msgs)
-    
+
     def controllerPrint(self, row, msgs):
         self.controller.screen.clear_row(row)
         self.controller.screen.set_cursor(row, 1)
@@ -915,21 +917,48 @@ class MyController:
     # \_________/
 
     def L1_Pressed(self):
+        """
+        Toggles flywheel motor if flywheel is front
+        Unjams intake if intake is front
+
+        Default: Flywheel is front
+        """
+
         if Robot.drivetrain.getFrontIsFlywheel():
             Robot.flywheel.toggleMotor()
         else:
             Robot.intake.reverseMotor()
 
     def L2_Pressed(self):
+        """
+        Toggles oritentation of the robot between flywheel or intake as the front
+
+        Default: Flywheel is front
+        """
+
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
+        """
+        Toggles flywheel speed between high (100%) or low (50%) if flywheel is front
+        Flips rollers if intake is front
+
+        Default: Flywheel is front
+        """
+
         if Robot.drivetrain.getFrontIsFlywheel():
             Robot.flywheel.toggleSpeed()
         else:
             Robot.roller.flip()
 
     def R2_Pressed(self):
+        """
+        Indexer pushes disc if flywheel is front
+        Toggles intake if intake is front
+
+        Default: Flywheel is front
+        """
+
         if Robot.drivetrain.getFrontIsFlywheel():
             if self.toggleManualIndexer() == False:
                 if self.manualIndexer:
@@ -1331,24 +1360,24 @@ class Flywheel:
         self.updateVel()
 
     def increaseVelocity(self):
-        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.LO_SPEED
-        else:
-            self.velocityDict[self.distance] += 50
+        # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
+        #     self.distance = Constants.LO_SPEED
+        # else:
+        self.velocityDict[self.distance] += 50
 
-            if self.velocityDict[self.distance] > 4_200.0:
-                self.velocityDict[self.distance] = 4_200.0
+        if self.velocityDict[self.distance] > 4_200.0:
+            self.velocityDict[self.distance] = 4_200.0
 
         self.updateVel()
 
     def decreaseVelocity(self):
-        if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            self.distance = Constants.LO_SPEED
-        else:
-            self.velocityDict[self.distance] -= 50
+        # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
+        #     self.distance = Constants.LO_SPEED
+        # else:
+        self.velocityDict[self.distance] -= 50
 
-            if self.velocityDict[self.distance] < 0.0:
-                self.velocityDict[self.distance] = 0.0
+        if self.velocityDict[self.distance] < 0.0:
+            self.velocityDict[self.distance] = 0.0
 
         self.updateVel()
 
@@ -1501,7 +1530,7 @@ class EndgameVortex:
         self.motor.set_stopping(COAST)
 
         self.hasRun = False
-        
+
         self.endgameTime = Constants.GAME_TIME_SEC - 10
 
     def toggleMotor(self):
