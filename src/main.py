@@ -863,32 +863,22 @@ class MyController:
         result = pow(x, 2) / 100.0
         return result if x >= 0 else -result
 
-    def updateRow1(self, *data):
+    def updateRow1(self, *msgs):
         # X: _ Y: _ Θ: _
-        self.controller.screen.clear_row(1)
+        self.controllerPrint(1, msgs)
 
-        self.controller.screen.set_cursor(1, 1)
-
-        self.controller.screen.print(data[0], data[1], math.degrees(data[2]))
-
-    def updateRow2(self, *data):
+    def updateRow2(self, *msgs):
         # D: 24 V: 4,200
-        self.controller.screen.clear_row(2)
+        self.controllerPrint(2, msgs)
 
-        self.controller.screen.set_cursor(2, 1)
-
-        self.controller.screen.print("FWD:", data[0], "FWV:", data[1])
-
-    def updateRow3(self):
+    def updateRow3(self, *msgs):
         # FC: False MI: False
-        self.controller.screen.clear_row(3)
-
-        self.controller.screen.set_cursor(3, 1)
-
-        fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
-
-        self.controller.screen.print("FC:", fineControl, "MI:",
-                                     self.manualIndexer)
+        self.controllerPrint(3, msgs)
+    
+    def controllerPrint(self, row, msgs):
+        self.controller.screen.clear_row(row)
+        self.controller.screen.set_cursor(row, 1)
+        self.controller.screen.print(*msgs)
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
@@ -1007,7 +997,9 @@ class MyController:
         elif Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL:
             Robot.drivetrain.set_turn_velocity(100)
             Robot.drivetrain.set_drive_velocity(100)
-        self.updateRow3()
+
+        fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
+        self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
 
     # def toggleDriveTrainMode(self):
     #     if Robot.drivetrain.getMotorMode() == BRAKE:
@@ -1021,7 +1013,8 @@ class MyController:
         while self.controller.buttonR2.pressing():
             if brain.timer.time(MSEC) - start > 1_000:
                 self.manualIndexer = not self.manualIndexer
-                self.updateRow3()
+                fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
+                self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
                 return True
             wait(10, MSEC)
 
@@ -1130,7 +1123,7 @@ class Odometry:
 
         if screenEndTime > self.screenStartTime + self.screenUpdateInterval:
             self.screenStartTime = screenEndTime
-            myController.updateRow1(self.x, self.y, self.Θ)
+            myController.updateRow1(self.x, self.y, math.degrees(self.Θ))
 
         # while brain.timer.time(MSEC) - start < 10:
         #     continue
@@ -1361,7 +1354,7 @@ class Flywheel:
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
             velocity = self.velocityDict[self.distance]
-            myController.updateRow2(self.distance, velocity)
+            myController.updateRow2("FWD:", self.distance, "FWV:", velocity)
             self.setVelocity(velocity)
             print(self.__class__.__name__, velocity)
 
