@@ -840,17 +840,16 @@ class MyController:
         Thread(self.controllerLoop)
 
     def controllerLoop(self):
-        deadZoneVal = 5  # PERCENT
+        deadZoneVal = 1  # PERCENT
         while (True):
             if self.controllerEnabled:
                 forward = self.axisCurve(self.controller.axis3.position())
                 strafe = self.axisCurve(self.controller.axis4.position())
                 turn = self.axisCurve(self.controller.axis1.position())
-
-                if not self.controller.buttonL2.pressing and (
-                        abs(forward) > deadZoneVal or
-                        abs(strafe) > deadZoneVal or
-                        abs(turn) > deadZoneVal):
+                
+                if not self.controller.buttonL2.pressing() and abs(forward) > deadZoneVal or abs(
+                        strafe) > deadZoneVal or abs(
+                        turn) > deadZoneVal:
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
@@ -934,7 +933,7 @@ class MyController:
         Default: Flywheel is front
         """
 
-        wait(10, MSEC)
+        wait(100, MSEC)
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
@@ -975,16 +974,16 @@ class MyController:
     """
 
     def X_Pressed(self):
-        Robot.flywheel.increaseVelocity()
+        Robot.vortex.toggleMotor()
 
     def A_Pressed(self):
-        pass
+        Robot.flywheel.increaseVelocity()
 
     def B_Pressed(self):
         Robot.flywheel.decreaseVelocity()
 
     def Y_Pressed(self):
-        Robot.vortex.toggleMotor()
+        Robot.intake.reverseMotor()
 
     """
       ↑
@@ -996,13 +995,14 @@ class MyController:
         pass
 
     def Right_Pressed(self):
-        Robot.intake.reverseMotor()
+        # Robot.intake.reverseMotor()
+        pass
 
     def Down_Pressed(self):
-        self.changeDriveTrainVel()
+        pass
 
     def Left_Pressed(self):
-        pass
+        self.changeDriveTrainVel()
 
     # ----------------------BUTTON HELPER METHODS------------------------
 
@@ -1349,6 +1349,7 @@ class Flywheel:
         # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
         #     self.distance = Constants.LO_SPEED
         # else:
+        printDB("PRESSED", self.distance, Constants.LO_SPEED)
         if self.distance == Constants.LO_SPEED:
             self.distannce = Constants.HI_SPEED
         else:
@@ -1468,7 +1469,7 @@ class Intake:
     """
 
     def __init__(self, motor):
-        self.motor = Motor(motor, GearSetting.RATIO_18_1, False)
+        self.motor = Motor(motor, GearSetting.RATIO_6_1, False)
         self.motor.set_max_torque(100, PERCENT)
         self.isRunning = False
 
@@ -1487,7 +1488,7 @@ class Intake:
         self.isRunning = False
 
     def reverseMotor(self):
-        self.motor.spin_for(REVERSE, 360 * 2, DEGREES, 100, PERCENT)
+        self.motor.spin_for(FORWARD, 360 * 2, DEGREES, 100, PERCENT)
         self.isRunning = False
 
 
@@ -1621,7 +1622,7 @@ def vexcode_driver_function():
 
 def Driver_Control():
     Default_Motor_Speed()
-    Robot.flywheel.setDistance(Constants.TILE___1)
+    Robot.flywheel.setDistance(Constants.HI_SPEED)
 
 
 # ---------------------------REQUIRED CODE---------------------------
