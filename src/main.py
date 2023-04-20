@@ -163,13 +163,17 @@ class AutoFlywheel:
     def execute(self):
         AutoFlywheel.isRunning = True
         Robot.flywheel.setDistance(self.distance)
-        Robot.flywheel.toggleMotor()
+        if Robot.flywheel.toggleMotor():
+            self.printStartMessage()
+        else: self.stop()
+
         AutoFlywheel.isRunning = False
 
     def stop(self):
         AutoFlywheel.isRunning = False
         AutoFlywheel.stopAuto = True
         Robot.flywheel.stop()
+        self.printStopMessage()
 
     def run(self):
         pass
@@ -209,10 +213,15 @@ class AutoIntake:
         AutoIntake.stopAuto = False
 
     def execute(self):
+        
         AutoIntake.isRunning = True
 
-        if self.status == 1: Robot.intake.toggleMotor()
-        elif self.status == 0: Robot.intake.stop()
+        if self.status == 1: 
+            self.printStartMessage()
+            Robot.intake.toggleMotor()
+        elif self.status == 0:
+            Robot.intake.stop()
+            self.printStopMessage()
 
         AutoIntake.isRunning = False
 
@@ -251,6 +260,7 @@ class AutoIndexer:
         AutoIndexer.stopAuto = False
 
     def execute(self):
+        self.printStartMessage()
         AutoIndexer.isRunning = True
 
         while self.numDisc > 0:
@@ -261,6 +271,7 @@ class AutoIndexer:
 
             if pushed:
                 self.numDisc -= 1
+                self.printStopMessage()
 
         AutoIndexer.isRunning = False
 
@@ -305,6 +316,7 @@ class AutoRoller:
         AutoRoller.stopAuto = False
 
     def execute(self):
+        self.printStartMessage()
         """Run the roller to spin how many degrees"""
         AutoRoller.isRunning = True
 
@@ -388,6 +400,7 @@ class AutoDrive:
         Robot.drivetrain.flywheelAsFront(True)
 
     def execute(self):
+        self.printStartMessage()
         if self.wait:
             self.run()
         else:
@@ -561,6 +574,7 @@ class AutoAlignShoot(AutoDrive):
                           Constants.HIGH_GOAL_X - robotX)
 
     def execute(self):
+        self.printStartMessage()
         AutoAlignShoot.isRunning = True
 
         start = brain.timer.time(MSEC)
@@ -621,9 +635,7 @@ class RunCommands:
             # if RunCommands.stopAuto:
             #     break
             
-            command.printStartMessage()
             command.execute()
-            command.printStopMessage()
 
         self.stop()
 
@@ -1366,10 +1378,12 @@ class Flywheel:
             self.isRunning = False
             print("MOTOR STOPPED")
             self.motorGroup.stop()
+            return False
         else:
             self.isRunning = True
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
             print("MOTOR SPINNING")
+            return True
 
     def isAtSetVel(self):
         currMotorVel = self.motorGroup.velocity(RPM)
@@ -1676,3 +1690,5 @@ competition = Competition(vexcode_driver_function, vexcode_auton_function)
 wait(15, MSEC)
 
 non_competition_driver()
+
+# non_competition_auto()
