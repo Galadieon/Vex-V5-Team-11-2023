@@ -174,11 +174,11 @@ class AutoFlywheel:
     def run(self):
         pass
 
-    def printMessage(self):
-        if self.isRunning:
-            printDB(self.__class__.__name__, "Started\tTarget:", Robot.flywheel.getTargetVelocity())
-        else:
-            printDB(self.__class__.__name__, "Stopped")
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started\tTarget:", Robot.flywheel.getTargetVelocity())
+
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoIntake:
@@ -216,11 +216,11 @@ class AutoIntake:
 
         AutoIntake.isRunning = False
 
-    def printMessage(self):
-        if self.isRunning:
-            printDB(self.__class__.__name__, "Started")
-        else:
-            printDB(self.__class__.__name__, "Stopped")
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started")
+    
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoIndexer:
@@ -269,11 +269,11 @@ class AutoIndexer:
         self.stopAuto = True
         Robot.indexer.stop()
 
-    def printMessage(self):
-        if self.isRunning:
-            printDB(self.__class__.__name__, "Started")
-        else:
-            printDB(self.__class__.__name__, "Stopped")
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started")
+    
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoRoller:
@@ -313,11 +313,11 @@ class AutoRoller:
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = True
 
-    def printMessage(self):
-        if self.isRunning:
-            printDB(self.__class__.__name__, "Started")
-        else:
-            printDB(self.__class__.__name__, "Stopped")
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started")
+        
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoDrive:
@@ -510,11 +510,11 @@ class AutoDrive:
     def calcAutoLineY(self, x):
         return x - 19.8
 
-    def printMessage(self):
-        if self.isRunning:
-            printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget, "Y:", self.yTarget, "Θ:", self.ΘTarget)
-        else:
-            printDB(self.__class__.__name__, "Stopped")
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget, "Y:", self.yTarget, "Θ:", self.ΘTarget)
+        
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoAlignShoot(AutoDrive):
@@ -621,9 +621,9 @@ class RunCommands:
             # if RunCommands.stopAuto:
             #     break
             
-            command.printMessage()
+            command.printStartMessage()
             command.execute()
-            command.printMessage()
+            command.printStopMessage()
 
         self.stop()
 
@@ -1616,9 +1616,11 @@ class Robot:
 # DEFAULT FUNCTIONS ---------- DEFAULT FUNCTIONS --------- DEFAULT FUNCTIONS
 
 
-def non_competition_start():
+def non_competition_driver():
     Driver_Control()
 
+def non_competition_auto():
+    Autonomous_Control()
 
 def Default_Motor_Speed():
     Robot.drivetrain.set_drive_velocity(100)
@@ -1673,4 +1675,4 @@ competition = Competition(vexcode_driver_function, vexcode_auton_function)
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
-non_competition_start()
+non_competition_driver()
