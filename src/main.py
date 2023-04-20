@@ -174,6 +174,12 @@ class AutoFlywheel:
     def run(self):
         pass
 
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started\tTarget:", Robot.flywheel.getTargetVelocity())
+        else:
+            printDB(self.__class__.__name__, "Stopped")
+
 
 class AutoIntake:
     """
@@ -209,6 +215,12 @@ class AutoIntake:
         elif self.status == 0: Robot.intake.stop()
 
         AutoIntake.isRunning = False
+
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoIndexer:
@@ -257,6 +269,12 @@ class AutoIndexer:
         self.stopAuto = True
         Robot.indexer.stop()
 
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
+
 
 class AutoRoller:
     """
@@ -294,6 +312,12 @@ class AutoRoller:
 
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = True
+
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoDrive:
@@ -486,6 +510,12 @@ class AutoDrive:
     def calcAutoLineY(self, x):
         return x - 19.8
 
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget, "Y:", self.yTarget, "Θ:", self.ΘTarget)
+        else:
+            printDB(self.__class__.__name__, "Stopped")
+
 
 class AutoAlignShoot(AutoDrive):
 
@@ -590,24 +620,27 @@ class RunCommands:
             #     continue
             # if RunCommands.stopAuto:
             #     break
-
+            
+            command.printMessage()
             command.execute()
+            command.printMessage()
 
-        Robot.drivetrain.set_stopping(COAST)
+        self.stop()
 
         RunCommands.isRunning = False
 
-    # @staticmethod
-    # def stopAll():
-    #     RunCommands.isRunning = False
-    #     RunCommands.stopAuto = True
+    def stopAll(self):
+        RunCommands.isRunning = False
+        RunCommands.stopAuto = True
 
-    #     AutoDrive.stopAuto = True
-    #     AutoAlignShoot.stopAll()
-    #     AutoFlywheel.stopAuto = True
-    #     AutoIndexer.stopAuto = True
-    #     AutoIntake.stopAuto = True
-    #     AutoRoller.stopAuto = True
+        AutoDrive.stopAuto = True
+        AutoAlignShoot.stopAll()
+        AutoFlywheel.stopAuto = True
+        AutoIndexer.stopAuto = True
+        AutoIntake.stopAuto = True
+        AutoRoller.stopAuto = True
+        
+        Robot.drivetrain.set_stopping(COAST)
 
     # @staticmethod
     # def pause():
@@ -1396,6 +1429,9 @@ class Flywheel:
         self.motorGroup.set_velocity(self.motorVel, RPM)
         if self.isRunning:
             self.motorGroup.spin(FORWARD, self.motorVel, RPM)
+    
+    def getTargetVelocity(self):
+        return self.flywheelVel
 
 
 class Indexer:
