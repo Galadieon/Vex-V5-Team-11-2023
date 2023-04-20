@@ -167,6 +167,12 @@ class AutoFlywheel:
 
     def run(self):
         pass
+    
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started   Target:", Robot.flywheel.getTargetVelocity())
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoIntake:
@@ -210,6 +216,12 @@ class AutoIntake:
         AutoIntake.stopAuto = True
 
         # TODO: add code to stop the physical flywheel
+    
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoIndexer:
@@ -257,6 +269,12 @@ class AutoIndexer:
         self.isRunning = False
         self.stopAuto = True
         Robot.indexer.stop()
+    
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoRoller:
@@ -295,6 +313,12 @@ class AutoRoller:
 
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = True
+    
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoDrive:
@@ -483,6 +507,12 @@ class AutoDrive:
 
     def calcAutoLineY(self, x):
         return x - 19.8
+    
+    def printMessage(self):
+        if self.isRunning:
+            printDB(self.__class__.__name__, "Started\tTarget: X(")
+        else:
+            printDB(self.__class__.__name__, "Stopped")
 
 
 class AutoAlignShoot(AutoDrive):
@@ -1282,6 +1312,9 @@ class Flywheel:
         self.flywheelVel = flywheelVel
         self.motorVel = self.calcMotorVel(self.flywheelVel)
         self.motorGroup.set_velocity(self.motorVel, RPM)
+
+    def getTargetVelocity(self):
+        return self.flywheelVel
 
 
 class Indexer:
