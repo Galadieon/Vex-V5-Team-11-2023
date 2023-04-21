@@ -233,6 +233,8 @@ class AutoIntake:
 
         AutoIntake.isRunning = False
 
+        return not AutoIntake.isRunning
+
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started")
 
@@ -336,6 +338,8 @@ class AutoRoller:
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = True
 
+        return not AutoRoller.isRunning
+
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started")
 
@@ -418,7 +422,6 @@ class AutoDrive:
         self.start = brain.timer.time(MSEC)
 
     def execute(self):
-        self.printStartMessage()
         if self.wait:
             return self.run()
         else:
@@ -592,11 +595,7 @@ class AutoAlignShoot(AutoDrive):
         return math.atan2(Constants.HIGH_GOAL_Y - robotY,
                           Constants.HIGH_GOAL_X - robotX)
 
-    def starterCode(self):
-        pass
-
     def execute(self):
-        self.printStartMessage()
         AutoAlignShoot.isRunning = True
 
         start = brain.timer.time(MSEC)
@@ -675,9 +674,6 @@ class AutoDriveRoller(AutoDrive):
         self.ΘforR = math.pi
         self.ΘforL = math.pi / 2
     
-    def starterCode(self):
-        pass
-    
     def execute(self):
         AutoDriveRoller.isRunning = True
 
@@ -719,6 +715,8 @@ class RunCommands:
         RunCommands.pauseAuto = False
         RunCommands.isRunning = True
 
+        start = time.time()
+
         Robot.drivetrain.set_stopping(HOLD)
 
         for command in commandList:
@@ -733,6 +731,8 @@ class RunCommands:
             command.printStopMessage()
 
         self.stopAll()
+
+        printDB("Time taken:", time.time() - start)
 
         RunCommands.isRunning = False
 
@@ -836,15 +836,16 @@ class RightAuto1:
     def __init__(self):
         rollerTimeOut = 750
 
+            # AutoDrive(Constants.TILE_R_R,
+            #           Constants.TILE___4,
+            #           math.pi,
+            #           True,
+            #           timeOut=rollerTimeOut),
+
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
-            AutoDrive(Constants.TILE_R_R,
-                      Constants.TILE___4,
-                      math.pi,
-                      True,
-                      timeOut=rollerTimeOut),
-            AutoRoller(),
+            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            0,
