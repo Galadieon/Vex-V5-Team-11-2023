@@ -638,6 +638,72 @@ class AutoAlignShoot(AutoDrive):
         # self.maintainPos = True
         # self.wait = False
         # super().execute()
+    
+class AutoDriveRoller(AutoDrive):
+
+    isRunning = False
+
+    stopAuto = False
+
+    autoFlywheel = None
+
+    autoIndexer = None
+
+    def __init__(self,
+                 xTarget=0.0,
+                 yTarget=0.0,
+                 ΘTarget=math.pi / 2,
+                 overrideAutoClear=False,
+                 rollerSide='R',
+                 driveVel=100.0,
+                 turnVel=100.0,
+                 thresholdX=0.25,
+                 thresholdY=0.25,
+                 thresholdΘ=math.radians(1),
+                 timeOut=5_000,
+                 wait=True):
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
+        super().__init__(xTarget, yTarget, ΘTarget,
+                         overrideAutoClear, driveVel, turnVel, thresholdX,
+                         thresholdY, thresholdΘ, timeOut, wait)
+
+        AutoDriveRoller.isRunning = False
+        AutoDriveRoller.stopAuto = False
+
+        self.rollerSide = rollerSide
+
+        self.ΘforR = math.pi
+        self.ΘforL = math.pi / 2
+    
+    def starterCode(self):
+        pass
+    
+    def execute(self):
+        AutoDriveRoller.isRunning = True
+
+        while not super().execute():
+            pass
+    
+        start = brain.timer.time(MSEC)
+
+        while brain.timer.time(MSEC) < start + 250:
+            Robot.drivetrain.drive(-50, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+        
+        Robot.roller.flip(wait=False)
+    
+        start = brain.timer.time(MSEC)
+
+        while brain.timer.time(MSEC) < start + 250:
+            Robot.drivetrain.drive(-50, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+        
+        AutoDriveRoller.isRunning = False
+        return not AutoDriveRoller.isRunning
+
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started\tTarget:", self.rollerSide, "Roller")
+
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
@@ -725,7 +791,7 @@ class LeftAuto1:
                                math.pi / 2)
         commandRun = RunCommands(
             AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2,
-                      True),
+                      True, timeOut=rollerTimeOut),
             AutoRoller(),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
