@@ -634,8 +634,9 @@ class RunCommands:
             #     continue
             # if RunCommands.stopAuto:
             #     break
-            
+            command.printStartMessage()
             command.execute()
+            command.printStopMessage()
 
         self.stopAll()
 
