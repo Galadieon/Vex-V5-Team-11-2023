@@ -637,7 +637,8 @@ class AutoAlignShoot(AutoDrive):
         # self.maintainPos = True
         # self.wait = False
         # super().execute()
-    
+
+
 class AutoDriveRoller(AutoDrive):
 
     isRunning = False
@@ -684,6 +685,7 @@ class AutoDriveRoller(AutoDrive):
 
         while brain.timer.time(MSEC) < start + 250:
             Robot.drivetrain.drive(-50, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+            Robot.drivetrain.drive_for()
         
         Robot.roller.flip(wait=False)
     
@@ -844,7 +846,7 @@ class RightAuto1:
 
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
-            AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
+            # AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
             AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
@@ -870,6 +872,8 @@ class RightAuto1:
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2,
                       True),
+                      
+            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
             AutoDrive(Constants.TILE___1,
                       Constants.TILE_L_R,
                       math.pi / 2,
@@ -1392,6 +1396,11 @@ class MecanumDriveTrain:
         self.motorFrontRight.spin(FORWARD)
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
+    
+    def drive_for(self, direction: DirectionType.DirectionType, rot_or_time: vexnumber, *args, **kwargs):
+        tempDT = DriveTrain(MotorGroup(self.motorFrontLeft, self.motorBackLeft), MotorGroup(self.motorFrontRight, self.motorBackRight), 12.5663706144, 15, 15, INCHES)
+
+        tempDT.drive_for(REVERSE, 5, INCHES, 50, PERCENT, True)
 
     def stop(self):
         self.motorFrontLeft.stop()
