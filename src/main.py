@@ -160,6 +160,9 @@ class AutoFlywheel:
         AutoFlywheel.isRunning = False
         AutoFlywheel.stopAuto = False
 
+    def starterCode(self):
+        pass
+
     def execute(self):
         AutoFlywheel.isRunning = True
         Robot.flywheel.setDistance(self.distance)
@@ -211,6 +214,9 @@ class AutoIntake:
         self.status = status
         AutoIntake.isRunning = False
         AutoIntake.stopAuto = False
+
+    def starterCode(self):
+        pass
 
     def execute(self):
         
@@ -314,6 +320,9 @@ class AutoRoller:
 
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = False
+    
+    def starterCode(self):
+        pass
 
     def execute(self):
         self.printStartMessage()
@@ -398,46 +407,53 @@ class AutoDrive:
         AutoDrive.stopAuto = False
 
         Robot.drivetrain.flywheelAsFront(True)
+        
+    def starterCode(self):
+        AutoDrive.isRunning = True
+        self.atTarget = False
+        self.clearedAutoLine = True
+
+        self.start = brain.timer.time(MSEC)
 
     def execute(self):
         self.printStartMessage()
         if self.wait:
-            self.run()
+            return self.run()
         else:
             #     self.thread = Thread(self.run)
             printDB("Tried to make new thread (bad)")
+            return True
 
     def run(self):
-        AutoDrive.isRunning = True
-        atTarget = False
-        clearedAutoLine = True
+        if AutoDrive.stopAuto:
+            print("STOPPED DRIVE")
+            AutoDrive.isRunning = False
+            return
 
-        start = brain.timer.time(MSEC)
+        if brain.timer.time(MSEC) - self.start > self.timeOut:
+            # RunCommands.stopAll()
+            AutoDrive.isRunning = False
+            return not  AutoDrive.isRunning
 
-        while not atTarget:
-            if AutoDrive.stopAuto:
-                print("STOPPED DRIVE")
-                AutoDrive.isRunning = False
-                return
+        robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-            if brain.timer.time(MSEC) - start > self.timeOut:
-                # RunCommands.stopAll()
-                break
+        if self.notClearedAutoLine(robotX,
+                                    robotY) or self.clearedAutoLine is not True:
+            xT, yT = self.calcAutoLineClear(robotX, robotY)
+            self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
+                                            self.ΘTarget, self.driveVel,
+                                            self.turnVel)
+        else:
+            self.atTarget = self.driveTo(
+                self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget,
+                self.driveVel, self.turnVel)
 
-            robotX, robotY, robotΘ = Robot.odometry.getPose()
-
-            if self.notClearedAutoLine(robotX,
-                                       robotY) or clearedAutoLine is not True:
-                xT, yT = self.calcAutoLineClear(robotX, robotY)
-                clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
-                                               self.ΘTarget, self.driveVel,
-                                               self.turnVel)
-            else:
-                atTarget = self.driveTo(
-                    self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget,
-                    self.driveVel, self.turnVel)
-
-        AutoDrive.isRunning = False
+        if self.atTarget:
+            AutoDrive.isRunning = False
+            return True
+        else:
+            AutoDrive.isRunning = True
+            return False
 
     def driveToOrigin(self):
         self.xTarget = Constants.TILE___1
@@ -573,6 +589,9 @@ class AutoAlignShoot(AutoDrive):
         return math.atan2(Constants.HIGH_GOAL_Y - robotY,
                           Constants.HIGH_GOAL_X - robotX)
 
+    def starterCode(self):
+        pass
+
     def execute(self):
         self.printStartMessage()
         AutoAlignShoot.isRunning = True
@@ -592,6 +611,8 @@ class AutoAlignShoot(AutoDrive):
 
         AutoAlignShoot.stopAll()
 
+        return True
+
     @staticmethod
     def stopAll():
         AutoAlignShoot.isRunning = False
@@ -604,10 +625,12 @@ class AutoAlignShoot(AutoDrive):
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT 1 ...\n")
-        super().execute()
+        while not super().execute():
+            pass
         wait(100, MSEC)
         print("ATTEMPTING ALIGNMENT 2 ...\n")
-        super().execute()
+        while not super().execute():
+            pass
         # print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         # self.maintainPos = True
         # self.wait = False
@@ -635,7 +658,9 @@ class RunCommands:
             # if RunCommands.stopAuto:
             #     break
             command.printStartMessage()
-            command.execute()
+            command.starterCode()
+            while not command.execute():
+                printDB("Executing", command.__class__.__name__, "\n")
             command.printStopMessage()
 
         self.stopAll()
@@ -1679,12 +1704,13 @@ def vexcode_auton_function():
         wait(10, MSEC)
     Robot.odometry.stop()
     auton_task_0.stop()
-    printDB("AUTO PERIOD STOPPED")
+    printDB("AUTO PERIOD ENDS")
 
 
 def Autonomous_Control():
     brain.screen.print("Starting auto")
     RightAuto1()
+    brain.screen.print("Stopping auto")
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
