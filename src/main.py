@@ -182,7 +182,7 @@ class AutoFlywheel:
         printDB(self.__class__.__name__, "Started\tTarget:", Robot.flywheel.getTargetVelocity())
 
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoIntake:
@@ -229,7 +229,7 @@ class AutoIntake:
         printDB(self.__class__.__name__, "Started")
     
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoIndexer:
@@ -284,7 +284,7 @@ class AutoIndexer:
         printDB(self.__class__.__name__, "Started")
     
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoRoller:
@@ -329,7 +329,7 @@ class AutoRoller:
         printDB(self.__class__.__name__, "Started")
         
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoDrive:
@@ -527,7 +527,7 @@ class AutoDrive:
         printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget, "Y:", self.yTarget, "Θ:", self.ΘTarget)
         
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped")
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoAlignShoot(AutoDrive):
@@ -978,7 +978,7 @@ class MyController:
         Default: Flywheel is front
         """
 
-        wait(100, MSEC)
+        wait(250, MSEC)
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
@@ -1148,68 +1148,81 @@ class Odometry:
     def updatePose(self):
         self.threadIsRunning = True
 
-        # while (self.threadIsRunning):
-        if self.Θ >= 360.0: self.Θ = 0.0
-        if self.Θ < 0.0: self.Θ = 360.0
+        self.resetEncoders()
 
-        # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
-        if abs(self.x) > 1_000 or abs(self.y) > 1_000 or abs(self.Θ) > 1_000:
-            self.resetPose()
-            self.resetEncoders()
+        while (self.threadIsRunning):
+            wait(10, MSEC)
 
-        if self.resetOdomPose == True:
-            self.resetPose()
+            if self.Θ >= 360.0: self.Θ = 0.0
+            if self.Θ < 0.0: self.Θ = 360.0
 
-        if self.resetOdomEncoders == True:
-            self.resetEncoders()
+            # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
+            if abs(self.x) > 1_000 or abs(self.y) > 1_000 or abs(self.Θ) > 1_000:
+                self.resetPose()
+                self.resetEncoders()
 
-        if self.threadIsPaused:
-            wait(1, MSEC)
-            pass
+            if self.resetOdomPose == True:
+                self.resetPose()
 
-        start = brain.timer.time(MSEC)
+            if self.resetOdomEncoders == True:
+                self.resetEncoders()
 
-        self.prevRightVal = self.currRightVal
-        self.prevLeftVal = self.currLeftVal
-        self.prevAuxVal = self.currAuxVal
+            if self.threadIsPaused:
+                wait(1, MSEC)
+                pass
 
-        self.currRightVal = self.rightEncoder.value()
-        self.currLeftVal = self.leftEncoder.value()
-        self.currAuxVal = self.auxEncoder.value()
+            start = brain.timer.time(MSEC)
 
-        dn2 = self.currRightVal - self.prevRightVal
-        dn1 = self.currLeftVal - self.prevLeftVal
-        dn3 = self.currAuxVal - self.prevAuxVal
+            self.prevRightVal = self.currRightVal
+            self.prevLeftVal = self.currLeftVal
+            self.prevAuxVal = self.currAuxVal
 
-        dtheta = self.inchsPerTick * ((dn2 - dn1) / self.LR_Distance)
-        dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
-        dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) *
-                                         (self.B_Distance / self.LR_Distance)))
+            self.currRightVal = self.rightEncoder.value()
+            self.currLeftVal = self.leftEncoder.value()
+            self.currAuxVal = self.auxEncoder.value()
 
-        theta = self.Θ + (dtheta / 2.0)
-        self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
-        self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
-        self.Θ += dtheta
+            dn2 = self.currRightVal - self.prevRightVal
+            dn1 = self.currLeftVal - self.prevLeftVal
+            dn3 = self.currAuxVal - self.prevAuxVal
 
-        screenEndTime = brain.timer.time(MSEC)
+            dtheta = self.inchsPerTick * ((dn2 - dn1) / self.LR_Distance)
+            dx = self.inchsPerTick * ((dn1 + dn2) / 2.0)
+            dy = self.inchsPerTick * (dn3 - ((dn2 - dn1) *
+                                            (self.B_Distance / self.LR_Distance)))
 
-        if screenEndTime > self.screenStartTime + self.screenUpdateInterval:
-            self.screenStartTime = screenEndTime
-            myController.updateRow1(self.x, self.y, math.degrees(self.Θ))
+            theta = self.Θ + (dtheta / 2.0)
+            self.x += -dx * math.cos(-theta) + dy * math.sin(-theta)
+            self.y -= -dx * math.sin(-theta) - dy * math.cos(-theta)
+            self.Θ += dtheta
 
-        # while brain.timer.time(MSEC) - start < 10:
-        #     continue
-        #     wait(2.5, MSEC)
+            screenEndTime = brain.timer.time(MSEC)
+
+            if screenEndTime > self.screenStartTime + self.screenUpdateInterval:
+                self.screenStartTime = screenEndTime
+                myController.updateRow1(self.x, self.y, math.degrees(self.Θ))
+
+            # while brain.timer.time(MSEC) - start < 10:
+            #     continue
+            #     wait(2.5, MSEC)
+    
+    def start(self):
+        self.thread = Thread(self.updatePose)
 
     def stop(self):
+        self.thread.stop()
+        wait(250, MSEC)
         self.threadIsRunning = False
 
     def getPose(self):
         return self.x, self.y, self.Θ
 
     def reset(self):
+        wait(250, MSEC)
         self.resetOdomPose = True
         self.resetOdomEncoders = True
+    
+    def resetValues(self):
+        self.resetEncoders()
 
     def resetPose(self):
         self.setPose(Constants.TILE___1, 0, math.pi / 2)
@@ -1224,6 +1237,15 @@ class Odometry:
         self.rightEncoder.set_position(0, DEGREES)
         self.leftEncoder.set_position(0, DEGREES)
         self.auxEncoder.set_position(0, DEGREES)
+
+        self.currRightVal = 0  # current encoder value for right wheel
+        self.currLeftVal = 0  # current encoder value for left wheel
+        self.currAuxVal = 0  # current encoder value for back wheel
+
+        self.prevRightVal = 0  # previous encoder value for right wheel
+        self.prevLeftVal = 0  # previous encoder value for left wheel
+        self.prevAuxVal = 0  # previous encoder value for back whee
+
         self.resetOdomEncoders = False
 
 
@@ -1646,12 +1668,13 @@ def Default_Motor_Speed():
 
 def vexcode_auton_function():
     printDB("AUTO PERIOD BEGIN")
+    Robot.odometry.start()
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
-        Robot.odometry.updatePose()
         wait(10, MSEC)
-    printDB("AUTO PERIOD STOPPED")
+    Robot.odometry.stop()
     auton_task_0.stop()
+    printDB("AUTO PERIOD STOPPED")
 
 
 def Autonomous_Control():
