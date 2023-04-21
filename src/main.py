@@ -637,7 +637,7 @@ class RunCommands:
             
             command.execute()
 
-        self.stop()
+        self.stopAll()
 
         RunCommands.isRunning = False
 
