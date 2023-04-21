@@ -642,6 +642,8 @@ class RunCommands:
         RunCommands.isRunning = False
 
     def stopAll(self):
+        printDB("Stopping Auto Commands ...")
+
         RunCommands.isRunning = False
         RunCommands.stopAuto = True
 
@@ -653,6 +655,8 @@ class RunCommands:
         AutoRoller.stopAuto = True
         
         Robot.drivetrain.set_stopping(COAST)
+
+        printDB("Successfully Stopped Auto Commands")
 
     # @staticmethod
     # def pause():
