@@ -221,25 +221,26 @@ class AutoIntake:
         pass
 
     def execute(self):
-
         AutoIntake.isRunning = True
 
         if self.status == 1:
-            self.printStartMessage()
+            printDB(self.__class__.__name__, "Started\n")
             Robot.intake.toggleMotor()
-        elif self.status == 0:
+        else:
             Robot.intake.stop()
-            self.printStopMessage()
+            printDB(self.__class__.__name__, "Stopped\n")
 
         AutoIntake.isRunning = False
 
         return not AutoIntake.isRunning
 
     def printStartMessage(self):
-        printDB(self.__class__.__name__, "Started")
+        # printDB(self.__class__.__name__, "Started")
+        pass
 
     def printStopMessage(self):
-        printDB(self.__class__.__name__, "Stopped\n")
+        # printDB(self.__class__.__name__, "Stopped\n")
+        pass
 
 
 class AutoIndexer:
@@ -270,13 +271,14 @@ class AutoIndexer:
         AutoIndexer.stopAuto = False
 
     def execute(self):
-        self.printStartMessage()
         AutoIndexer.isRunning = True
 
         while self.numDisc > 0:
             if AutoIndexer.stopAuto == True:
                 Robot.indexer.stop()
                 break
+            self.printStartMessage()
+
             pushed = Robot.indexer.autoPush()
 
             if pushed:
@@ -329,7 +331,6 @@ class AutoRoller:
         pass
 
     def execute(self):
-        self.printStartMessage()
         """Run the roller to spin how many degrees"""
         AutoRoller.isRunning = True
 
@@ -436,8 +437,9 @@ class AutoDrive:
             return
 
         if brain.timer.time(MSEC) - self.start > self.timeOut:
-            # RunCommands.stopAll()
+            printDB(self.__class__.__name__, "Ran Out of Time")
             AutoDrive.isRunning = False
+            # RunCommands.stopAll()
             return not AutoDrive.isRunning
 
         robotX, robotY, robotΘ = Robot.odometry.getPose()
@@ -546,7 +548,7 @@ class AutoDrive:
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget,
-                "Y:", self.yTarget, "Θ:", self.ΘTarget)
+                "Y:", self.yTarget, "Θ:", math.degrees(self.ΘTarget))
 
     def printStopMessage(self):
         printDB(self.__class__.__name__, "Stopped\n")
@@ -565,7 +567,7 @@ class AutoAlignShoot(AutoDrive):
     def __init__(self,
                  xTarget=0.0,
                  yTarget=0.0,
-                 ΘTarget=math.pi / 2,
+                 offset=0.156601876982, # arctan((126-108/(132-18))
                  distance=Constants.HI_SPEED,
                  overrideAutoClear=False,
                  driveVel=100.0,
@@ -579,7 +581,9 @@ class AutoAlignShoot(AutoDrive):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
         super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
                          overrideAutoClear, driveVel, turnVel, thresholdX,
-                         thresholdY, thresholdΘ, timeOut, wait)
+                         thresholdY, thresholdΘ, 1_000, wait)
+
+        self.childTimeOut = timeOut
 
         self.distance = distance
         self.discs = discs
@@ -602,13 +606,16 @@ class AutoAlignShoot(AutoDrive):
 
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
         AutoAlignShoot.autoFlywheel.execute()
-
+        count = 0
         for _ in range(self.discs):
-            if brain.timer.time(MSEC) > start + self.timeOut:
+            count = count + 1
+            print(count)
+            if brain.timer.time(MSEC) > start + self.childTimeOut:
+                printDB(self.__class__.__name__, "Ran Out of Time")
                 break
             self.alignMaintainPos()
 
-            AutoAlignShoot.autoIndexer = AutoIndexer(self.discs)
+            AutoAlignShoot.autoIndexer = AutoIndexer(1)
             AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
@@ -628,11 +635,11 @@ class AutoAlignShoot(AutoDrive):
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT 1 ...\n")
         while not super().execute():
-            pass
+            wait(10, MSEC)
         wait(100, MSEC)
         print("ATTEMPTING ALIGNMENT 2 ...\n")
         while not super().execute():
-            pass
+            wait(10, MSEC)
         # print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         # self.maintainPos = True
         # self.wait = False
@@ -677,22 +684,22 @@ class AutoDriveRoller(AutoDrive):
     
     def execute(self):
         AutoDriveRoller.isRunning = True
+        reverseSpeed = 50
 
         while not super().execute():
-            pass
+            wait(10, MSEC)
     
         start = brain.timer.time(MSEC)
 
         while brain.timer.time(MSEC) < start + 250:
-            Robot.drivetrain.drive(-50, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
-            Robot.drivetrain.drive_for()
+            Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
         
         Robot.roller.flip(wait=False)
     
         start = brain.timer.time(MSEC)
 
         while brain.timer.time(MSEC) < start + 250:
-            Robot.drivetrain.drive(-50, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+            Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
         
         AutoDriveRoller.isRunning = False
         return not AutoDriveRoller.isRunning
@@ -729,7 +736,8 @@ class RunCommands:
             command.printStartMessage()
             command.starterCode()
             while not command.execute():
-                printDB("Executing", command.__class__.__name__, "\n")
+                # printDB("Executing", command.__class__.__name__, "\n")
+                wait(10, MSEC)
             command.printStopMessage()
 
         self.stopAll()
@@ -784,20 +792,20 @@ class TestMode:
         )
 
 
-class LeftAuto1:
+class FullLeftAuto1:
 
     def __init__(self):
         rollerTimeOut = 750
+        shootingOffset = 0.156601876982
+        # arctan((126-108/(132-18))
 
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
         commandRun = RunCommands(
-            AutoDrive(Constants.TILE___1, Constants.TILE_L_R, math.pi / 2,
-                      True, timeOut=rollerTimeOut),
-            AutoRoller(),
+            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
@@ -808,7 +816,7 @@ class LeftAuto1:
                       (5 * math.pi) / 4, True),
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
@@ -818,25 +826,22 @@ class LeftAuto1:
                       (5 * math.pi) / 4, True),
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
-            AutoDrive(Constants.TILE_R_R,
-                      Constants.TILE___4,
-                      math.pi,
-                      True,
-                      timeOut=rollerTimeOut),
-            AutoRoller(),
+            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
         )
 
 
-class RightAuto1:
+class FullRightAuto1:
 
     def __init__(self):
         rollerTimeOut = 750
+        shootingOffset = 0.156601876982
+        # arctan((126-108/(132-18))
 
             # AutoDrive(Constants.TILE_R_R,
             #           Constants.TILE___4,
@@ -850,7 +855,7 @@ class RightAuto1:
             AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
@@ -861,7 +866,7 @@ class RightAuto1:
                       True),
             AutoAlignShoot(Constants.TILE___3,
                            Constants.TILE___2,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
@@ -874,15 +879,9 @@ class RightAuto1:
                       True),
                       
             AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
-            AutoDrive(Constants.TILE___1,
-                      Constants.TILE_L_R,
-                      math.pi / 2,
-                      True,
-                      timeOut=rollerTimeOut),
-            AutoRoller(),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
-                           0,
+                           shootingOffset,
                            Constants.HI_SPEED,
                            True,
                            timeOut=5_000),
@@ -1770,9 +1769,9 @@ def vexcode_auton_function():
 
 
 def Autonomous_Control():
-    brain.screen.print("Starting auto")
-    RightAuto1()
-    brain.screen.print("Stopping auto")
+    print("Auto Period Starts")
+    FullLeftAuto1()
+    print("Auto Period Ends")
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
@@ -1809,4 +1808,4 @@ non_competition_driver()
 
 # non_competition_auto()
 
-exit(0)
+# exit(0)
