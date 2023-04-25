@@ -1766,11 +1766,17 @@ def vexcode_auton_function():
     Robot.odometry.stop()
     auton_task_0.stop()
     printDB("AUTO PERIOD ENDS")
+    if not autoDone:
+        printDB("Auto Didn't Finish in Time")
+    else:
+        printDB("Auto Finished in Time")
 
 
 def Autonomous_Control():
+    global autoDone
     print("Auto Period Starts")
     FullLeftAuto1()
+    autoDone = True
     print("Auto Period Ends")
 
 
@@ -1796,6 +1802,8 @@ def Driver_Control():
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
+
+autoDone = False
 
 myController = MyController()
 
