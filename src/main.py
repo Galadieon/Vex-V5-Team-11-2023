@@ -160,9 +160,6 @@ class AutoFlywheel:
         AutoFlywheel.isRunning = False
         AutoFlywheel.stopAuto = False
 
-    def starterCode(self):
-        pass
-
     def execute(self):
         AutoFlywheel.isRunning = True
         Robot.flywheel.setDistance(self.distance)
@@ -217,9 +214,6 @@ class AutoIntake:
         AutoIntake.isRunning = False
         AutoIntake.stopAuto = False
 
-    def starterCode(self):
-        pass
-
     def execute(self):
         AutoIntake.isRunning = True
 
@@ -231,8 +225,6 @@ class AutoIntake:
             printDB(self.__class__.__name__, "Stopped\n")
 
         AutoIntake.isRunning = False
-
-        return not AutoIntake.isRunning
 
     def printStartMessage(self):
         # printDB(self.__class__.__name__, "Started")
@@ -327,9 +319,6 @@ class AutoRoller:
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = False
 
-    def starterCode(self):
-        pass
-
     def execute(self):
         """Run the roller to spin how many degrees"""
         AutoRoller.isRunning = True
@@ -338,8 +327,6 @@ class AutoRoller:
 
         AutoRoller.isRunning = False
         AutoRoller.stopAuto = True
-
-        return not AutoRoller.isRunning
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started")
@@ -415,46 +402,44 @@ class AutoDrive:
 
         Robot.drivetrain.flywheelAsFront(True)
 
-    def starterCode(self):
-        AutoDrive.isRunning = True
-        self.atTarget = False
-        self.clearedAutoLine = True
-
-        self.start = brain.timer.time(MSEC)
-
     def execute(self):
         if self.wait:
-            return self.run()
+            self.run()
         else:
             #     self.thread = Thread(self.run)
             printDB("Tried to make new thread (bad)")
-            return True
 
     def run(self):
-        while competition.is_autonomous() and competition.is_enabled() and not self.atTarget:
+        AutoDrive.isRunning = True
+        atTarget = False
+        clearedAutoLine = True
+
+        start = brain.timer.time(MSEC)
+
+        while competition.is_autonomous() and competition.is_enabled() and not atTarget:
             if AutoDrive.stopAuto:
                 print("STOPPED DRIVE")
                 AutoDrive.isRunning = False
-                return not AutoDrive.isRunning
+                return
 
             if brain.timer.time(MSEC) - self.start > self.timeOut:
                 printDB(self.__class__.__name__, "Ran Out of Time")
                 AutoDrive.isRunning = False
                 # RunCommands.stopAll()
-                return not AutoDrive.isRunning
+                return
 
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-            if self.notClearedAutoLine(robotX,
-                                    robotY) or self.clearedAutoLine is not True:
-                xT, yT = self.calcAutoLineClear(robotX, robotY)
-                self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
-                                                    self.ΘTarget, self.driveVel,
-                                                    self.turnVel)
-            else:
-                values = (self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget, self.driveVel, self.turnVel)
-                printDB("AUTO RUNNING", values)
-                self.atTarget = self.driveTo(*values)
+            # if self.notClearedAutoLine(robotX,
+            #                         robotY) or self.clearedAutoLine is not True:
+            #     xT, yT = self.calcAutoLineClear(robotX, robotY)
+            #     self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
+            #                                         self.ΘTarget, self.driveVel,
+            #                                         self.turnVel)
+            # else:
+            values = (self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget, self.driveVel, self.turnVel)
+            printDB("AUTO RUNNING", values)
+            atTarget = self.driveTo(*values)
 
     def driveToOrigin(self):
         self.xTarget = Constants.TILE___1
@@ -522,9 +507,9 @@ class AutoDrive:
         localDeltaX = dist * math.cos(localRelTheta)
         localDeltaY = dist * math.sin(localRelTheta)
 
-        localDeltaX = round(localDeltaX, 7)  # 10.0000000
         # limit excessively long and small numbers
-        localDeltaY = round(localDeltaY, 7)  # 10.0000000
+        # localDeltaX = round(localDeltaX, 7)  # 10.0000000
+        # localDeltaY = round(localDeltaY, 7)  # 10.0000000
 
         return localDeltaX, localDeltaY
 
@@ -542,7 +527,7 @@ class AutoDrive:
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget,
-                "Y:", self.yTarget, "Θ:", math.degrees(self.ΘTarget))
+                "Y:", self.yTarget, "Θ:", round(math.degrees(self.ΘTarget), 2))
 
     def printStopMessage(self):
         printDB(self.__class__.__name__, "Stopped\n")
