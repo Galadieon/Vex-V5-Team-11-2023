@@ -431,7 +431,7 @@ class AutoDrive:
             return True
 
     def run(self):
-        while(competition.is_autonomous() and competition.is_enabled()):
+        while competition.is_autonomous() and competition.is_enabled() and not self.atTarget:
             if AutoDrive.stopAuto:
                 print("STOPPED DRIVE")
                 AutoDrive.isRunning = False
@@ -729,9 +729,10 @@ class RunCommands:
             #     break
             command.printStartMessage()
             command.starterCode()
-            while not command.execute():
-                # printDB("Executing", command.__class__.__name__, "\n")
-                wait(10, MSEC)
+            # while not command.execute():
+            #     # printDB("Executing", command.__class__.__name__, "\n")
+            #     wait(10, MSEC)
+            command.execute()
             command.printStopMessage()
             wait(100, MSEC)
 
