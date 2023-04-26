@@ -431,36 +431,30 @@ class AutoDrive:
             return True
 
     def run(self):
-        if AutoDrive.stopAuto:
-            print("STOPPED DRIVE")
-            AutoDrive.isRunning = False
-            return
+        while(competition.is_autonomous() and competition.is_enabled()):
+            if AutoDrive.stopAuto:
+                print("STOPPED DRIVE")
+                AutoDrive.isRunning = False
+                return not AutoDrive.isRunning
 
-        if brain.timer.time(MSEC) - self.start > self.timeOut:
-            printDB(self.__class__.__name__, "Ran Out of Time")
-            AutoDrive.isRunning = False
-            # RunCommands.stopAll()
-            return not AutoDrive.isRunning
+            if brain.timer.time(MSEC) - self.start > self.timeOut:
+                printDB(self.__class__.__name__, "Ran Out of Time")
+                AutoDrive.isRunning = False
+                # RunCommands.stopAll()
+                return not AutoDrive.isRunning
 
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
+            robotX, robotY, robotΘ = Robot.odometry.getPose()
 
-        if self.notClearedAutoLine(robotX,
-                                   robotY) or self.clearedAutoLine is not True:
-            xT, yT = self.calcAutoLineClear(robotX, robotY)
-            self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
-                                                self.ΘTarget, self.driveVel,
-                                                self.turnVel)
-        else:
-            self.atTarget = self.driveTo(
-                self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget,
-                self.driveVel, self.turnVel)
-
-        if self.atTarget:
-            AutoDrive.isRunning = False
-            return True
-        else:
-            AutoDrive.isRunning = True
-            return False
+            if self.notClearedAutoLine(robotX,
+                                    robotY) or self.clearedAutoLine is not True:
+                xT, yT = self.calcAutoLineClear(robotX, robotY)
+                self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
+                                                    self.ΘTarget, self.driveVel,
+                                                    self.turnVel)
+            else:
+                values = (self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget, self.driveVel, self.turnVel)
+                printDB("AUTO RUNNING", values)
+                self.atTarget = self.driveTo(*values)
 
     def driveToOrigin(self):
         self.xTarget = Constants.TILE___1
@@ -579,7 +573,7 @@ class AutoAlignShoot(AutoDrive):
                  wait=True,
                  discs=3):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
-        super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY),
+        super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY) + offset,
                          overrideAutoClear, driveVel, turnVel, thresholdX,
                          thresholdY, thresholdΘ, 1_000, wait)
 
@@ -724,7 +718,7 @@ class RunCommands:
         RunCommands.pauseAuto = False
         RunCommands.isRunning = True
 
-        start = time.time()
+        # start = time.time()
 
         Robot.drivetrain.set_stopping(HOLD)
 
@@ -739,14 +733,14 @@ class RunCommands:
                 # printDB("Executing", command.__class__.__name__, "\n")
                 wait(10, MSEC)
             command.printStopMessage()
+            wait(100, MSEC)
 
-        self.stopAll()
-
-        printDB("Time taken:", time.time() - start)
+        # printDB("Time taken:", time.time() - start)
 
         RunCommands.isRunning = False
 
-    def stopAll(self):
+    @staticmethod
+    def stopAll():
         printDB("Stopping Auto Commands ...")
 
         RunCommands.isRunning = False
@@ -984,7 +978,7 @@ class MyController:
                 else:
                     Robot.drivetrain.stop()
 
-            wait(10, MSEC)
+            wait(20, MSEC)
 
     def axisCurve(self, x):
         # return (pow(x, 3)) / 10_000
@@ -1050,8 +1044,9 @@ class MyController:
         Default: Flywheel is front
         """
 
-        if Robot.drivetrain.getFrontIsFlywheel():
-            Robot.flywheel.toggleMotor()
+        # if Robot.drivetrain.getFrontIsFlywheel():
+        #     Robot.flywheel.toggleMotor()
+        Robot.roller.flip()
 
     def L2_Pressed(self):
         """
@@ -1060,7 +1055,7 @@ class MyController:
         Default: Flywheel is front
         """
 
-        wait(250, MSEC)
+        wait(50, MSEC)
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
@@ -1071,10 +1066,7 @@ class MyController:
         Default: Flywheel is front
         """
 
-        if Robot.drivetrain.getFrontIsFlywheel():
-            Robot.flywheel.toggleSpeed()
-        else:
-            Robot.roller.flip()
+        Robot.flywheel.toggleSpeed()
 
     def R2_Pressed(self):
         """
@@ -1084,15 +1076,13 @@ class MyController:
         Default: Flywheel is front
         """
 
-        if Robot.drivetrain.getFrontIsFlywheel():
-            if self.toggleManualIndexer() == False:
-                if self.manualIndexer:
-                    Robot.indexer.push()
-                else:
-                    Robot.indexer.autoPush()
-                    pass
-        else:
-            Robot.intake.toggleMotor()
+        if self.toggleManualIndexer() == False:
+            if self.manualIndexer:
+                Robot.indexer.push()
+            else:
+                # Robot.indexer.autoPush()
+                Robot.indexer.push()
+                pass
 
     """
       X
@@ -1101,13 +1091,13 @@ class MyController:
     """
 
     def X_Pressed(self):
-        Robot.vortex.toggleMotor()
+        pass
 
     def A_Pressed(self):
-        Robot.flywheel.increaseVelocity()
+        Robot.flywheel.toggleMotor()
 
     def B_Pressed(self):
-        Robot.flywheel.decreaseVelocity()
+        Robot.intake.toggleMotor()
 
     def Y_Pressed(self):
         Robot.intake.reverseMotor()
@@ -1119,14 +1109,13 @@ class MyController:
     """
 
     def Up_Pressed(self):
-        pass
+        Robot.flywheel.increaseVelocity()
 
     def Right_Pressed(self):
-        # Robot.intake.reverseMotor()
-        pass
+        Robot.vortex.toggleMotor()
 
     def Down_Pressed(self):
-        pass
+        Robot.flywheel.decreaseVelocity()
 
     def Left_Pressed(self):
         self.changeDriveTrainVel()
@@ -1225,36 +1214,36 @@ class Odometry:
         self.screenStartTime = brain.timer.time(MSEC)
         self.screenUpdateInterval = 100
 
-        # Thread(self.updatePose)
-
     def updatePose(self):
         self.threadIsRunning = True
 
         self.resetEncoders()
 
-        while (self.threadIsRunning):
+        while (competition.is_autonomous() and competition.is_enabled()):
             wait(10, MSEC)
 
-            if self.Θ >= 360.0: self.Θ = 0.0
-            if self.Θ < 0.0: self.Θ = 360.0
+            printDB("ODOMETRY RUNNING:", self.x, self.y, self.Θ, "\n")
+
+            # if self.Θ >= 360.0: self.Θ = 0.0
+            # if self.Θ < 0.0: self.Θ = 360.0
 
             # anytime that x or y robot values are greater than 1,000 inches, reset encoders & pose
             if abs(self.x) > 1_000 or abs(self.y) > 1_000 or abs(
                     self.Θ) > 1_000:
-                self.resetPose()
+                # self.resetPose()
                 self.resetEncoders()
 
-            if self.resetOdomPose == True:
-                self.resetPose()
+            # if self.resetOdomPose == True:
+            #     self.resetPose()
 
-            if self.resetOdomEncoders == True:
-                self.resetEncoders()
+            # if self.resetOdomEncoders == True:
+            #     self.resetEncoders()
 
-            if self.threadIsPaused:
-                wait(1, MSEC)
-                pass
+            # if self.threadIsPaused:
+            #     wait(1, MSEC)
+            #     pass
 
-            start = brain.timer.time(MSEC)
+            # start = brain.timer.time(MSEC)
 
             self.prevRightVal = self.currRightVal
             self.prevLeftVal = self.currLeftVal
@@ -1462,6 +1451,8 @@ class Flywheel:
         # for 84 : 12 max: 4_200 RPM (Our robot's max)
         # for 84 : 36 max: 1_400 RPM
 
+        self.speedToggle = True
+
         self.velocityDict = {
             # need empirical data & verification
 
@@ -1630,7 +1621,7 @@ class Intake:
     """
 
     def __init__(self, motor):
-        self.motor = Motor(motor, GearSetting.RATIO_6_1, False)
+        self.motor = Motor(motor, GearSetting.RATIO_6_1, True)
         self.motor.set_max_torque(100, PERCENT)
         self.isRunning = False
 
@@ -1641,7 +1632,7 @@ class Intake:
             self.run()
 
     def run(self):
-        self.motor.spin(FORWARD, 100, PERCENT)
+        self.motor.spin(REVERSE, 100, PERCENT)
         self.isRunning = True
 
     def stop(self):
@@ -1760,22 +1751,26 @@ def Default_Motor_Speed():
 def vexcode_auton_function():
     printDB("AUTO PERIOD BEGIN")
     Robot.odometry.start()
+    wait(100, MSEC)
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
         wait(10, MSEC)
-    Robot.odometry.stop()
     auton_task_0.stop()
-    printDB("AUTO PERIOD ENDS")
+    wait(100, MSEC)
+    RunCommands.stopAll()
     if not autoDone:
         printDB("Auto Didn't Finish in Time")
     else:
         printDB("Auto Finished in Time")
+    # wait(100, MSEC)
 
 
 def Autonomous_Control():
     global autoDone
     print("Auto Period Starts")
-    FullLeftAuto1()
+    FullRightAuto1()
+    # FullLeftAuto1()
+    # TestMode()
     autoDone = True
     print("Auto Period Ends")
 
