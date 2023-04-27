@@ -167,6 +167,7 @@ class AutoFlywheel:
             self.printStartMessage()
         else:
             self.stop()
+            self.printStopMessage()
 
         AutoFlywheel.isRunning = False
 
@@ -174,7 +175,6 @@ class AutoFlywheel:
         AutoFlywheel.isRunning = False
         AutoFlywheel.stopAuto = True
         Robot.flywheel.stop()
-        self.printStopMessage()
 
     def run(self):
         pass
@@ -715,7 +715,6 @@ class RunCommands:
             # if RunCommands.stopAuto:
             #     break
             command.printStartMessage()
-            command.starterCode()
             # while not command.execute():
             #     # printDB("Executing", command.__class__.__name__, "\n")
             #     wait(10, MSEC)
@@ -734,12 +733,10 @@ class RunCommands:
         RunCommands.isRunning = False
         RunCommands.stopAuto = True
 
-        AutoDrive.stopAuto = True
+        # AutoDrive.stopAuto = True
         AutoAlignShoot.stopAll()
-        AutoFlywheel.stopAuto = True
-        AutoIndexer.stopAuto = True
-        AutoIntake.stopAuto = True
-        AutoRoller.stopAuto = True
+        Robot.intake.stop()
+        Robot.roller.stop()
 
         Robot.drivetrain.set_stopping(COAST)
 
@@ -968,7 +965,7 @@ class MyController:
                 else:
                     Robot.drivetrain.stop()
 
-            wait(20, MSEC)
+            wait(10, MSEC)
 
     def axisCurve(self, x):
         # return (pow(x, 3)) / 10_000
@@ -1660,6 +1657,9 @@ class Roller:
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT,
                             wait)
+    
+    def stop(self):
+        self.motor.stop()
     
     def isNotDone(self):
         return not self.motor.is_done()
