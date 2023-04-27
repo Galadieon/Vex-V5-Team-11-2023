@@ -43,7 +43,7 @@ class Constants:
 
     GAME_TIME_SEC = 2 * 60
 
-    FIELDSIZE = 141.0
+    FIELDSIZE = 144.0
     TILESIZE = FIELDSIZE / 6.0  # 141 / 6 = 23.5, OG: 24
 
     TILE___0 = TILESIZE * 0.0
@@ -557,8 +557,8 @@ class AutoAlignShoot(AutoDrive):
                  timeOut=5_000,
                  wait=True,
                  discs=3):
-        robotX, robotY, robotΘ = Robot.odometry.getPose()
-        super().__init__(xTarget, yTarget, self.calcAngleToHi(robotX, robotY) + offset,
+        # robotX, robotY, robotΘ = Robot.odometry.getPose()
+        super().__init__(xTarget, yTarget, self.calcAngleToHi(xTarget, yTarget) + offset,
                          overrideAutoClear, driveVel, turnVel, thresholdX,
                          thresholdY, thresholdΘ, 1_000, wait)
 
@@ -575,8 +575,9 @@ class AutoAlignShoot(AutoDrive):
 
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
-        return abs(math.atan2(Constants.HIGH_GOAL_Y - robotY,
+        value = abs(math.atan2(Constants.HIGH_GOAL_Y - robotY,
                           Constants.HIGH_GOAL_X - robotX))
+        return value
 
     def execute(self):
         AutoAlignShoot.isRunning = True
@@ -585,10 +586,8 @@ class AutoAlignShoot(AutoDrive):
 
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
         AutoAlignShoot.autoFlywheel.execute()
-        count = 0
+        
         for _ in range(self.discs):
-            count = count + 1
-            print(count)
             if brain.timer.time(MSEC) > start + self.childTimeOut:
                 printDB(self.__class__.__name__, "Ran Out of Time")
                 break
@@ -689,7 +688,16 @@ class AutoDriveRoller(AutoDrive):
 
 class AutoStartOdometry:
     def __init__(self):
+        pass
+
+    def execute(self):
         Robot.odometry.start()
+
+    def printStartMessage(self):
+        printDB(self.__class__.__name__, "Started")
+
+    def printStopMessage(self):
+        printDB(self.__class__.__name__, "Stopped\n")
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
