@@ -588,6 +588,8 @@ class AutoAlignShoot(AutoDrive):
         AutoAlignShoot.autoFlywheel.execute()
         
         for _ in range(self.discs):
+            if not competition.is_autonomous() and not competition.is_autonomous():
+                return
             if brain.timer.time(MSEC) > start + self.childTimeOut:
                 printDB(self.__class__.__name__, "Ran Out of Time")
                 break
@@ -684,6 +686,7 @@ class AutoDriveRoller(AutoDrive):
     def printStopMessage(self):
         printDB(self.__class__.__name__, "Stopped\n")
 
+
 class AutoStartOdometry:
     def __init__(self):
         pass
@@ -726,7 +729,7 @@ class RunCommands:
             #     wait(10, MSEC)
             command.execute()
             command.printStopMessage()
-            wait(100, MSEC)
+            wait(10, MSEC)
 
         # printDB("Time taken:", time.time() - start)
 
@@ -763,6 +766,7 @@ class TestMode:
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
         commandRun = RunCommands(
+            AutoStartOdometry(),
             AutoDrive(Constants.TILE___1, Constants.TILE___1, math.pi / 2,
                       True),
             AutoDrive(Constants.TILE___2, Constants.TILE___1, math.pi / 2,
@@ -1215,7 +1219,7 @@ class Odometry:
         while (competition.is_autonomous() and competition.is_enabled()):
             wait(10, MSEC)
 
-            printDB("ODOMETRY RUNNING:", self.x, self.y, self.Θ, "\n")
+            # printDB("ODOMETRY RUNNING:", self.x, self.y, self.Θ, "\n")
 
             # if self.Θ >= 360.0: self.Θ = 0.0
             # if self.Θ < 0.0: self.Θ = 360.0
@@ -1490,10 +1494,10 @@ class Flywheel:
 
     def toggleSpeed(self):
         # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-        #     self.distance = Constants.LO_SPEED
+            # self.distance = Constants.LO_SPEED
         # else:
         printDB("PRESSED", self.distance, Constants.LO_SPEED)
-        if self.distance == Constants.LO_SPEED:
+        if self.distance < Constants.HI_SPEED:
             self.distannce = Constants.HI_SPEED
         else:
             self.distance = Constants.LO_SPEED
@@ -1750,7 +1754,6 @@ def Default_Motor_Speed():
 
 def vexcode_auton_function():
     printDB("AUTO PERIOD BEGIN")
-    wait(100, MSEC)
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
         wait(10, MSEC)
