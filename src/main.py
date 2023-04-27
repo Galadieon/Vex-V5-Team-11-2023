@@ -692,7 +692,8 @@ class AutoStartOdometry:
         pass
 
     def execute(self):
-        Robot.odometry.start()
+        # Robot.odometry.start()
+        pass
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started")
@@ -975,7 +976,7 @@ class MyController:
                 else:
                     Robot.drivetrain.stop()
 
-            wait(10, MSEC)
+            wait(100, MSEC)
 
     def axisCurve(self, x):
         # return (pow(x, 3)) / 10_000
@@ -1052,7 +1053,7 @@ class MyController:
         Default: Flywheel is front
         """
 
-        wait(50, MSEC)
+        wait(100, MSEC)
         Robot.drivetrain.changeFront()
 
     def R1_Pressed(self):
@@ -1276,8 +1277,8 @@ class Odometry:
             #     continue
             #     wait(2.5, MSEC)
 
-    def start(self):
-        self.thread = Thread(self.updatePose)
+    # def start(self):
+    #     self.thread = Thread(self.updatePose)
 
     # def stop(self):
     #     self.thread.stop()
@@ -1741,7 +1742,8 @@ def non_competition_driver():
 
 
 def non_competition_auto():
-    Autonomous_Control()
+    # Autonomous_Control()
+    pass
 
 
 def Default_Motor_Speed():
@@ -1768,14 +1770,14 @@ def vexcode_auton_function():
     pass
 
 
-def Autonomous_Control():
-    global autoDone
-    print("Auto Period Starts")
-    # FullRightAuto1()
-    # FullLeftAuto1()
-    # TestMode()
-    autoDone = True
-    print("Auto Period Ends")
+# def Autonomous_Control():
+#     global autoDone
+#     print("Auto Period Starts")
+#     # FullRightAuto1()
+#     # FullLeftAuto1()
+#     # TestMode()
+#     autoDone = True
+#     print("Auto Period Ends")
 
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
