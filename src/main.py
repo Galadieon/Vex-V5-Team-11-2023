@@ -74,8 +74,8 @@ class Constants:
     PL_M = 1.5  # 3 inch total
     PL_L = 2.0  # 4 inch total
 
-    HIGH_GOAL_X = TILESIZE * 0.25  # from center of 1st square
-    HIGH_GOAL_Y = TILESIZE * 4.72  # from center of 1st square
+    HIGH_GOAL_X = TILESIZE * 0.25  # from center of 0th square
+    HIGH_GOAL_Y = TILESIZE * 4.75  # from center of 0th square
 
     WHEEL_TRAVEL = 4.0 * math.pi
     TRACK_WIDTH = 14.097242
@@ -412,17 +412,17 @@ class AutoDrive:
     def run(self):
         AutoDrive.isRunning = True
         atTarget = False
-        clearedAutoLine = True
+        # clearedAutoLine = True
 
         start = brain.timer.time(MSEC)
 
         while competition.is_autonomous() and competition.is_enabled() and not atTarget:
-            if AutoDrive.stopAuto:
-                print("STOPPED DRIVE")
-                AutoDrive.isRunning = False
-                return
+            # if AutoDrive.stopAuto:
+            #     print("STOPPED DRIVE")
+            #     AutoDrive.isRunning = False
+            #     return
 
-            if brain.timer.time(MSEC) - self.start > self.timeOut:
+            if brain.timer.time(MSEC) - start > self.timeOut:
                 printDB(self.__class__.__name__, "Ran Out of Time")
                 AutoDrive.isRunning = False
                 # RunCommands.stopAll()
@@ -431,9 +431,9 @@ class AutoDrive:
             robotX, robotY, robotΘ = Robot.odometry.getPose()
 
             # if self.notClearedAutoLine(robotX,
-            #                         robotY) or self.clearedAutoLine is not True:
+            #                         robotY) or clearedAutoLine is not True:
             #     xT, yT = self.calcAutoLineClear(robotX, robotY)
-            #     self.clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
+            #     clearedAutoLine = self.driveTo(self.calcLocalXY(xT, yT),
             #                                         self.ΘTarget, self.driveVel,
             #                                         self.turnVel)
             # else:
@@ -575,8 +575,8 @@ class AutoAlignShoot(AutoDrive):
 
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
-        return math.atan2(Constants.HIGH_GOAL_Y - robotY,
-                          Constants.HIGH_GOAL_X - robotX)
+        return abs(math.atan2(Constants.HIGH_GOAL_Y - robotY,
+                          Constants.HIGH_GOAL_X - robotX))
 
     def execute(self):
         AutoAlignShoot.isRunning = True
@@ -613,12 +613,10 @@ class AutoAlignShoot(AutoDrive):
 
     def alignMaintainPos(self):
         print("ATTEMPTING ALIGNMENT 1 ...\n")
-        while not super().execute():
-            wait(10, MSEC)
+        super().execute()
         wait(100, MSEC)
         print("ATTEMPTING ALIGNMENT 2 ...\n")
-        while not super().execute():
-            wait(10, MSEC)
+        super().execute()
         # print("ALIGNMENT COMPLETED\nCOMMENCING LAUNCHES\n")
         # self.maintainPos = True
         # self.wait = False
@@ -665,29 +663,33 @@ class AutoDriveRoller(AutoDrive):
         AutoDriveRoller.isRunning = True
         reverseSpeed = 50
 
-        while not super().execute():
-            wait(10, MSEC)
+        super().execute()
     
         start = brain.timer.time(MSEC)
 
-        while brain.timer.time(MSEC) < start + 250:
+        while brain.timer.time(MSEC) < start + 250 and competition.is_autonomous() and competition.is_enabled():
             Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+            wait(10, MSEC)
         
         Robot.roller.flip(wait=False)
     
         start = brain.timer.time(MSEC)
 
-        while brain.timer.time(MSEC) < start + 250:
+        while Robot.roller.isNotDone() and competition.is_autonomous() and competition.is_enabled():
             Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+            wait(10, MSEC)
         
         AutoDriveRoller.isRunning = False
-        return not AutoDriveRoller.isRunning
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started\tTarget:", self.rollerSide, "Roller")
 
     def printStopMessage(self):
         printDB(self.__class__.__name__, "Stopped\n")
+
+class AutoStartOdometry:
+    def __init__(self):
+        Robot.odometry.start()
 
 
 # ---------------------------AUTONOMOUS ROUTINES----------------------------
@@ -782,6 +784,7 @@ class FullLeftAuto1:
         Robot.odometry.setPose(Constants.TILE___1, Constants.TILE___0,
                                math.pi / 2)
         commandRun = RunCommands(
+            AutoStartOdometry(),
             AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
@@ -832,6 +835,7 @@ class FullRightAuto1:
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
             # AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
+            AutoStartOdometry(),
             AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
@@ -1218,6 +1222,7 @@ class Odometry:
                     self.Θ) > 1_000:
                 # self.resetPose()
                 self.resetEncoders()
+                continue
 
             # if self.resetOdomPose == True:
             #     self.resetPose()
@@ -1267,25 +1272,25 @@ class Odometry:
     def start(self):
         self.thread = Thread(self.updatePose)
 
-    def stop(self):
-        self.thread.stop()
-        wait(250, MSEC)
-        self.threadIsRunning = False
+    # def stop(self):
+    #     self.thread.stop()
+    #     wait(250, MSEC)
+    #     self.threadIsRunning = False
 
     def getPose(self):
         return self.x, self.y, self.Θ
 
-    def reset(self):
-        wait(250, MSEC)
-        self.resetOdomPose = True
-        self.resetOdomEncoders = True
+    # def reset(self):
+    #     wait(250, MSEC)
+    #     self.resetOdomPose = True
+    #     self.resetOdomEncoders = True
 
-    def resetValues(self):
-        self.resetEncoders()
+    # def resetValues(self):
+    #     self.resetEncoders()
 
-    def resetPose(self):
-        self.setPose(Constants.TILE___1, 0, math.pi / 2)
-        self.resetOdomPose = False
+    # def resetPose(self):
+    #     self.setPose(Constants.TILE___1, 0, math.pi / 2)
+    #     self.resetOdomPose = False
 
     def setPose(self, newX, newY, newΘ):
         self.x = newX
@@ -1655,6 +1660,9 @@ class Roller:
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT,
                             wait)
+    
+    def isNotDone(self):
+        return not self.motor.is_done()
 
 
 class EndgameVortex:
@@ -1736,7 +1744,6 @@ def Default_Motor_Speed():
 
 def vexcode_auton_function():
     printDB("AUTO PERIOD BEGIN")
-    Robot.odometry.start()
     wait(100, MSEC)
     auton_task_0 = Thread(Autonomous_Control)
     while (competition.is_autonomous() and competition.is_enabled()):
