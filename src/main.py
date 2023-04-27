@@ -982,22 +982,22 @@ class MyController:
         result = pow(x, 2) / 100.0
         return result if x >= 0 else -result
 
-    def updateRow1(self, *msgs):
-        # X: _ Y: _ Θ: _
-        self.controllerPrint(1, msgs)
+    # def updateRow1(self, *msgs):
+    #     # X: _ Y: _ Θ: _
+    #     self.controllerPrint(1, msgs)
 
-    def updateRow2(self, *msgs):
-        # D: 24 V: 4,200
-        self.controllerPrint(2, msgs)
+    # def updateRow2(self, *msgs):
+    #     # D: 24 V: 4,200
+    #     self.controllerPrint(2, msgs)
 
-    def updateRow3(self, *msgs):
-        # FC: False MI: False
-        self.controllerPrint(3, msgs)
+    # def updateRow3(self, *msgs):
+    #     # FC: False MI: False
+    #     self.controllerPrint(3, msgs)
 
-    def controllerPrint(self, row, msgs):
-        self.controller.screen.clear_row(row)
-        self.controller.screen.set_cursor(row, 1)
-        self.controller.screen.print(*msgs)
+    # def controllerPrint(self, row, msgs):
+    #     self.controller.screen.clear_row(row)
+    #     self.controller.screen.set_cursor(row, 1)
+    #     self.controller.screen.print(*msgs)
 
     def registerEventHandlers(self):
         self.controller.buttonL1.pressed(self.L1_Pressed)
@@ -1139,7 +1139,7 @@ class MyController:
             Robot.drivetrain.set_drive_velocity(100)
 
         fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
-        self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
+        # self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
 
     # def toggleDriveTrainMode(self):
     #     if Robot.drivetrain.getMotorMode() == BRAKE:
@@ -1154,7 +1154,7 @@ class MyController:
             if brain.timer.time(MSEC) - start > 1_000:
                 self.manualIndexer = not self.manualIndexer
                 fineControl = Robot.drivetrain.driveVel == Constants.DRIVETRAIN_FINE_CONTROL_VEL
-                self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
+                # self.updateRow3("FC:", fineControl, "MI:", self.manualIndexer)
                 return True
             wait(10, MSEC)
 
@@ -1270,7 +1270,7 @@ class Odometry:
 
             if screenEndTime > self.screenStartTime + self.screenUpdateInterval:
                 self.screenStartTime = screenEndTime
-                myController.updateRow1(self.x, self.y, math.degrees(self.Θ))
+                # myController.updateRow1(self.x, self.y, math.degrees(self.Θ))
 
             # while brain.timer.time(MSEC) - start < 10:
             #     continue
@@ -1444,7 +1444,7 @@ class Flywheel:
 
         self.isRunning = False
 
-        self.distance = Constants.LO_SPEED
+        self.distance = Constants.HI_SPEED
 
         # for 84 : 12 max: 4_200 RPM (Our robot's max)
         # for 84 : 36 max: 1_400 RPM
@@ -1529,7 +1529,7 @@ class Flywheel:
     def updateVel(self):
         if self.distance in self.velocityDict.keys():
             velocity = self.velocityDict[self.distance]
-            myController.updateRow2("FWD:", self.distance, "FWV:", velocity)
+            # myController.updateRow2("FWD:", self.distance, "FWV:", velocity)
             self.setVelocity(velocity)
             print(self.__class__.__name__, velocity)
 
@@ -1753,24 +1753,25 @@ def Default_Motor_Speed():
 
 
 def vexcode_auton_function():
-    printDB("AUTO PERIOD BEGIN")
-    auton_task_0 = Thread(Autonomous_Control)
-    while (competition.is_autonomous() and competition.is_enabled()):
-        wait(10, MSEC)
-    auton_task_0.stop()
-    wait(100, MSEC)
-    RunCommands.stopAll()
-    if not autoDone:
-        printDB("Auto Didn't Finish in Time")
-    else:
-        printDB("Auto Finished in Time")
+    # printDB("AUTO PERIOD BEGIN")
+    # auton_task_0 = Thread(Autonomous_Control)
+    # while (competition.is_autonomous() and competition.is_enabled()):
+    #     wait(10, MSEC)
+    # auton_task_0.stop()
     # wait(100, MSEC)
+    # # RunCommands.stopAll()
+    # if not autoDone:
+    #     printDB("Auto Didn't Finish in Time")
+    # else:
+    #     printDB("Auto Finished in Time")
+    # wait(100, MSEC)
+    pass
 
 
 def Autonomous_Control():
     global autoDone
     print("Auto Period Starts")
-    FullRightAuto1()
+    # FullRightAuto1()
     # FullLeftAuto1()
     # TestMode()
     autoDone = True
