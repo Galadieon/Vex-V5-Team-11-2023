@@ -513,17 +513,17 @@ class AutoDrive:
 
         return localDeltaX, localDeltaY
 
-    def notClearedAutoLine(self, x, y):
-        return False if self.overrideAutoClear == True else y > self.calcAutoLineY(
-            x)
+    # def notClearedAutoLine(self, x, y):
+    #     return False if self.overrideAutoClear == True else y > self.calcAutoLineY(
+    #         x)
 
-    def calcAutoLineClear(self, robotX, robotY):
-        xTarget = ((robotX + robotY + Constants.TILE___1 + 19.8) / 2.0) + 2
-        yTarget = self.calcAutoLineY(xTarget) - 2
-        return xTarget, yTarget
+    # def calcAutoLineClear(self, robotX, robotY):
+    #     xTarget = ((robotX + robotY + Constants.TILE___1 + 19.8) / 2.0) + 2
+    #     yTarget = self.calcAutoLineY(xTarget) - 2
+    #     return xTarget, yTarget
 
-    def calcAutoLineY(self, x):
-        return x - 19.8
+    # def calcAutoLineY(self, x):
+    #     return x - 19.8
 
     def printStartMessage(self):
         printDB(self.__class__.__name__, "Started\tTarget X:", self.xTarget,
@@ -597,8 +597,6 @@ class AutoAlignShoot(AutoDrive):
             AutoAlignShoot.autoIndexer.execute()
 
         AutoAlignShoot.stopAll()
-
-        return True
 
     @staticmethod
     def stopAll():
@@ -1410,8 +1408,8 @@ class MecanumDriveTrain:
     def getMotorMode(self):
         return self.motorMode
 
-    def getFrontIsFlywheel(self):
-        return self.flywheelIsFront
+    # def getFrontIsFlywheel(self):
+    #     return self.flywheelIsFront
 
 
 class Flywheel:
