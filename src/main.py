@@ -416,7 +416,8 @@ class AutoDrive:
 
         start = brain.timer.time(MSEC)
 
-        while competition.is_autonomous() and competition.is_enabled() and not atTarget:
+        while competition.is_autonomous() and competition.is_enabled(
+        ) and not atTarget:
             # if AutoDrive.stopAuto:
             #     print("STOPPED DRIVE")
             #     AutoDrive.isRunning = False
@@ -437,7 +438,8 @@ class AutoDrive:
             #                                         self.ΘTarget, self.driveVel,
             #                                         self.turnVel)
             # else:
-            values = (self.calcLocalXY(self.xTarget, self.yTarget), self.ΘTarget, self.driveVel, self.turnVel)
+            values = (self.calcLocalXY(self.xTarget, self.yTarget),
+                      self.ΘTarget, self.driveVel, self.turnVel)
             printDB("AUTO RUNNING", values)
             atTarget = self.driveTo(*values)
 
@@ -543,22 +545,24 @@ class AutoAlignShoot(AutoDrive):
 
     autoIndexer = None
 
-    def __init__(self,
-                 xTarget=0.0,
-                 yTarget=0.0,
-                 offset=0.156601876982, # arctan((126-108/(132-18))
-                 distance=Constants.HI_SPEED,
-                 overrideAutoClear=False,
-                 driveVel=100.0,
-                 turnVel=100.0,
-                 thresholdX=0.25,
-                 thresholdY=0.25,
-                 thresholdΘ=math.radians(1),
-                 timeOut=5_000,
-                 wait=True,
-                 discs=3):
+    def __init__(
+            self,
+            xTarget=0.0,
+            yTarget=0.0,
+            offset=0.156601876982,  # arctan((126-108/(132-18))
+            distance=Constants.HI_SPEED,
+            overrideAutoClear=False,
+            driveVel=100.0,
+            turnVel=100.0,
+            thresholdX=0.25,
+            thresholdY=0.25,
+            thresholdΘ=math.radians(1),
+            timeOut=5_000,
+            wait=True,
+            discs=3):
         # robotX, robotY, robotΘ = Robot.odometry.getPose()
-        super().__init__(xTarget, yTarget, self.calcAngleToHi(xTarget, yTarget) + offset,
+        super().__init__(xTarget, yTarget,
+                         self.calcAngleToHi(xTarget, yTarget) + offset,
                          overrideAutoClear, driveVel, turnVel, thresholdX,
                          thresholdY, thresholdΘ, 1_000, wait)
 
@@ -575,8 +579,9 @@ class AutoAlignShoot(AutoDrive):
 
     # may need to fix this later
     def calcAngleToHi(self, robotX, robotY):
-        value = abs(math.atan2(Constants.HIGH_GOAL_Y - robotY,
-                          Constants.HIGH_GOAL_X - robotX))
+        value = abs(
+            math.atan2(Constants.HIGH_GOAL_Y - robotY,
+                       Constants.HIGH_GOAL_X - robotX))
         return value
 
     def execute(self):
@@ -586,9 +591,10 @@ class AutoAlignShoot(AutoDrive):
 
         AutoAlignShoot.autoFlywheel = AutoFlywheel(distance=self.distance)
         AutoAlignShoot.autoFlywheel.execute()
-        
+
         for _ in range(self.discs):
-            if not competition.is_autonomous() and not competition.is_autonomous():
+            if not competition.is_autonomous(
+            ) and not competition.is_autonomous():
                 return
             if brain.timer.time(MSEC) > start + self.childTimeOut:
                 printDB(self.__class__.__name__, "Ran Out of Time")
@@ -646,9 +652,9 @@ class AutoDriveRoller(AutoDrive):
                  timeOut=5_000,
                  wait=True):
         robotX, robotY, robotΘ = Robot.odometry.getPose()
-        super().__init__(xTarget, yTarget, ΘTarget,
-                         overrideAutoClear, driveVel, turnVel, thresholdX,
-                         thresholdY, thresholdΘ, timeOut, wait)
+        super().__init__(xTarget, yTarget, ΘTarget, overrideAutoClear,
+                         driveVel, turnVel, thresholdX, thresholdY, thresholdΘ,
+                         timeOut, wait)
 
         AutoDriveRoller.isRunning = False
         AutoDriveRoller.stopAuto = False
@@ -657,37 +663,46 @@ class AutoDriveRoller(AutoDrive):
 
         self.ΘforR = math.pi
         self.ΘforL = math.pi / 2
-    
+
     def execute(self):
         AutoDriveRoller.isRunning = True
         reverseSpeed = 50
 
         super().execute()
-    
+
         start = brain.timer.time(MSEC)
 
-        while brain.timer.time(MSEC) < start + 250 and competition.is_autonomous() and competition.is_enabled():
-            Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+        while brain.timer.time(
+                MSEC) < start + 250 and competition.is_autonomous(
+                ) and competition.is_enabled():
+            Robot.drivetrain.drive(
+                -reverseSpeed, 0,
+                self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
             wait(10, MSEC)
-        
+
         Robot.roller.flip(wait=False)
-    
+
         start = brain.timer.time(MSEC)
 
-        while Robot.roller.isNotDone() and competition.is_autonomous() and competition.is_enabled():
-            Robot.drivetrain.drive(-reverseSpeed, 0, self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
+        while Robot.roller.isNotDone() and competition.is_autonomous(
+        ) and competition.is_enabled():
+            Robot.drivetrain.drive(
+                -reverseSpeed, 0,
+                self.ΘforR if self.rollerSide == 'R' else self.ΘforL)
             wait(10, MSEC)
-        
+
         AutoDriveRoller.isRunning = False
 
     def printStartMessage(self):
-        printDB(self.__class__.__name__, "Started\tTarget:", self.rollerSide, "Roller")
+        printDB(self.__class__.__name__, "Started\tTarget:", self.rollerSide,
+                "Roller")
 
     def printStopMessage(self):
         printDB(self.__class__.__name__, "Stopped\n")
 
 
 class AutoStartOdometry:
+
     def __init__(self):
         pass
 
@@ -793,7 +808,8 @@ class FullLeftAuto1:
                                math.pi / 2)
         commandRun = RunCommands(
             AutoStartOdometry(),
-            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
+            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0,
+                            math.pi / 2, True, 'L'),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            shootingOffset,
@@ -817,7 +833,8 @@ class FullLeftAuto1:
                       (5 * math.pi) / 4, True),
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
-            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
+            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi,
+                            True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            shootingOffset,
@@ -834,17 +851,18 @@ class FullRightAuto1:
         shootingOffset = 0.156601876982
         # arctan((126-108/(132-18))
 
-            # AutoDrive(Constants.TILE_R_R,
-            #           Constants.TILE___4,
-            #           math.pi,
-            #           True,
-            #           timeOut=rollerTimeOut),
+        # AutoDrive(Constants.TILE_R_R,
+        #           Constants.TILE___4,
+        #           math.pi,
+        #           True,
+        #           timeOut=rollerTimeOut),
 
         Robot.odometry.setPose(Constants.TILE___5, Constants.TILE___3, math.pi)
         commandRun = RunCommands(
             # AutoDrive(Constants.TILE___5, Constants.TILE___4, math.pi, True),
             AutoStartOdometry(),
-            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi, True, 'R'),
+            AutoDriveRoller(Constants.TILE___5, Constants.TILE___4, math.pi,
+                            True, 'R'),
             AutoAlignShoot(Constants.TILE_R_S,
                            Constants.TILE___4,
                            shootingOffset,
@@ -869,8 +887,8 @@ class FullRightAuto1:
             AutoIntake(status=0),
             AutoDrive(Constants.TILE___1, Constants.TILE___0, math.pi / 2,
                       True),
-                      
-            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0, math.pi / 2, True, 'L'),
+            AutoDriveRoller(Constants.TILE___1, Constants.TILE___0,
+                            math.pi / 2, True, 'L'),
             AutoAlignShoot(Constants.TILE___1,
                            Constants.TILE_L_S,
                            shootingOffset,
@@ -966,9 +984,10 @@ class MyController:
                 strafe = self.axisCurve(self.controller.axis4.position())
                 turn = self.axisCurve(self.controller.axis1.position())
 
-                if not self.controller.buttonL2.pressing() and abs(
-                        forward) > deadZoneVal or abs(
-                            strafe) > deadZoneVal or abs(turn) > deadZoneVal:
+                if not self.controller.buttonL2.pressing() and (
+                        abs(forward) > deadZoneVal or
+                        abs(strafe) > deadZoneVal or
+                        abs(turn) > deadZoneVal):
                     Robot.drivetrain.drive(
                         forward * (Robot.drivetrain.driveVel / 100),
                         strafe * (Robot.drivetrain.driveVel / 100),
@@ -1383,9 +1402,13 @@ class MecanumDriveTrain:
         self.motorFrontRight.spin(FORWARD)
         self.motorBackRight.spin(FORWARD)
         self.motorBackLeft.spin(FORWARD)
-    
-    def drive_for(self, direction: DirectionType.DirectionType, rot_or_time: vexnumber, *args, **kwargs):
-        tempDT = DriveTrain(MotorGroup(self.motorFrontLeft, self.motorBackLeft), MotorGroup(self.motorFrontRight, self.motorBackRight), 12.5663706144, 15, 15, INCHES)
+
+    def drive_for(self, direction: DirectionType.DirectionType,
+                  rot_or_time: vexnumber, *args, **kwargs):
+        tempDT = DriveTrain(
+            MotorGroup(self.motorFrontLeft, self.motorBackLeft),
+            MotorGroup(self.motorFrontRight, self.motorBackRight),
+            12.5663706144, 15, 15, INCHES)
 
         tempDT.drive_for(REVERSE, 5, INCHES, 50, PERCENT, True)
 
@@ -1495,7 +1518,7 @@ class Flywheel:
 
     def toggleSpeed(self):
         # if self.distance == Constants.MID_SHOT or self.distance == Constants.SIDE_SHOT:
-            # self.distance = Constants.LO_SPEED
+        # self.distance = Constants.LO_SPEED
         # else:
         printDB("PRESSED", self.distance, Constants.LO_SPEED)
         if self.distance < Constants.HI_SPEED:
@@ -1668,10 +1691,10 @@ class Roller:
     def flip(self, direction=FORWARD, degreesToTurn=90, wait=False):
         self.motor.spin_for(direction, degreesToTurn, DEGREES, 50, PERCENT,
                             wait)
-    
+
     def stop(self):
         self.motor.stop()
-    
+
     def isNotDone(self):
         return not self.motor.is_done()
 
@@ -1778,7 +1801,6 @@ def vexcode_auton_function():
 #     # TestMode()
 #     autoDone = True
 #     print("Auto Period Ends")
-
 
 # DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS ------------ DRIVER FUNCTIONS
 
